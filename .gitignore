@@ -3,6 +3,8 @@
 *.translation
 user/
 *.tmp
-screenshots/
+screenshots/test_*.png
+screenshots/manual_*.png
+screenshots/user_*.png
 *.log
 .DS_Store
