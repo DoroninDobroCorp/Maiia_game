@@ -1,4 +1,4 @@
-extends Node
+extends SceneTree
 
 ## Скрипт автоматического прогона и снятия реальных игровых скриншотов (A07)
 
@@ -9,14 +9,15 @@ var app: Node
 var step: int = 0
 var frame_counter: int = 0
 
-func _ready() -> void:
+func _init() -> void:
 	# Сбрасываем сохранение для чистого прогона с самого начала
 	SaveServiceScript.reset_save()
 	
 	app = AppRootScene.instantiate()
-	add_child(app)
+	root.add_child(app)
+	process_frame.connect(_on_process_frame)
 
-func _process(_delta: float) -> void:
+func _on_process_frame() -> void:
 	frame_counter += 1
 	
 	if frame_counter == 15 and step == 0:
@@ -41,7 +42,7 @@ func _process(_delta: float) -> void:
 		
 	elif frame_counter == 60 and step == 3:
 		step = 4
-		# Открываем шкатулку с дисками и включаем подсказку
+		# Открываем шкатулку с дисками и разворачиваем улику на крышке
 		app.open_puzzle_box()
 		var puzzle_ui: Node = app.modal_container.get_child(0)
 		if puzzle_ui != null and puzzle_ui.has_method("_on_hint_pressed"):
@@ -49,7 +50,7 @@ func _process(_delta: float) -> void:
 			
 	elif frame_counter == 75 and step == 4:
 		step = 5
-		# Кадр 3: Мини-игра дисков с открытой подсказкой
+		# Кадр 3: Первая тайна станции с открытой уликой
 		app.take_screenshot("screenshots/03_puzzle_dials_clue.png")
 		print("Captured 03_puzzle_dials_clue.png")
 		# Решаем загадку и закрываем модальное окно, чтобы увидеть преображённую комнату
@@ -73,4 +74,4 @@ func _process(_delta: float) -> void:
 		
 	elif frame_counter == 130 and step == 7:
 		print("All 5 acceptance screenshots captured successfully!")
-		get_tree().quit(0)
+		quit(0)

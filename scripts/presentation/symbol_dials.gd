@@ -27,11 +27,25 @@ func setup(dials: Array, is_already_solved: bool, audio_svc: Node) -> void:
 	_build_ui(is_already_solved)
 	_update_dial_displays()
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			get_viewport().set_input_as_handled()
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("paper_flip")
+			closed.emit()
+
 func _build_ui(is_already_solved: bool) -> void:
 	# Фоновая полупрозрачная затемняющая подложка
 	var bg := ColorRect.new()
 	bg.color = Color(0.05, 0.06, 0.1, 0.78)
 	bg.set_anchors_preset(PRESET_FULL_RECT)
+	bg.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("paper_flip")
+			closed.emit()
+	)
 	add_child(bg)
 	
 	# Центральная карточка шкатулки
@@ -40,7 +54,7 @@ func _build_ui(is_already_solved: bool) -> void:
 	add_child(center)
 	
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(740, 480)
+	panel.custom_minimum_size = Vector2(760, 520)
 	var p_style := StyleBoxFlat.new()
 	p_style.bg_color = Color(0.14, 0.12, 0.18, 0.96)
 	p_style.border_color = Color(0.88, 0.72, 0.32, 0.85)
@@ -51,22 +65,23 @@ func _build_ui(is_already_solved: bool) -> void:
 	center.add_child(panel)
 	
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 16)
+	vbox.add_theme_constant_override("separation", 14)
 	panel.add_child(vbox)
 	
 	# Заголовок
 	var title_lbl := Label.new()
-	title_lbl.text = "✦ СТАРИННАЯ ШКАТУЛКА С ДИСКАМИ ✦"
+	title_lbl.text = "✦ ПЕРВАЯ ТАЙНА СТАНЦИИ • СТАРИННАЯ ШКАТУЛКА ✦"
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_lbl.add_theme_font_size_override("font_size", 22)
+	title_lbl.add_theme_font_size_override("font_size", 20)
 	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.55))
 	vbox.add_child(title_lbl)
 	
 	var sub_lbl := Label.new()
-	sub_lbl.text = "Поверни три диска так, чтобы символы совпали с путеводной подсказкой."
+	sub_lbl.text = "Внутри шкатулки дремлет старый механизм станции. Разгадай шифр трёх дисков —\nвозможно, именно он сможет разбудить лампу, радио и всю станцию."
 	sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub_lbl.add_theme_font_size_override("font_size", 14)
-	sub_lbl.add_theme_color_override("font_color", Color(0.85, 0.82, 0.76))
+	sub_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub_lbl.add_theme_font_size_override("font_size", 13)
+	sub_lbl.add_theme_color_override("font_color", Color(0.88, 0.85, 0.78))
 	vbox.add_child(sub_lbl)
 	
 	# Контейнер для 3 дисков
@@ -90,25 +105,29 @@ func _build_ui(is_already_solved: bool) -> void:
 	vbox.add_child(feedback_label)
 	
 	if is_already_solved:
-		feedback_label.text = "✓ Замок открыт! Механизм станции запущен, лампа и радио активны."
-		feedback_label.add_theme_color_override("font_color", Color(0.4, 0.9, 0.5))
+		feedback_label.text = "✓ Первая тайна разгадана: шкатулка открыта, станция проснулась!"
+		feedback_label.add_theme_color_override("font_color", Color(0.4, 0.95, 0.55))
 	
-	# Блок подсказки (сворачиваемый)
+	# Блок улики / записки на крышке (сворачиваемый)
 	clue_box = PanelContainer.new()
 	var clue_style := StyleBoxFlat.new()
-	clue_style.bg_color = Color(0.18, 0.16, 0.22, 0.9)
-	clue_style.border_color = Color(0.55, 0.45, 0.25, 0.6)
+	clue_style.bg_color = Color(0.12, 0.11, 0.14, 0.96)
+	clue_style.border_color = Color(0.82, 0.68, 0.36, 0.75)
 	clue_style.set_border_width_all(1)
-	clue_style.set_corner_radius_all(6)
-	clue_style.set_content_margin_all(12)
+	clue_style.set_corner_radius_all(8)
+	clue_style.content_margin_left = 16
+	clue_style.content_margin_right = 16
+	clue_style.content_margin_top = 12
+	clue_style.content_margin_bottom = 12
 	clue_box.add_theme_stylebox_override("panel", clue_style)
 	clue_box.visible = false
 	vbox.add_child(clue_box)
 	
 	clue_label = Label.new()
 	clue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	clue_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	clue_label.add_theme_font_size_override("font_size", 13)
-	clue_label.add_theme_color_override("font_color", Color(0.95, 0.90, 0.75))
+	clue_label.add_theme_color_override("font_color", Color(0.96, 0.91, 0.78))
 	clue_box.add_child(clue_label)
 	
 	# Нижние кнопки действий
@@ -118,7 +137,7 @@ func _build_ui(is_already_solved: bool) -> void:
 	vbox.add_child(btn_hbox)
 	
 	var btn_hint := Button.new()
-	btn_hint.text = "📖 Подсказка из блокнота"
+	btn_hint.text = "📜 Записка на крышке"
 	btn_hint.custom_minimum_size = Vector2(210, 38)
 	btn_hint.pressed.connect(_on_hint_pressed)
 	btn_hbox.add_child(btn_hint)
@@ -222,18 +241,18 @@ func _on_hint_pressed() -> void:
 	
 	clue_box.visible = !clue_box.visible
 	if clue_box.visible:
-		clue_label.text = QuestRulesScript.get_clue_text() + "\n\n" + QuestRulesScript.get_hint_text()
+		clue_label.text = QuestRulesScript.get_clue_text()
 
 func _on_check_pressed() -> void:
 	var is_correct: bool = QuestRulesScript.check_solution(current_dials)
 	if is_correct:
-		feedback_label.text = "✨ Замок щёлкнул и мягко раскрылся! Лампа загорелась, станция оживает!"
+		feedback_label.text = "✨ Замок щёлкнул и мягко раскрылся! Где-то внутри отозвался старый механизм — станция просыпается!"
 		feedback_label.add_theme_color_override("font_color", Color(0.4, 0.95, 0.55))
 		if audio_service != null and audio_service.has_method("play_sfx"):
 			audio_service.play_sfx("chime_solve")
 		puzzle_solved.emit()
 	else:
-		feedback_label.text = "Диски щёлкнули, но замок не поддался. Сверься с подсказкой из блокнота."
+		feedback_label.text = "Диски щёлкнули, но замок не поддался. Вчитайся в записку на крышке."
 		feedback_label.add_theme_color_override("font_color", Color(0.95, 0.75, 0.4))
 		if audio_service != null and audio_service.has_method("play_sfx"):
 			audio_service.play_sfx("wood_thump")

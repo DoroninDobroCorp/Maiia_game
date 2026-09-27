@@ -4,8 +4,17 @@ extends Control
 ## Иллюстрированный журнал станции (Пролог S00, Заметки долины, Достижения)
 
 signal closed()
+signal quest_open_requested(quest: Dictionary, instance: Dictionary)
+signal artifact_delete_requested(artifact_id: String)
 
 const ProgressionRulesScript = preload("res://scripts/domain/progression_rules.gd")
+const ContentRepositoryScript = preload("res://scripts/services/content_repository.gd")
+const ContentLibraryServiceScript = preload("res://scripts/services/content_library_service.gd")
+const QuestServiceScript = preload("res://scripts/services/quest_service.gd")
+const ArtifactServiceScript = preload("res://scripts/services/artifact_service.gd")
+const AuthorPatchServiceScript = preload("res://scripts/services/author_patch_service.gd")
+const ProgressServiceScript = preload("res://scripts/services/progress_service.gd")
+const AtlasMapScript = preload("res://scripts/presentation/atlas_map.gd")
 
 var audio_service: Node
 var tab_container: TabContainer
@@ -14,10 +23,24 @@ func setup(game_state: Dictionary, audio_svc: Node) -> void:
 	audio_service = audio_svc
 	_build_ui(game_state)
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			get_viewport().set_input_as_handled()
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("paper_flip")
+			closed.emit()
+
 func _build_ui(state: Dictionary) -> void:
 	var bg := ColorRect.new()
 	bg.color = Color(0.04, 0.05, 0.08, 0.85)
 	bg.set_anchors_preset(PRESET_FULL_RECT)
+	bg.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("paper_flip")
+			closed.emit()
+	)
 	add_child(bg)
 	
 	var center := CenterContainer.new()
@@ -73,12 +96,27 @@ func _build_ui(state: Dictionary) -> void:
 	tab_quest.name = "Задачи (S00)"
 	tab_container.add_child(tab_quest)
 	
-	# 2. Вкладка «Атлас долины»
-	var tab_atlas := _build_atlas_tab()
+	# 2. Опубликованные семейные экспедиции Phase B.
+	var tab_phase_b := _build_phase_b_quests_tab(state)
+	tab_phase_b.name = "Экспедиции"
+	tab_container.add_child(tab_phase_b)
+
+	# 3. Семь направлений развития.
+	var tab_skills := _build_skills_tab(state)
+	tab_skills.name = "Навыки"
+	tab_container.add_child(tab_skills)
+
+	# 4. Архив подтверждённой работы и локальных вложений.
+	var tab_archive := _build_archive_tab(state)
+	tab_archive.name = "Архив"
+	tab_container.add_child(tab_archive)
+
+	# 5. Вкладка «Атлас долины»
+	var tab_atlas := _build_atlas_tab(state)
 	tab_atlas.name = "Атлас долины"
 	tab_container.add_child(tab_atlas)
 	
-	# 3. Вкладка «Достижения и архив»
+	# 6. Достижения пролога.
 	var tab_achieve := _build_achievements_tab(state)
 	tab_achieve.name = "Достижения"
 	tab_container.add_child(tab_achieve)
@@ -103,7 +141,7 @@ func _build_quest_tab(state: Dictionary) -> Control:
 	vbox.add_child(q_title)
 	
 	var q_story := Label.new()
-	q_story.text = "В старом архиве у подножия Серро Пилтрикитрон появилось место для новой хозяйки. Пустая деревянная табличка ждёт твоего имени, верстак готов к работе, а шкатулка с дисками хранит секрет запуска радиоканала."
+	q_story.text = "В старом архиве у подножия Серро Пилтрикитрон появилось место для новой хозяйки. Пустая деревянная табличка ждёт твоего имени, верстак готов к работе, а старинная шкатулка хранит первую маленькую тайну станции. На крышке осталась пожелтевшая записка — разгадай её шифр и попробуй разбудить станцию."
 	q_story.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	q_story.add_theme_font_size_override("font_size", 13)
 	q_story.add_theme_color_override("font_color", Color(0.85, 0.82, 0.76))
@@ -116,8 +154,8 @@ func _build_quest_tab(state: Dictionary) -> Control:
 	
 	_add_task_item(tasks_box, "1. Дать станции имя и выбрать символ на вывеске", sign_done, "Оформлено в Терминале автора.")
 	_add_task_item(tasks_box, "2. Выставить на верстак памятный экспонат исследователя", prop_done, "Предмет выбран и стоит на подставке.")
-	_add_task_item(tasks_box, "3. Разгадать шифр трёх дисков на старинной шкатулке", puzzle_done, "Порядок: Гора (1), Ветер (2), Звезда (3).")
-	_add_task_item(tasks_box, "4. Разбудить станцию (зажечь настольную лампу и включить радио)", awaken_done, "Станция освещена теплом, радиоканал восстановлен!")
+	_add_task_item(tasks_box, "3. Разгадать первую тайну станции (шифр шкатулки)", puzzle_done, "Шкатулка открыта — лампа зажглась, радио ожило, станция просыпается!" if puzzle_done else "Внимательно прочти пожелтевшую записку на крышке шкатулки.")
+	_add_task_item(tasks_box, "4. Пробудить станцию (зажечь настольную лампу и оживить радио)", awaken_done, "Станция озарена тёплым светом, радиоканал «Южный Маяк» ожил!")
 	
 	if awaken_done:
 		var complete_banner := Label.new()
@@ -128,6 +166,209 @@ func _build_quest_tab(state: Dictionary) -> Control:
 		vbox.add_child(complete_banner)
 	
 	return scroll
+
+func _build_phase_b_quests_tab(state: Dictionary) -> Control:
+	var scroll := ScrollContainer.new()
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 10)
+	scroll.add_child(vbox)
+
+	var world_effects: Array = ProgressServiceScript.get_profile_world_effects(state, "player_01")
+	if world_effects.has("observatory_view_01"):
+		var finale := Label.new()
+		finale.text = "✦ Глава завершена: обсерватория снова светится. Станция сохранила сделанную работу и теперь ждёт, какую следующую главу выберет её автор."
+		finale.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		finale.add_theme_font_size_override("font_size", 13)
+		finale.add_theme_color_override("font_color", Color(0.96, 0.82, 0.52))
+		vbox.add_child(finale)
+
+	var intro := Label.new()
+	intro.text = "Только карточки, которые взрослый уже одобрил и опубликовал. Принятие задания фиксирует точную версию — будущие правки её не меняют."
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.add_theme_font_size_override("font_size", 11)
+	intro.add_theme_color_override("font_color", Color(0.70, 0.69, 0.66))
+	vbox.add_child(intro)
+
+	var quests := QuestServiceScript.list_player_quests(state)
+	if quests.is_empty():
+		var empty := Label.new()
+		empty.text = "Новые экспедиции пока не открыты. Взрослый может выбрать одну карточку в локальной родительской консоли [P]."
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty.add_theme_color_override("font_color", Color(0.78, 0.74, 0.66))
+		vbox.add_child(empty)
+		return scroll
+
+	for quest in quests:
+		var qid := str(quest.get("quest_id", ""))
+		var instance := _latest_instance_for_quest(state, qid)
+		var card := PanelContainer.new()
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.18, 0.155, 0.19, 0.90)
+		style.border_color = Color(0.50, 0.43, 0.28, 0.75)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(7)
+		style.set_content_margin_all(11)
+		card.add_theme_stylebox_override("panel", style)
+		vbox.add_child(card)
+
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		card.add_child(row)
+		var text_box := VBoxContainer.new()
+		text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(text_box)
+		var title := Label.new()
+		title.text = "%s • %s" % [qid, str(quest.get("title", ""))]
+		title.add_theme_font_size_override("font_size", 14)
+		title.add_theme_color_override("font_color", Color(1.0, 0.88, 0.58))
+		text_box.add_child(title)
+		var summary := Label.new()
+		summary.text = str(quest.get("summary", ""))
+		summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		summary.add_theme_font_size_override("font_size", 11)
+		text_box.add_child(summary)
+		var status := Label.new()
+		status.text = "Доступно" if instance.is_empty() else _instance_status_title(str(instance.get("status", "")))
+		status.add_theme_font_size_override("font_size", 10)
+		status.add_theme_color_override("font_color", Color(0.58, 0.86, 0.64) if instance.is_empty() or str(instance.get("status", "")) == "COMPLETED" else Color(0.84, 0.74, 0.50))
+		text_box.add_child(status)
+		var open_btn := Button.new()
+		open_btn.text = "Открыть"
+		var exact_quest: Dictionary = quest.duplicate(true)
+		var exact_instance: Dictionary = instance.duplicate(true)
+		open_btn.pressed.connect(func(): quest_open_requested.emit(exact_quest, exact_instance))
+		row.add_child(open_btn)
+
+	return scroll
+
+func _build_skills_tab(state: Dictionary) -> Control:
+	var scroll := ScrollContainer.new()
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 9)
+	scroll.add_child(vbox)
+	var phase_b: Dictionary = state.get("phase_b", {})
+	var profile_xp: Dictionary = (phase_b.get("skill_xp_by_profile", {}) as Dictionary).get("player_01", {})
+	for skill_id in ContentRepositoryScript.SKILLS.keys():
+		var data: Dictionary = ContentRepositoryScript.SKILLS[skill_id]
+		var card := PanelContainer.new()
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.16, 0.145, 0.18, 0.88)
+		style.set_corner_radius_all(6)
+		style.set_content_margin_all(10)
+		card.add_theme_stylebox_override("panel", style)
+		vbox.add_child(card)
+		var box := VBoxContainer.new()
+		card.add_child(box)
+		var title := Label.new()
+		title.text = "%s  %s — %d XP" % [str(data.get("icon", "✦")), str(data.get("title", skill_id)), int(profile_xp.get(str(skill_id), 0))]
+		title.add_theme_font_size_override("font_size", 14)
+		title.add_theme_color_override("font_color", Color(0.96, 0.86, 0.60))
+		box.add_child(title)
+		var sub := Label.new()
+		sub.text = "Поднавыки: " + ", ".join(ContentRepositoryScript.get_subskills(str(skill_id)))
+		sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sub.add_theme_font_size_override("font_size", 10)
+		sub.add_theme_color_override("font_color", Color(0.68, 0.68, 0.66))
+		box.add_child(sub)
+	return scroll
+
+func _build_archive_tab(state: Dictionary) -> Control:
+	var scroll := ScrollContainer.new()
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 10)
+	scroll.add_child(vbox)
+	var archive_note := Label.new()
+	archive_note.text = "✦ " + AuthorPatchServiceScript.get_dialogue(state, "archive_note")
+	archive_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	archive_note.add_theme_color_override("font_color", Color(0.92, 0.82, 0.58))
+	vbox.add_child(archive_note)
+
+	var phase_b: Dictionary = state.get("phase_b", {})
+	var artifacts: Dictionary = phase_b.get("artifacts", {})
+	var activities: Dictionary = phase_b.get("activities", {})
+	var has_content := false
+
+	for artifact_id in artifacts.keys():
+		var artifact: Dictionary = artifacts[artifact_id]
+		if str(artifact.get("profile_id", "player_01")) != "player_01":
+			continue
+		has_content = true
+		var card := PanelContainer.new()
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.18, 0.15, 0.17, 0.9)
+		style.set_corner_radius_all(6)
+		style.set_content_margin_all(10)
+		card.add_theme_stylebox_override("panel", style)
+		vbox.add_child(card)
+		var row := HBoxContainer.new()
+		card.add_child(row)
+		var text_box := VBoxContainer.new()
+		text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(text_box)
+		var title := Label.new()
+		title.text = "Работа: " + str(artifact.get("title", "Без названия"))
+		text_box.add_child(title)
+		var media := Label.new()
+		var available := not ArtifactServiceScript.media_path_for(state, str(artifact_id)).is_empty()
+		media.text = "Локальное медиа доступно" if available else "Медиа удалено или недоступно; запись результата сохранена"
+		media.add_theme_font_size_override("font_size", 10)
+		media.add_theme_color_override("font_color", Color(0.58, 0.82, 0.64) if available else Color(0.66, 0.64, 0.60))
+		text_box.add_child(media)
+		if available:
+			var delete_btn := Button.new()
+			delete_btn.text = "Удалить медиа"
+			var exact_id := str(artifact_id)
+			delete_btn.pressed.connect(func(): artifact_delete_requested.emit(exact_id))
+			row.add_child(delete_btn)
+
+	for activity_value in activities.values():
+		var activity: Dictionary = activity_value
+		if str(activity.get("profile_id", "")) != "player_01" or str(activity.get("status", "")) != "CONFIRMED":
+			continue
+		if str(activity.get("kind", "")) == "milestone":
+			continue
+		has_content = true
+		var qid := str(activity.get("quest_id", ""))
+		var quest := ContentLibraryServiceScript.get_template(state, qid, int(activity.get("revision", -1)))
+		var line := Label.new()
+		line.text = "✓ %s — %s" % [qid, str(quest.get("title", "Подтверждённая работа"))]
+		line.add_theme_color_override("font_color", Color(0.62, 0.88, 0.66))
+		vbox.add_child(line)
+
+	if not has_content:
+		var empty := Label.new()
+		empty.text = "Архив пока пуст. Подтверждённые реальные результаты будут появляться здесь."
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty.add_theme_color_override("font_color", Color(0.68, 0.66, 0.62))
+		vbox.add_child(empty)
+	return scroll
+
+func _latest_instance_for_quest(state: Dictionary, quest_id: String) -> Dictionary:
+	var instances: Dictionary = state.get("phase_b", {}).get("quest_instances", {})
+	var best: Dictionary = {}
+	var best_score := -1
+	for instance_value in instances.values():
+		var instance: Dictionary = instance_value
+		if str(instance.get("profile_id", "")) != "player_01" or str(instance.get("quest_id", "")) != quest_id:
+			continue
+		var status := str(instance.get("status", ""))
+		var live_score := 100 if ["ACTIVE", "SUBMITTED", "PAUSED"].has(status) else 0
+		var score := live_score + int(instance.get("revision", 0))
+		if score >= best_score:
+			best_score = score
+			best = instance.duplicate(true)
+	return best
+
+func _instance_status_title(status: String) -> String:
+	return {
+		"ACTIVE": "В работе",
+		"PAUSED": "Отложено",
+		"SUBMITTED": "На проверке",
+		"COMPLETED": "Завершено"
+	}.get(status, status)
 
 func _add_task_item(parent: Control, task_title: String, is_done: bool, hint: String) -> void:
 	var h := HBoxContainer.new()
@@ -155,56 +396,37 @@ func _add_task_item(parent: Control, task_title: String, is_done: bool, hint: St
 	h_lbl.add_theme_color_override("font_color", Color(0.65, 0.62, 0.55))
 	v.add_child(h_lbl)
 
-func _build_atlas_tab() -> Control:
+func _build_atlas_tab(state: Dictionary) -> Control:
 	var scroll := ScrollContainer.new()
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 12)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(vbox)
-	
-	var notes: Array[Dictionary] = [
-		{
-			"title": "Вершина Серро Пилтрикитрон (Cerro Piltriquitrón)",
-			"desc": "С языка мапуче переводится как «висящий на облаках». Могучий хребет защищает долину от свирепых западных тихоокеанских ветров."
-		},
-		{
-			"title": "Река Рио Асуль (Río Azul)",
-			"desc": "Ледниковая река с кристально чистой бирюзовой водой. Берёт начало высоко в заснеженных Андах и протекает через всю долину."
-		},
-		{
-			"title": "Хвойные и нотофагусовые леса",
-			"desc": "Древние патагонские кедры (кипарисы лавсоновские), коихве и ленга. В воздухе пахнет хвоей, свежей смолой и речным туманом."
-		},
-		{
-			"title": "Неисследованный сектор карты",
-			"desc": "Тропа за старым мостом скрыта в тумане. Чтобы открыть её, предстоит восстановить радиосигналы маяков в будущих экспедициях."
-		}
-	]
-	
-	for n in notes:
-		var p := PanelContainer.new()
-		var p_style := StyleBoxFlat.new()
-		p_style.bg_color = Color(0.18, 0.16, 0.22, 0.8)
-		p_style.set_corner_radius_all(6)
-		p_style.set_content_margin_all(10)
-		p.add_theme_stylebox_override("panel", p_style)
-		vbox.add_child(p)
-		
-		var pv := VBoxContainer.new()
-		p.add_child(pv)
-		
-		var l_title := Label.new()
-		l_title.text = "✦ " + str(n["title"])
-		l_title.add_theme_font_size_override("font_size", 14)
-		l_title.add_theme_color_override("font_color", Color(1.0, 0.88, 0.6))
-		pv.add_child(l_title)
-		
-		var l_desc := Label.new()
-		l_desc.text = str(n["desc"])
-		l_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l_desc.add_theme_font_size_override("font_size", 12)
-		l_desc.add_theme_color_override("font_color", Color(0.85, 0.82, 0.75))
-		pv.add_child(l_desc)
+
+	var intro := Label.new()
+	intro.text = "Открыта только Лесная станция. Остальные места видны сквозь туман войны и будут раскрываться постепенно."
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.add_theme_color_override("font_color", Color(0.78, 0.77, 0.70))
+	vbox.add_child(intro)
+
+	var atlas: Control = AtlasMapScript.new()
+	atlas.custom_minimum_size = Vector2(820, 390)
+	atlas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(atlas)
+	atlas.setup(state)
+
+	var detail := Label.new()
+	detail.text = "◎ Лесная станция — единственная открытая точка. Нажми на метку в тумане, чтобы увидеть, что там появится позже."
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail.add_theme_font_size_override("font_size", 12)
+	detail.add_theme_color_override("font_color", Color(0.88, 0.84, 0.73))
+	vbox.add_child(detail)
+	atlas.location_selected.connect(func(location: Dictionary):
+		if bool(location.get("unlocked", false)):
+			detail.text = "◎ %s — %s\n%s" % [str(location.get("title", "")), str(location.get("subtitle", "")), str(location.get("description", ""))]
+		else:
+			detail.text = "☁ %s — %s\nТуман войны. %s" % [str(location.get("title", "")), str(location.get("subtitle", "")), str(location.get("description", ""))]
+	)
 	
 	return scroll
 

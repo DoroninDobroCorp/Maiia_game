@@ -8,15 +8,27 @@ const SaveServiceScript = preload("res://scripts/services/save_service.gd")
 const AudioServiceScript = preload("res://scripts/services/audio_service.gd")
 const QuestRulesScript = preload("res://scripts/domain/quest_rules.gd")
 const ProgressionRulesScript = preload("res://scripts/domain/progression_rules.gd")
+const ContentRepositoryScript = preload("res://scripts/services/content_repository.gd")
+const ContentLibraryServiceScript = preload("res://scripts/services/content_library_service.gd")
+const QuestServiceScript = preload("res://scripts/services/quest_service.gd")
+const ArtifactServiceScript = preload("res://scripts/services/artifact_service.gd")
+const AuthorPatchServiceScript = preload("res://scripts/services/author_patch_service.gd")
+const ProgressServiceScript = preload("res://scripts/services/progress_service.gd")
+const RadioWeatherServiceScript = preload("res://scripts/services/radio_weather_service.gd")
 
 const StationRoomScene = preload("res://scenes/world/station_room.tscn")
 const SymbolDialsScene = preload("res://scenes/minigames/symbol_dials.tscn")
 const AuthorTerminalScene = preload("res://scenes/ui/author_terminal.tscn")
+const AuthorDialogueEditorScene = preload("res://scenes/ui/author_dialogue_editor.tscn")
 const JournalScene = preload("res://scenes/ui/journal.tscn")
+const ParentConsoleScene = preload("res://scenes/ui/parent_console.tscn")
+const QuestDetailScene = preload("res://scenes/ui/quest_detail.tscn")
+const WorldExplorerScene = preload("res://scenes/ui/world_explorer.tscn")
 const SettingsScene = preload("res://scenes/ui/settings_dialog.tscn")
 
 var game_state: Dictionary = {}
 var audio_service: Node
+var radio_weather_service: Node
 var station_room: Node3D
 
 # UI слои
@@ -36,6 +48,9 @@ func _ready() -> void:
 	# 1. Инициализация звука
 	audio_service = AudioServiceScript.new()
 	add_child(audio_service)
+	radio_weather_service = RadioWeatherServiceScript.new()
+	add_child(radio_weather_service)
+	radio_weather_service.bulletin_ready.connect(_on_radio_bulletin_ready)
 	
 	# 2. Загрузка сохранения
 	game_state = SaveServiceScript.load_game()
@@ -58,9 +73,12 @@ func _ready() -> void:
 	# Приветственное сообщение при первом входе
 	var s00: Dictionary = game_state.get("s00_progress", {})
 	if not bool(s00.get("station_awakened", false)):
-		show_toast("Добро пожаловать на станцию! Осмотри предметы на верстаке, измени вывеску или открой шкатулку с дисками.")
+		show_toast("Добро пожаловать на станцию! Осмотри комнату, оформи вывеску и разгадай первую тайну в шкатулке на верстаке.")
 	else:
 		show_toast("С возвращением на станцию «" + str(game_state.get("station_name", "Лесная станция")) + "»!")
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	_unhandled_input(event)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey:
@@ -76,6 +94,11 @@ func _unhandled_input(event: InputEvent) -> void:
 					_close_modals()
 				else:
 					open_journal()
+			elif k.keycode == KEY_P:
+				if modal_container.get_child_count() > 0:
+					_close_modals()
+				else:
+					open_parent_console()
 			elif k.keycode == KEY_F12:
 				take_screenshot("screenshots/manual_capture.png")
 
@@ -90,18 +113,19 @@ func _setup_hud() -> void:
 	hud_root.mouse_filter = Control.MOUSE_FILTER_PASS
 	ui_layer.add_child(hud_root)
 	
-	# Верхняя информационная панель
+	# Небольшая табличка вместо полосы на всю ширину: интерфейс оставляет миру воздух.
 	var top_bar := PanelContainer.new()
-	top_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	top_bar.custom_minimum_size = Vector2(0, 48)
+	top_bar.position = Vector2(18, 16)
+	top_bar.custom_minimum_size = Vector2(310, 38)
 	var tb_style := StyleBoxFlat.new()
-	tb_style.bg_color = Color(0.08, 0.08, 0.12, 0.86)
-	tb_style.border_color = Color(0.88, 0.72, 0.32, 0.5)
-	tb_style.border_width_bottom = 1
-	tb_style.content_margin_left = 20
-	tb_style.content_margin_right = 20
-	tb_style.content_margin_top = 8
-	tb_style.content_margin_bottom = 8
+	tb_style.bg_color = Color(0.055, 0.05, 0.065, 0.76)
+	tb_style.border_color = Color(0.82, 0.64, 0.28, 0.72)
+	tb_style.set_border_width_all(1)
+	tb_style.set_corner_radius_all(7)
+	tb_style.content_margin_left = 14
+	tb_style.content_margin_right = 14
+	tb_style.content_margin_top = 7
+	tb_style.content_margin_bottom = 7
 	top_bar.add_theme_stylebox_override("panel", tb_style)
 	hud_root.add_child(top_bar)
 	
@@ -109,25 +133,42 @@ func _setup_hud() -> void:
 	top_bar.add_child(top_hbox)
 	
 	header_station_lbl = Label.new()
-	header_station_lbl.add_theme_font_size_override("font_size", 16)
+	header_station_lbl.add_theme_font_size_override("font_size", 15)
 	header_station_lbl.add_theme_color_override("font_color", Color(1.0, 0.90, 0.60))
-	header_station_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_hbox.add_child(header_station_lbl)
-	
+
+	# Состояние пролога — отдельный компактный индикатор в правом углу.
+	var quest_card := PanelContainer.new()
+	quest_card.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	quest_card.position = Vector2(-382, 16)
+	quest_card.custom_minimum_size = Vector2(364, 38)
+	var q_style := StyleBoxFlat.new()
+	q_style.bg_color = Color(0.055, 0.05, 0.065, 0.70)
+	q_style.border_color = Color(0.42, 0.48, 0.56, 0.48)
+	q_style.set_border_width_all(1)
+	q_style.set_corner_radius_all(7)
+	q_style.content_margin_left = 12
+	q_style.content_margin_right = 12
+	q_style.content_margin_top = 7
+	q_style.content_margin_bottom = 7
+	quest_card.add_theme_stylebox_override("panel", q_style)
+	hud_root.add_child(quest_card)
+
 	header_quest_lbl = Label.new()
-	header_quest_lbl.add_theme_font_size_override("font_size", 13)
+	header_quest_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	header_quest_lbl.add_theme_font_size_override("font_size", 12)
 	header_quest_lbl.add_theme_color_override("font_color", Color(0.85, 0.82, 0.75))
-	top_hbox.add_child(header_quest_lbl)
+	quest_card.add_child(header_quest_lbl)
 	
 	# Всплывающее уведомление (Toast)
 	toast_panel = PanelContainer.new()
 	toast_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	toast_panel.position = Vector2(-320, 62)
-	toast_panel.custom_minimum_size = Vector2(640, 44)
+	toast_panel.position = Vector2(-290, 68)
+	toast_panel.custom_minimum_size = Vector2(580, 42)
 	toast_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var t_style := StyleBoxFlat.new()
-	t_style.bg_color = Color(0.14, 0.13, 0.18, 0.94)
-	t_style.border_color = Color(0.88, 0.72, 0.32, 0.85)
+	t_style.bg_color = Color(0.08, 0.075, 0.095, 0.90)
+	t_style.border_color = Color(0.88, 0.72, 0.32, 0.70)
 	t_style.set_border_width_all(1)
 	t_style.set_corner_radius_all(8)
 	t_style.set_content_margin_all(12)
@@ -151,8 +192,8 @@ func _setup_hud() -> void:
 	# Подсказка при наведении на 3D-предмет
 	hover_tooltip_panel = PanelContainer.new()
 	hover_tooltip_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	hover_tooltip_panel.position = Vector2(-200, -115)
-	hover_tooltip_panel.custom_minimum_size = Vector2(400, 36)
+	hover_tooltip_panel.position = Vector2(-210, -62)
+	hover_tooltip_panel.custom_minimum_size = Vector2(420, 36)
 	hover_tooltip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var h_style := StyleBoxFlat.new()
 	h_style.bg_color = Color(0.10, 0.10, 0.14, 0.92)
@@ -170,30 +211,22 @@ func _setup_hud() -> void:
 	hover_tooltip_lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.68))
 	hover_tooltip_panel.add_child(hover_tooltip_lbl)
 	
-	# Нижняя панель быстрых действий
-	var bottom_bar := PanelContainer.new()
-	bottom_bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	bottom_bar.custom_minimum_size = Vector2(0, 58)
-	bottom_bar.offset_top = -58
-	var bb_style := StyleBoxFlat.new()
-	bb_style.bg_color = Color(0.08, 0.08, 0.12, 0.90)
-	bb_style.border_color = Color(0.88, 0.72, 0.32, 0.5)
-	bb_style.border_width_top = 1
-	bb_style.set_content_margin_all(10)
-	bottom_bar.add_theme_stylebox_override("panel", bb_style)
-	hud_root.add_child(bottom_bar)
-	
-	var nav_hbox := HBoxContainer.new()
-	nav_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	nav_hbox.add_theme_constant_override("separation", 12)
-	bottom_bar.add_child(nav_hbox)
-	
-	_add_nav_btn(nav_hbox, "📖 Журнал [J]", func(): open_journal())
-	_add_nav_btn(nav_hbox, "🛠 Оформить станцию", func(): open_author_terminal())
-	_add_nav_btn(nav_hbox, "🔐 Шкатулка с дисками", func(): open_puzzle_box())
-	_add_nav_btn(nav_hbox, "📻 Радио «Южный Маяк»", func(): _interact_radio())
-	_add_nav_btn(nav_hbox, "🗺 Карта долины", func(): _interact_map())
-	_add_nav_btn(nav_hbox, "⚙ Настройки [Esc]", func(): open_settings())
+	# Лаконичная подсказка: основные действия совершаются прямо с предметами в комнате.
+	var hint_card := PanelContainer.new()
+	hint_card.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	hint_card.position = Vector2(18, -48)
+	hint_card.custom_minimum_size = Vector2(330, 30)
+	var hint_style := StyleBoxFlat.new()
+	hint_style.bg_color = Color(0.04, 0.04, 0.055, 0.66)
+	hint_style.set_corner_radius_all(6)
+	hint_style.set_content_margin_all(7)
+	hint_card.add_theme_stylebox_override("panel", hint_style)
+	hud_root.add_child(hint_card)
+	var hint_lbl := Label.new()
+	hint_lbl.text = "Осматривай предметы • клик — действие   |   J — журнал   Esc — настройки"
+	hint_lbl.add_theme_font_size_override("font_size", 11)
+	hint_lbl.add_theme_color_override("font_color", Color(0.78, 0.76, 0.70, 0.90))
+	hint_card.add_child(hint_lbl)
 	
 	# Контейнер модальных окон поверх HUD
 	modal_container = Control.new()
@@ -221,6 +254,7 @@ func _apply_state_to_world(animate_transition: bool = false) -> void:
 	station_room.update_desk_prop(prop_id)
 	station_room.update_dials_visual(dials)
 	station_room.set_world_stage(solved, animate_transition)
+	station_room.apply_phase_b_world_effects(ProgressServiceScript.get_profile_world_effects(game_state, "player_01"))
 	
 	_update_hud_labels()
 
@@ -279,7 +313,11 @@ func _on_prop_clicked(prop_id: String) -> void:
 			open_journal()
 		"door_observatory":
 			audio_service.play_sfx("wood_thump")
-			show_toast("Дверь в башню обсерватории пока заперта. Ключ от неё откроется в следующих главах.")
+			var effects: Array = ProgressServiceScript.get_profile_world_effects(game_state, "player_01")
+			if effects.has("observatory_view_01"):
+				show_toast("Обсерватория открыта. За стеклом снова видны огни долины — станция получила твой ответ и оставляет следующую главу своему автору.")
+			else:
+				show_toast("Дверь в башню обсерватории пока заперта. Ключ от неё откроется в следующих главах.")
 
 func _interact_desk_prop() -> void:
 	audio_service.play_sfx("click_dial")
@@ -293,14 +331,20 @@ func _interact_radio() -> void:
 	var solved: bool = bool(game_state.get("puzzle_solved", false))
 	if not solved:
 		audio_service.play_sfx("wood_thump")
-		show_toast("Радиоприёмник тихо гудит: частота заблокирована кодом шкатулки на верстаке.")
+		show_toast("Радио молчит, а лампа не горит: станция спит. Разгадай первую тайну шкатулки на верстаке — возможно, она знает, как разбудить станцию.")
 	else:
 		audio_service.play_radio_broadcast()
-		show_toast("📻 Эфир «Южный Маяк»: «¡Hola, El Bolsón! Приветствуем новую хранительницу станции! Ветер с Пилтрикитрона приносит ясную погоду...»")
+		if radio_weather_service.request_bulletin():
+			show_toast("📻 Южный Маяк ловит погодную волну Эль-Больсона…")
+		else:
+			show_toast("📻 Плохая связь. Приёмник пока не может обновить прогноз.")
+
+func _on_radio_bulletin_ready(text: String) -> void:
+	show_toast(text)
 
 func _interact_map() -> void:
 	audio_service.play_sfx("paper_flip")
-	show_toast("🗺 Настенная карта долины Эль-Больсон: отмечены река Рио Асуль, пик Серро Пилтрикитрон и неизведанный горный сектор.")
+	open_world_explorer()
 
 # ==================== МОДАЛЬНЫЕ ОКНА ====================
 
@@ -330,6 +374,7 @@ func open_author_terminal() -> void:
 	term.reset_to_default.connect(func():
 		apply_author_customization("Лесная станция", "star", "compass")
 	)
+	term.dialogue_editor_requested.connect(open_author_dialogue_editor)
 	term.closed.connect(_close_modals)
 
 func apply_author_customization(new_name: String, new_emblem: String, new_prop_id: String) -> void:
@@ -393,7 +438,7 @@ func complete_puzzle() -> void:
 	audio_service.play_radio_broadcast()
 	
 	if newly_unlocked:
-		show_toast("✨ Достижение «Первое изменение мира»! Лампа зажглась, радиоканал «Южный Маяк» восстановлен!")
+		show_toast("✨ Первая тайна разгадана! Лампа зажглась, радио ожило — станция пробуждается ото сна!")
 	else:
 		show_toast("✨ Механизм шкатулки открыт, станция озарена тёплым светом!")
 
@@ -405,7 +450,225 @@ func open_journal() -> void:
 	var j: Control = JournalScene.instantiate()
 	modal_container.add_child(j)
 	j.setup(game_state, audio_service)
+	j.quest_open_requested.connect(func(quest: Dictionary, instance: Dictionary):
+		open_quest_detail(quest, instance)
+	)
+	j.artifact_delete_requested.connect(func(artifact_id: String):
+		var result := ArtifactServiceScript.delete_media(game_state, artifact_id)
+		if bool(result.get("ok", false)):
+			SaveServiceScript.save_game(game_state)
+			open_journal()
+			show_toast("Вложение удалено; запись результата и сюжетный прогресс сохранены.")
+	)
 	j.closed.connect(_close_modals)
+
+func open_parent_console() -> void:
+	_close_modals()
+	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	audio_service.play_sfx("paper_flip")
+	var console: Control = ParentConsoleScene.instantiate()
+	modal_container.add_child(console)
+	console.setup(game_state, audio_service)
+	console.publish_requested.connect(func(quest: Dictionary):
+		var result := QuestServiceScript.approve_and_publish(game_state, quest)
+		if bool(result.get("ok", false)):
+			SaveServiceScript.save_game(game_state)
+			open_parent_console()
+			show_toast("Точная версия %s v%d опубликована для игрока." % [str(quest.get("quest_id", "")), int(quest.get("revision", 1))])
+		else:
+			show_toast("Не удалось опубликовать карточку: " + str(result.get("reason", "ошибка проверки")))
+	)
+	console.confirm_requested.connect(func(activity_id: String):
+		_confirm_activity_transaction(activity_id)
+	)
+	console.revision_requested.connect(func(activity_id: String, note: String):
+		var result := QuestServiceScript.request_revision(game_state, activity_id, note)
+		if bool(result.get("ok", false)):
+			SaveServiceScript.save_game(game_state)
+			open_parent_console()
+			show_toast("Результат возвращён к заранее опубликованным критериям.")
+	)
+	console.revoke_requested.connect(func(quest_id: String, revision: int):
+		if QuestServiceScript.revoke_version(game_state, quest_id, revision):
+			SaveServiceScript.save_game(game_state)
+			open_parent_console()
+			show_toast("Версия отозвана. Активные инструкции поставлены на безопасную паузу.")
+	)
+	console.draft_save_requested.connect(func(quest: Dictionary):
+		var result := ContentLibraryServiceScript.save_draft(game_state, quest)
+		if bool(result.get("ok", false)):
+			SaveServiceScript.save_game(game_state)
+			open_parent_console()
+			show_toast("Черновик %s v%d сохранён локально. Для игрока он появится только после отдельной публикации." % [str(quest.get("quest_id", "")), int(quest.get("revision", 1))])
+		else:
+			var details := "; ".join(result.get("errors", [])) if result.has("errors") else str(result.get("message", result.get("reason", "ошибка")))
+			show_toast("Черновик не сохранён: " + details)
+	)
+	console.package_import_requested.connect(func(path: String):
+		_import_content_package(path)
+	)
+	console.package_export_requested.connect(func():
+		_export_content_package()
+	)
+	console.closed.connect(_close_modals)
+
+func open_world_explorer() -> void:
+	_close_modals()
+	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	var explorer: Control = WorldExplorerScene.instantiate()
+	modal_container.add_child(explorer)
+	explorer.setup(game_state, audio_service)
+	explorer.quest_open_requested.connect(func(quest: Dictionary):
+		open_quest_detail(quest, {})
+	)
+	explorer.closed.connect(_close_modals)
+
+func open_quest_detail(quest: Dictionary, instance: Dictionary = {}) -> void:
+	_close_modals()
+	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	var detail: Control = QuestDetailScene.instantiate()
+	modal_container.add_child(detail)
+	detail.setup(quest, instance, audio_service)
+	detail.accept_requested.connect(func(quest_id: String, revision: int, variant_id: String):
+		var result := QuestServiceScript.create_instance(game_state, quest_id, revision, variant_id, "player_01")
+		if bool(result.get("ok", false)):
+			SaveServiceScript.save_game(game_state)
+			var fresh_quest := _published_quest(quest_id, revision)
+			open_quest_detail(fresh_quest, result.get("instance", {}))
+			show_toast("Экспедиция принята: её точная версия теперь зафиксирована.")
+		else:
+			show_toast("Не удалось принять экспедицию: " + str(result.get("reason", "ошибка")))
+	)
+	detail.submit_requested.connect(func(instance_id: String, note: String):
+		var phase_b: Dictionary = game_state.get("phase_b", {})
+		var instances: Dictionary = phase_b.get("quest_instances", {})
+		var current: Dictionary = instances.get(instance_id, {})
+		var artifact_id := str(current.get("draft_artifact_id", ""))
+		var activity_id := "activity:%s:%d" % [instance_id, Time.get_ticks_usec()]
+		var result := QuestServiceScript.submit_result(game_state, instance_id, activity_id, note, artifact_id)
+		if bool(result.get("ok", false)):
+			SaveServiceScript.save_game(game_state)
+			open_journal()
+			show_toast("Результат отправлен на проверку. XP пока не начислен.")
+		else:
+			show_toast("Не удалось отправить результат: " + str(result.get("reason", "ошибка")))
+	)
+	detail.pause_requested.connect(func(instance_id: String):
+		if QuestServiceScript.pause_instance(game_state, instance_id):
+			SaveServiceScript.save_game(game_state)
+			open_journal()
+			show_toast("Экспедиция отложена без штрафа.")
+	)
+	detail.resume_requested.connect(func(instance_id: String):
+		if QuestServiceScript.resume_instance(game_state, instance_id):
+			SaveServiceScript.save_game(game_state)
+			var current := _instance_by_id(instance_id)
+			open_quest_detail(current.get("quest_snapshot", {}), current)
+	)
+	detail.artifact_import_requested.connect(func(source_path: String, instance_id: String):
+		_import_artifact_for_instance(source_path, instance_id)
+	)
+	detail.closed.connect(open_journal)
+
+func open_author_dialogue_editor() -> void:
+	_close_modals()
+	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	var editor: Control = AuthorDialogueEditorScene.instantiate()
+	modal_container.add_child(editor)
+	editor.setup(game_state, audio_service)
+	editor.publish_requested.connect(func(package: Dictionary):
+		var result := AuthorPatchServiceScript.publish(game_state, package)
+		if bool(result.get("ok", false)):
+			SaveServiceScript.save_game(game_state)
+			_apply_state_to_world(false)
+			open_author_dialogue_editor()
+			show_toast("Авторская реплика опубликована локально; версия сохранена для отката.")
+		else:
+			show_toast("Пакет не опубликован: " + str(result.get("reason", result.get("errors", ["ошибка"])) ))
+	)
+	editor.rollback_requested.connect(func(patch_id: String):
+		var result := AuthorPatchServiceScript.rollback(game_state, patch_id)
+		if bool(result.get("ok", false)):
+			SaveServiceScript.save_game(game_state)
+			open_author_dialogue_editor()
+			show_toast("Реплика откатилась к предыдущей сохранённой версии.")
+	)
+	editor.closed.connect(open_author_terminal)
+
+func _confirm_activity_transaction(activity_id: String) -> void:
+	var before := game_state.duplicate(true)
+	var result := QuestServiceScript.confirm_result(game_state, activity_id)
+	if not bool(result.get("ok", false)):
+		show_toast("Не удалось подтвердить результат: " + str(result.get("reason", "ошибка")))
+		return
+	if not SaveServiceScript.save_game(game_state):
+		game_state = before
+		show_toast("Сохранение не завершилось; подтверждение не применено в текущем сеансе.")
+		return
+	_apply_state_to_world(true)
+	open_parent_console()
+	show_toast("✓ Результат подтверждён: XP и изменение мира сохранены одним снимком.")
+
+func _import_artifact_for_instance(source_path: String, instance_id: String) -> void:
+	var instance := _instance_by_id(instance_id)
+	if instance.is_empty():
+		show_toast("Не найдено прохождение для вложения.")
+		return
+	var quest: Dictionary = instance.get("quest_snapshot", {})
+	var result := ArtifactServiceScript.import_local_image(game_state, source_path, str(quest.get("title", "Работа")), str(instance.get("profile_id", "player_01")))
+	if not bool(result.get("ok", false)):
+		show_toast("Не удалось импортировать изображение: " + str(result.get("reason", "ошибка")))
+		return
+	var phase_b: Dictionary = game_state.get("phase_b", {})
+	var instances: Dictionary = phase_b.get("quest_instances", {})
+	var live: Dictionary = instances[instance_id]
+	live["draft_artifact_id"] = str((result.get("artifact", {}) as Dictionary).get("artifact_id", ""))
+	instances[instance_id] = live
+	phase_b["quest_instances"] = instances
+	game_state["phase_b"] = phase_b
+	SaveServiceScript.save_game(game_state)
+	open_quest_detail(quest, live)
+	show_toast("Изображение скопировано в управляемый локальный архив.")
+
+func _instance_by_id(instance_id: String) -> Dictionary:
+	return (game_state.get("phase_b", {}).get("quest_instances", {}) as Dictionary).get(instance_id, {}).duplicate(true)
+
+func _published_quest(quest_id: String, revision: int) -> Dictionary:
+	var key := QuestServiceScript.version_key(quest_id, revision)
+	var published: Dictionary = game_state.get("phase_b", {}).get("published_versions", {})
+	if published.has(key):
+		return ((published[key] as Dictionary).get("quest", {}) as Dictionary).duplicate(true)
+	return ContentLibraryServiceScript.get_template(game_state, quest_id, revision)
+
+func _import_content_package(path: String) -> void:
+	if path.is_empty() or not FileAccess.file_exists(path):
+		show_toast("Не найден локальный JSON-пакет по указанному пути.")
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		show_toast("Не удалось открыть локальный JSON-пакет.")
+		return
+	var text := file.get_as_text()
+	file.close()
+	var result := ContentLibraryServiceScript.import_package_json(game_state, text)
+	if not bool(result.get("ok", false)):
+		var details := "; ".join(result.get("errors", [])) if result.has("errors") else str(result.get("reason", "ошибка"))
+		show_toast("Пакет отклонён целиком: " + details)
+		return
+	SaveServiceScript.save_game(game_state)
+	open_parent_console()
+	show_toast("Импортировано черновиков: %d. Ни один не опубликован автоматически." % int(result.get("imported", 0)))
+
+func _export_content_package() -> void:
+	var package := ContentLibraryServiceScript.build_export_package(game_state)
+	var path := "user://phase_c_quest_pack.json"
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		show_toast("Не удалось создать локальный экспорт пакета.")
+		return
+	file.store_string(JSON.stringify(package, "  "))
+	file.close()
+	show_toast("Пакет черновиков сохранён: " + ProjectSettings.globalize_path(path))
 
 func open_settings() -> void:
 	_close_modals()

@@ -11,13 +11,14 @@ signal prop_unhovered(prop_id: String)
 
 # Основные узлы сцены
 var camera: Camera3D
-var base_camera_pos := Vector3(0.0, 1.42, 2.05)
-var base_camera_rot := Vector3(-13.5, 0.0, 0.0)
+var base_camera_pos := Vector3(0.0, 1.50, 2.42)
+var base_camera_rot := Vector3(-8.5, 0.0, 0.0)
 
 var ceiling_light: OmniLight3D
 var desk_lamp_spot: SpotLight3D
 var desk_lamp_omni: OmniLight3D
 var radio_light: OmniLight3D
+var window_glow_light: OmniLight3D
 var dust_particles: CPUParticles3D
 
 # Интерактивные 3D элементы
@@ -26,13 +27,19 @@ var sign_mesh: MeshInstance3D
 var prop_anchor: Node3D
 var radio_dial_mesh: MeshInstance3D
 var desk_lamp_bulb_mesh: MeshInstance3D
+var power_strip_mesh: MeshInstance3D
 var puzzle_box_dials: Array[MeshInstance3D] = []
+var phase_b_unlock_panel: Node3D
+var phase_b_unlock_label: Label3D
+var observatory_unlock_light: OmniLight3D
 
 # Материалы для фаз
 var mat_lamp_off: StandardMaterial3D
 var mat_lamp_on: StandardMaterial3D
 var mat_radio_off: StandardMaterial3D
 var mat_radio_on: StandardMaterial3D
+var mat_power_off: StandardMaterial3D
+var mat_power_on: StandardMaterial3D
 
 # Состояние
 var is_stage_2: bool = false
@@ -47,6 +54,7 @@ func _ready() -> void:
 	_setup_room_geometry()
 	_setup_lighting()
 	_setup_props()
+	_setup_phase_b_effects()
 
 func _process(delta: float) -> void:
 	if not reduce_motion:
@@ -70,27 +78,32 @@ func set_world_stage(stage_2_awakened: bool, animate: bool = false) -> void:
 	if stage_2_awakened:
 		desk_lamp_bulb_mesh.material_override = mat_lamp_on
 		radio_dial_mesh.material_override = mat_radio_on
+		power_strip_mesh.material_override = mat_power_on
 		dust_particles.emitting = true
 		
 		if animate:
 			var tween: Tween = create_tween().set_parallel(true)
-			tween.tween_property(desk_lamp_spot, "light_energy", 2.2, 1.2)
-			tween.tween_property(desk_lamp_omni, "light_energy", 1.0, 1.2)
-			tween.tween_property(radio_light, "light_energy", 0.8, 1.2)
-			tween.tween_property(ceiling_light, "light_energy", 0.7, 1.2)
+			tween.tween_property(desk_lamp_spot, "light_energy", 3.2, 1.25)
+			tween.tween_property(desk_lamp_omni, "light_energy", 1.35, 1.25)
+			tween.tween_property(radio_light, "light_energy", 1.1, 1.25)
+			tween.tween_property(ceiling_light, "light_energy", 0.62, 1.25)
+			tween.tween_property(window_glow_light, "light_energy", 0.48, 1.5)
 		else:
-			desk_lamp_spot.light_energy = 2.2
-			desk_lamp_omni.light_energy = 1.0
-			radio_light.light_energy = 0.8
-			ceiling_light.light_energy = 0.7
+			desk_lamp_spot.light_energy = 3.2
+			desk_lamp_omni.light_energy = 1.35
+			radio_light.light_energy = 1.1
+			ceiling_light.light_energy = 0.62
+			window_glow_light.light_energy = 0.48
 	else:
 		desk_lamp_bulb_mesh.material_override = mat_lamp_off
 		radio_dial_mesh.material_override = mat_radio_off
+		power_strip_mesh.material_override = mat_power_off
 		dust_particles.emitting = false
 		desk_lamp_spot.light_energy = 0.0
 		desk_lamp_omni.light_energy = 0.0
 		radio_light.light_energy = 0.0
-		ceiling_light.light_energy = 0.45
+		ceiling_light.light_energy = 0.28
+		window_glow_light.light_energy = 0.18
 
 func update_station_sign(station_name: String, emblem_id: String) -> void:
 	var emblem_symbols: Dictionary = {
@@ -126,19 +139,77 @@ func update_dials_visual(dial_indices: Array) -> void:
 		var tween: Tween = create_tween()
 		tween.tween_property(dial, "rotation:x", target_rot, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
+func apply_phase_b_world_effects(effect_ids: Array) -> void:
+	if phase_b_unlock_panel == null:
+		return
+	var tokens := {
+		"atlas_first_page": "ATLAS I",
+		"radio_channel_01_unlocked": "CH 01",
+		"workbench_blueprint": "PLANO",
+		"station_emblem_art": "ARTE",
+		"station_motif": "♫",
+		"author_artifact_card": "OBRA",
+		"expedition_pack": "EXP",
+		"wind_parameter_saved": "VIENTO",
+		"display_room_sign": "SEÑAL",
+		"observatory_view_01": "OBS I",
+		"author_patch_accepted": "PATCH"
+	}
+	var visible_tokens: Array[String] = []
+	for effect_id in tokens.keys():
+		if effect_ids.has(effect_id):
+			visible_tokens.append(str(tokens[effect_id]))
+	phase_b_unlock_panel.visible = not visible_tokens.is_empty()
+	phase_b_unlock_label.text = "ARCHIVO DE CAMPO  •  " + "  ✦  ".join(visible_tokens)
+	if observatory_unlock_light != null:
+		observatory_unlock_light.light_energy = 1.35 if effect_ids.has("observatory_view_01") else 0.0
+
+func _setup_phase_b_effects() -> void:
+	phase_b_unlock_panel = Node3D.new()
+	# Табличка полевого архива и обсерватории расположена над дверью обсерватории (справа),
+	# освещается её холодным фонарём и больше не перекрывает вывеску станции.
+	phase_b_unlock_panel.position = Vector3(1.85, 2.08, -0.74)
+	add_child(phase_b_unlock_panel)
+
+	var plaque_mat := StandardMaterial3D.new()
+	plaque_mat.albedo_color = Color(0.14, 0.10, 0.07)
+	plaque_mat.metallic = 0.18
+	plaque_mat.roughness = 0.52
+	var plaque := _create_box(Vector3(0.72, 0.13, 0.03), plaque_mat)
+	phase_b_unlock_panel.add_child(plaque)
+
+	phase_b_unlock_label = Label3D.new()
+	phase_b_unlock_label.position = Vector3(0.0, 0.0, 0.02)
+	phase_b_unlock_label.font_size = 14
+	phase_b_unlock_label.modulate = Color(0.95, 0.79, 0.46)
+	phase_b_unlock_label.outline_size = 4
+	phase_b_unlock_label.outline_modulate = Color(0.05, 0.035, 0.025, 0.95)
+	phase_b_unlock_panel.add_child(phase_b_unlock_label)
+	phase_b_unlock_panel.visible = false
+
+	observatory_unlock_light = OmniLight3D.new()
+	observatory_unlock_light.position = Vector3(1.75, 1.85, -0.35)
+	observatory_unlock_light.omni_range = 1.7
+	observatory_unlock_light.light_color = Color(0.56, 0.72, 1.0)
+	observatory_unlock_light.light_energy = 0.0
+	add_child(observatory_unlock_light)
+
 # ==================== ГЕОМЕТРИЯ И МАТЕРИАЛЫ ====================
 
 func _setup_environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.08, 0.09, 0.16) # Сумеречное индиго
+	env.background_color = Color(0.035, 0.045, 0.08) # Сумеречное индиго
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.24, 0.22, 0.32)
-	env.ambient_light_energy = 0.5
+	env.ambient_light_color = Color(0.16, 0.18, 0.27)
+	env.ambient_light_energy = 0.32
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.glow_enabled = true
-	env.glow_intensity = 0.6
-	env.glow_bloom = 0.2
+	env.glow_intensity = 0.75
+	env.glow_bloom = 0.12
+	env.ssao_enabled = true
+	env.ssao_radius = 1.2
+	env.ssao_intensity = 2.0
 	
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
@@ -146,7 +217,7 @@ func _setup_environment() -> void:
 
 func _setup_camera() -> void:
 	camera = Camera3D.new()
-	camera.fov = 48.0
+	camera.fov = 52.0
 	camera.position = base_camera_pos
 	camera.rotation_degrees = base_camera_rot
 	add_child(camera)
@@ -157,7 +228,7 @@ func _setup_lighting() -> void:
 	ceiling_light.position = Vector3(0.0, 2.2, 0.6)
 	ceiling_light.omni_range = 7.5
 	ceiling_light.light_color = Color(1.0, 0.88, 0.72)
-	ceiling_light.light_energy = 0.45
+	ceiling_light.light_energy = 0.28
 	ceiling_light.shadow_enabled = true
 	add_child(ceiling_light)
 	
@@ -165,7 +236,7 @@ func _setup_lighting() -> void:
 	var window_light := DirectionalLight3D.new()
 	window_light.rotation_degrees = Vector3(-25.0, 25.0, 0.0)
 	window_light.light_color = Color(0.42, 0.52, 0.78)
-	window_light.light_energy = 0.55
+	window_light.light_energy = 0.42
 	window_light.shadow_enabled = true
 	add_child(window_light)
 	
@@ -195,6 +266,15 @@ func _setup_lighting() -> void:
 	radio_light.light_color = Color(1.0, 0.65, 0.25)
 	radio_light.light_energy = 0.0
 	add_child(radio_light)
+
+	# Холодный отражённый свет окна. После пробуждения в нём появляется тёплая примесь.
+	window_glow_light = OmniLight3D.new()
+	window_glow_light.position = Vector3(0.0, 1.55, -0.45)
+	window_glow_light.omni_range = 4.2
+	window_glow_light.light_color = Color(0.48, 0.58, 0.92)
+	window_glow_light.light_energy = 0.18
+	window_glow_light.shadow_enabled = false
+	add_child(window_glow_light)
 	
 	# Тёплые парящие пылинки в луче света лампы
 	dust_particles = CPUParticles3D.new()
@@ -214,36 +294,43 @@ func _setup_lighting() -> void:
 
 func _setup_room_geometry() -> void:
 	# Материалы
-	var mat_wall := StandardMaterial3D.new()
-	mat_wall.albedo_color = Color(0.86, 0.82, 0.74)
-	mat_wall.roughness = 0.9
-	
-	var mat_wood_dark := StandardMaterial3D.new()
-	mat_wood_dark.albedo_color = Color(0.24, 0.15, 0.09)
-	mat_wood_dark.roughness = 0.7
-	
-	var mat_floor := StandardMaterial3D.new()
-	mat_floor.albedo_color = Color(0.22, 0.14, 0.08)
-	mat_floor.roughness = 0.65
-	
-	var mat_desk := StandardMaterial3D.new()
-	mat_desk.albedo_color = Color(0.38, 0.25, 0.15)
-	mat_desk.roughness = 0.45
+	var mat_wall := _textured_material("res://assets/textures/plaster.png", Color(0.80, 0.78, 0.72), 0.95, Vector3(2.6, 1.8, 2.6))
+	var mat_wood_dark := _textured_material("res://assets/textures/walnut.png", Color(0.42, 0.28, 0.18), 0.72, Vector3(3.2, 3.2, 3.2))
+	var mat_floor := _textured_material("res://assets/textures/floorboards.png", Color(0.52, 0.34, 0.20), 0.70, Vector3(2.8, 2.8, 2.8))
+	var mat_desk := _textured_material("res://assets/textures/desk_wood.png", Color(0.70, 0.45, 0.25), 0.48, Vector3(2.1, 2.1, 2.1))
+	var mat_rug := StandardMaterial3D.new()
+	mat_rug.albedo_color = Color(0.16, 0.23, 0.25)
+	mat_rug.roughness = 0.96
 	
 	# Пол
 	var floor_box := _create_box(Vector3(6.0, 0.1, 5.0), mat_floor)
 	floor_box.position = Vector3(0.0, -0.05, 0.5)
 	add_child(floor_box)
 	
-	# Задняя стена
-	var back_wall := _create_box(Vector3(6.0, 3.6, 0.1), mat_wall)
-	back_wall.position = Vector3(0.0, 1.8, -0.85)
-	add_child(back_wall)
+	# Задняя стена собрана вокруг настоящего оконного проёма. Раньше цельная
+	# плоскость перекрывала горы и небо, поэтому окно выглядело как рама на стене.
+	var back_wall_left := _create_box(Vector3(1.9, 3.6, 0.1), mat_wall)
+	back_wall_left.position = Vector3(-2.05, 1.8, -0.85)
+	add_child(back_wall_left)
+	var back_wall_right := _create_box(Vector3(1.9, 3.6, 0.1), mat_wall)
+	back_wall_right.position = Vector3(2.05, 1.8, -0.85)
+	add_child(back_wall_right)
+	var back_wall_top := _create_box(Vector3(2.2, 1.22, 0.1), mat_wall)
+	back_wall_top.position = Vector3(0.0, 2.99, -0.85)
+	add_child(back_wall_top)
+	var back_wall_bottom := _create_box(Vector3(2.2, 1.18, 0.1), mat_wall)
+	back_wall_bottom.position = Vector3(0.0, 0.59, -0.85)
+	add_child(back_wall_bottom)
 	
 	# Левая стена (с картой)
 	var left_wall := _create_box(Vector3(0.1, 3.6, 5.0), mat_wall)
 	left_wall.position = Vector3(-2.4, 1.8, 0.5)
 	add_child(left_wall)
+
+	# Правая стена замыкает композицию и даёт комнате ощущение реального объёма.
+	var right_wall := _create_box(Vector3(0.1, 3.6, 5.0), mat_wall)
+	right_wall.position = Vector3(2.4, 1.8, 0.5)
+	add_child(right_wall)
 	
 	# Потолочные деревянные балки
 	var beam_top := _create_box(Vector3(6.0, 0.2, 0.25), mat_wood_dark)
@@ -253,6 +340,19 @@ func _setup_room_geometry() -> void:
 	var beam_cross := _create_box(Vector3(0.25, 0.2, 5.0), mat_wood_dark)
 	beam_cross.position = Vector3(-0.8, 2.7, 0.5)
 	add_child(beam_cross)
+
+	var beam_cross_r := _create_box(Vector3(0.20, 0.18, 5.0), mat_wood_dark)
+	beam_cross_r.position = Vector3(1.55, 2.72, 0.5)
+	add_child(beam_cross_r)
+
+	# Тёмный цоколь и тонкая рейка сильно убирают ощущение «голых коробок».
+	for x in [-2.30, 2.30]:
+		var baseboard_side := _create_box(Vector3(0.08, 0.22, 4.8), mat_wood_dark)
+		baseboard_side.position = Vector3(x, 0.12, 0.5)
+		add_child(baseboard_side)
+	var baseboard_back := _create_box(Vector3(4.7, 0.22, 0.08), mat_wood_dark)
+	baseboard_back.position = Vector3(0.0, 0.12, -0.79)
+	add_child(baseboard_back)
 	
 	# Большое панорамное окно в центре
 	_build_window_and_mountains()
@@ -261,6 +361,11 @@ func _setup_room_geometry() -> void:
 	var desk_top := _create_box(Vector3(2.6, 0.08, 1.15), mat_desk)
 	desk_top.position = Vector3(0.0, 0.88, 0.72)
 	add_child(desk_top)
+
+	# Тонкий ковёр под рабочим местом добавляет цвет и отделяет верстак от пола.
+	var rug := _create_box(Vector3(2.55, 0.018, 1.62), mat_rug)
+	rug.position = Vector3(0.0, 0.018, 0.92)
+	add_child(rug)
 	
 	# Ножки стола
 	var desk_leg_l := _create_box(Vector3(0.09, 0.88, 0.09), mat_wood_dark)
@@ -275,14 +380,28 @@ func _setup_room_geometry() -> void:
 	var desk_shelf := _create_box(Vector3(2.4, 0.22, 0.28), mat_wood_dark)
 	desk_shelf.position = Vector3(0.0, 1.02, 0.24)
 	add_child(desk_shelf)
+
+	var desk_front_rail := _create_box(Vector3(2.38, 0.13, 0.08), mat_wood_dark)
+	desk_front_rail.position = Vector3(0.0, 0.70, 1.24)
+	add_child(desk_front_rail)
+
+	mat_power_off = StandardMaterial3D.new()
+	mat_power_off.albedo_color = Color(0.10, 0.08, 0.06)
+	mat_power_off.roughness = 0.55
+	mat_power_on = StandardMaterial3D.new()
+	mat_power_on.albedo_color = Color(1.0, 0.62, 0.23)
+	mat_power_on.emission_enabled = true
+	mat_power_on.emission = Color(1.0, 0.42, 0.08)
+	mat_power_on.emission_energy_multiplier = 3.0
+	power_strip_mesh = _create_box(Vector3(0.78, 0.018, 0.035), mat_power_off)
+	power_strip_mesh.position = Vector3(0.0, 1.145, 0.10)
+	add_child(power_strip_mesh)
 	
 	# Дверь в обсерваторию (справа сзади)
 	_build_observatory_door()
 
 func _build_window_and_mountains() -> void:
-	var mat_frame := StandardMaterial3D.new()
-	mat_frame.albedo_color = Color(0.22, 0.14, 0.08)
-	mat_frame.roughness = 0.6
+	var mat_frame := _textured_material("res://assets/textures/walnut.png", Color(0.46, 0.30, 0.18), 0.66, Vector3(2.0, 2.0, 2.0))
 	
 	# Оконная рама
 	var frame_bottom := _create_box(Vector3(2.2, 0.1, 0.12), mat_frame)
@@ -319,7 +438,7 @@ func _build_window_and_mountains() -> void:
 	
 	var mat_sky := StandardMaterial3D.new()
 	mat_sky.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
-	mat_sky.albedo_color = Color(0.10, 0.12, 0.22) # Глубокий патагонский вечер
+	mat_sky.albedo_color = Color(0.035, 0.055, 0.13) # Глубокий патагонский вечер
 	sky_plane.material_override = mat_sky
 	add_child(sky_plane)
 	
@@ -329,6 +448,9 @@ func _build_window_and_mountains() -> void:
 	var mat_star := StandardMaterial3D.new()
 	mat_star.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
 	mat_star.albedo_color = Color(1.0, 1.0, 0.9)
+	mat_star.emission_enabled = true
+	mat_star.emission = Color(0.85, 0.90, 1.0)
+	mat_star.emission_energy_multiplier = 1.8
 	
 	var star_positions: Array[Vector3] = [
 		Vector3(-0.6, 2.15, -2.4),
@@ -354,7 +476,10 @@ func _build_window_and_mountains() -> void:
 	moon.mesh = moon_mesh
 	var mat_moon := StandardMaterial3D.new()
 	mat_moon.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
-	mat_moon.albedo_color = Color(0.95, 0.95, 0.85)
+	mat_moon.albedo_color = Color(0.95, 0.96, 0.86)
+	mat_moon.emission_enabled = true
+	mat_moon.emission = Color(0.78, 0.84, 1.0)
+	mat_moon.emission_energy_multiplier = 1.2
 	moon.material_override = mat_moon
 	moon.position = Vector3(0.55, 2.18, -2.35)
 	add_child(moon)
@@ -380,6 +505,30 @@ func _build_window_and_mountains() -> void:
 	_add_mountain_peak(Vector3(0.4, 1.25, -1.9), Vector3(1.6, 0.6, 0.1), mat_mount_mid)
 	# Ближние силуэты хребта
 	_add_mountain_peak(Vector3(0.0, 1.15, -1.6), Vector3(2.4, 0.45, 0.1), mat_mount_near)
+
+	# Силуэты нескольких сосен перед хребтом создают масштаб и узнаваемую Патагонию.
+	for tree_data in [
+		[Vector3(-0.82, 1.20, -1.42), 0.34],
+		[Vector3(-0.64, 1.16, -1.43), 0.26],
+		[Vector3(0.73, 1.18, -1.42), 0.31],
+		[Vector3(0.89, 1.15, -1.43), 0.23]
+	]:
+		_add_pine_silhouette(tree_data[0], float(tree_data[1]), mat_mount_near)
+
+func _add_pine_silhouette(pos: Vector3, height: float, mat: Material) -> void:
+	var trunk := _create_box(Vector3(height * 0.06, height, 0.03), mat)
+	trunk.position = pos
+	add_child(trunk)
+	for i in range(3):
+		var crown := MeshInstance3D.new()
+		var cone := CylinderMesh.new()
+		cone.top_radius = 0.0
+		cone.bottom_radius = height * (0.22 - float(i) * 0.035)
+		cone.height = height * 0.33
+		crown.mesh = cone
+		crown.material_override = mat
+		crown.position = pos + Vector3(0.0, height * (0.10 + float(i) * 0.16), 0.0)
+		add_child(crown)
 
 func _add_mountain_peak(pos: Vector3, msize: Vector3, mat: Material) -> void:
 	var prism := MeshInstance3D.new()
@@ -462,9 +611,7 @@ func _setup_props() -> void:
 	_build_workbench_clutter()
 
 func _build_station_sign() -> void:
-	var mat_sign_wood := StandardMaterial3D.new()
-	mat_sign_wood.albedo_color = Color(0.34, 0.20, 0.11)
-	mat_sign_wood.roughness = 0.6
+	var mat_sign_wood := _textured_material("res://assets/textures/desk_wood.png", Color(0.62, 0.38, 0.19), 0.60, Vector3(1.8, 1.8, 1.8))
 	
 	var mat_brass := StandardMaterial3D.new()
 	mat_brass.albedo_color = Color(0.88, 0.72, 0.32)
@@ -473,16 +620,16 @@ func _build_station_sign() -> void:
 	
 	# Деревянная фигурная доска
 	sign_mesh = _create_box(Vector3(1.1, 0.26, 0.04), mat_sign_wood)
-	sign_mesh.position = Vector3(0.0, 2.52, -0.74)
+	sign_mesh.position = Vector3(0.0, 2.43, -0.74)
 	add_child(sign_mesh)
 	
 	# Латунные крепления
 	var brass_l := _create_box(Vector3(0.05, 0.28, 0.05), mat_brass)
-	brass_l.position = Vector3(-0.48, 2.52, -0.73)
+	brass_l.position = Vector3(-0.48, 2.43, -0.73)
 	add_child(brass_l)
 	
 	var brass_r := _create_box(Vector3(0.05, 0.28, 0.05), mat_brass)
-	brass_r.position = Vector3(0.48, 2.52, -0.73)
+	brass_r.position = Vector3(0.48, 2.43, -0.73)
 	add_child(brass_r)
 	
 	# Текст вывески
@@ -493,15 +640,13 @@ func _build_station_sign() -> void:
 	sign_label.modulate = Color(1.0, 0.92, 0.75)
 	sign_label.outline_modulate = Color(0.12, 0.08, 0.04)
 	sign_label.outline_size = 4
-	sign_label.position = Vector3(0.0, 2.52, -0.715)
+	sign_label.position = Vector3(0.0, 2.43, -0.715)
 	add_child(sign_label)
 	
 	_make_interactive_area(sign_mesh, "station_sign", "Вывеска станции [Оформить]", Vector3(1.15, 0.3, 0.15))
 
 func _build_puzzle_box() -> void:
-	var mat_box := StandardMaterial3D.new()
-	mat_box.albedo_color = Color(0.30, 0.18, 0.10)
-	mat_box.roughness = 0.5
+	var mat_box := _textured_material("res://assets/textures/walnut.png", Color(0.55, 0.31, 0.14), 0.52, Vector3(2.8, 2.8, 2.8))
 	
 	var mat_brass := StandardMaterial3D.new()
 	mat_brass.albedo_color = Color(0.88, 0.72, 0.32)
@@ -539,12 +684,10 @@ func _build_puzzle_box() -> void:
 		add_child(dial)
 		puzzle_box_dials.append(dial)
 	
-	_make_interactive_area(box_base, "puzzle_box", "Шкатулка с дисками [Открыть шифр]", Vector3(0.46, 0.18, 0.30))
+	_make_interactive_area(box_base, "puzzle_box", "Старинная шкатулка [Первая тайна станции]", Vector3(0.46, 0.18, 0.30))
 
 func _build_radio_receiver() -> void:
-	var mat_radio_case := StandardMaterial3D.new()
-	mat_radio_case.albedo_color = Color(0.24, 0.14, 0.08)
-	mat_radio_case.roughness = 0.45
+	var mat_radio_case := _textured_material("res://assets/textures/walnut.png", Color(0.48, 0.26, 0.12), 0.48, Vector3(2.4, 2.4, 2.4))
 	
 	var mat_cloth := StandardMaterial3D.new()
 	mat_cloth.albedo_color = Color(0.72, 0.66, 0.52) # Бежевая тканевая решётка
@@ -565,13 +708,15 @@ func _build_radio_receiver() -> void:
 	speaker.position = Vector3(0.74, 1.12, 0.66)
 	add_child(speaker)
 	
-	# Латунные ручки настройки
-	var knob1 := _create_box(Vector3(0.04, 0.04, 0.03), mat_brass)
-	knob1.position = Vector3(0.98, 1.02, 0.67)
+	# Латунные ручки настройки — цилиндры читаются гораздо лучше коробок.
+	var knob1 := _create_cylinder(0.025, 0.028, mat_brass)
+	knob1.position = Vector3(0.98, 1.02, 0.68)
+	knob1.rotation_degrees = Vector3(90, 0, 0)
 	add_child(knob1)
 	
-	var knob2 := _create_box(Vector3(0.04, 0.04, 0.03), mat_brass)
-	knob2.position = Vector3(0.98, 1.18, 0.67)
+	var knob2 := _create_cylinder(0.025, 0.028, mat_brass)
+	knob2.position = Vector3(0.98, 1.18, 0.68)
+	knob2.rotation_degrees = Vector3(90, 0, 0)
 	add_child(knob2)
 	
 	# Шкала частот
@@ -583,7 +728,7 @@ func _build_radio_receiver() -> void:
 	mat_radio_on.albedo_color = Color(1.0, 0.75, 0.35)
 	mat_radio_on.emission_enabled = true
 	mat_radio_on.emission = Color(1.0, 0.65, 0.25)
-	mat_radio_on.emission_energy_multiplier = 1.8
+	mat_radio_on.emission_energy_multiplier = 1.25
 	
 	radio_dial_mesh = _create_box(Vector3(0.12, 0.20, 0.02), mat_radio_off)
 	radio_dial_mesh.position = Vector3(0.98, 1.10, 0.66)
@@ -598,9 +743,7 @@ func _build_radio_receiver() -> void:
 	_make_interactive_area(radio_body, "radio", "Радиоприёмник «Южный Маяк» [Слушать эфир]", Vector3(0.56, 0.42, 0.32))
 
 func _build_valley_map() -> void:
-	var mat_map := StandardMaterial3D.new()
-	mat_map.albedo_color = Color(0.92, 0.88, 0.76) # Состаренный пергамент
-	mat_map.roughness = 0.85
+	var mat_map := _textured_material("res://assets/textures/parchment.png", Color(0.94, 0.87, 0.70), 0.88, Vector3(1.6, 1.6, 1.6))
 	
 	var mat_pins := StandardMaterial3D.new()
 	mat_pins.albedo_color = Color(0.88, 0.72, 0.32)
@@ -649,12 +792,12 @@ func _build_desk_lamp() -> void:
 	mat_brass.roughness = 0.3
 	
 	# Подставка лампы
-	var lamp_base := _create_box(Vector3(0.18, 0.03, 0.18), mat_brass)
+	var lamp_base := _create_cylinder(0.105, 0.035, mat_brass)
 	lamp_base.position = Vector3(0.42, 0.93, 0.24)
 	add_child(lamp_base)
 	
-	# Изогнутая ножка
-	var lamp_stem := _create_box(Vector3(0.03, 0.48, 0.03), mat_brass)
+	# Тонкая круглая ножка
+	var lamp_stem := _create_cylinder(0.018, 0.48, mat_brass)
 	lamp_stem.position = Vector3(0.42, 1.17, 0.24)
 	add_child(lamp_stem)
 	
@@ -663,9 +806,13 @@ func _build_desk_lamp() -> void:
 	mat_shade.albedo_color = Color(0.12, 0.38, 0.26) # Благородный изумрудный
 	mat_shade.roughness = 0.2
 	
-	var shade := _create_box(Vector3(0.24, 0.10, 0.14), mat_shade)
+	var shade := MeshInstance3D.new()
+	var shade_mesh := PrismMesh.new()
+	shade_mesh.size = Vector3(0.27, 0.12, 0.18)
+	shade.mesh = shade_mesh
+	shade.material_override = mat_shade
 	shade.position = Vector3(0.44, 1.44, 0.38)
-	shade.rotation_degrees = Vector3(-25, 0, 0)
+	shade.rotation_degrees = Vector3(-18, 0, 0)
 	add_child(shade)
 	
 	# Лампочка
@@ -679,7 +826,7 @@ func _build_desk_lamp() -> void:
 	mat_lamp_on.emission = Color(1.0, 0.85, 0.55)
 	mat_lamp_on.emission_energy_multiplier = 3.5
 	
-	desk_lamp_bulb_mesh = _create_box(Vector3(0.16, 0.04, 0.08), mat_lamp_off)
+	desk_lamp_bulb_mesh = _create_sphere(0.055, mat_lamp_off)
 	desk_lamp_bulb_mesh.position = Vector3(0.44, 1.41, 0.39)
 	add_child(desk_lamp_bulb_mesh)
 
@@ -691,30 +838,44 @@ func _build_station_journal() -> void:
 	var mat_pages := StandardMaterial3D.new()
 	mat_pages.albedo_color = Color(0.95, 0.91, 0.80)
 	mat_pages.roughness = 0.8
-	
-	# Кожаная обложка
-	var journal_cover := _create_box(Vector3(0.28, 0.035, 0.38), mat_leather)
-	journal_cover.position = Vector3(-0.85, 0.94, 0.78)
-	journal_cover.rotation_degrees = Vector3(0, 14, 0)
-	add_child(journal_cover)
-	
-	# Страницы
-	var pages := _create_box(Vector3(0.26, 0.025, 0.36), mat_pages)
-	pages.position = Vector3(-0.85, 0.945, 0.78)
-	pages.rotation_degrees = Vector3(0, 14, 0)
-	add_child(pages)
-	
-	# Тиснение на обложке
+
+	var journal_root := Node3D.new()
+	journal_root.position = Vector3(-0.85, 0.94, 0.78)
+	journal_root.rotation_degrees = Vector3(0, 14, 0)
+	add_child(journal_root)
+
+	# Нижняя крышка кожаного переплёта
+	var bottom_cover := _create_box(Vector3(0.28, 0.006, 0.38), mat_leather)
+	bottom_cover.position = Vector3(0.0, -0.015, 0.0)
+	journal_root.add_child(bottom_cover)
+
+	# Блок страниц (кремовая бумага) — строго внутри переплёта, не перекрывает крышки
+	var pages := _create_box(Vector3(0.26, 0.024, 0.36), mat_pages)
+	pages.position = Vector3(0.006, 0.0, 0.0)
+	journal_root.add_child(pages)
+
+	# Кожаный корешок переплёта с левой стороны
+	var spine := _create_box(Vector3(0.008, 0.036, 0.38), mat_leather)
+	spine.position = Vector3(-0.136, 0.0, 0.0)
+	journal_root.add_child(spine)
+
+	# Верхняя крышка кожаного переплёта — полностью закрывает блок страниц сверху
+	var top_cover := _create_box(Vector3(0.28, 0.006, 0.38), mat_leather)
+	top_cover.position = Vector3(0.0, 0.015, 0.0)
+	journal_root.add_child(top_cover)
+
+	# Золотое тиснение на верхней крышке
 	var label_j := Label3D.new()
 	label_j.text = "✦ SUR ✦\nЖУРНАЛ"
 	label_j.font_size = 18
 	label_j.pixel_size = 0.002
 	label_j.modulate = Color(0.88, 0.72, 0.32)
-	label_j.rotation_degrees = Vector3(-90, 14, 0)
-	label_j.position = Vector3(-0.85, 0.965, 0.78)
-	add_child(label_j)
+	label_j.render_priority = 1
+	label_j.rotation_degrees = Vector3(-90, 0, 0)
+	label_j.position = Vector3(0.0, 0.019, 0.0)
+	journal_root.add_child(label_j)
 	
-	_make_interactive_area(journal_cover, "journal", "Журнал станции [Открыть записи]", Vector3(0.35, 0.12, 0.42))
+	_make_interactive_area(journal_root, "journal", "Журнал станции [Открыть записи]", Vector3(0.35, 0.12, 0.42))
 
 func _build_workbench_clutter() -> void:
 	var mat_brass := StandardMaterial3D.new()
@@ -740,7 +901,7 @@ func _build_workbench_clutter() -> void:
 	add_child(pencil)
 	
 	# Латунная чернильница
-	var inkwell := _create_box(Vector3(0.07, 0.07, 0.07), mat_brass)
+	var inkwell := _create_cylinder(0.045, 0.07, mat_brass)
 	inkwell.position = Vector3(0.45, 0.96, 0.88)
 	add_child(inkwell)
 
@@ -760,10 +921,10 @@ func _build_compass_prop(parent: Node3D) -> void:
 	mat_needle.albedo_color = Color(0.85, 0.2, 0.15)
 	mat_needle.metallic = 0.5
 	
-	var base := _create_box(Vector3(0.18, 0.05, 0.18), mat_brass)
+	var base := _create_cylinder(0.105, 0.045, mat_brass)
 	parent.add_child(base)
 	
-	var dial := _create_box(Vector3(0.15, 0.055, 0.15), mat_dial)
+	var dial := _create_cylinder(0.086, 0.052, mat_dial)
 	parent.add_child(dial)
 	
 	var needle := _create_box(Vector3(0.02, 0.06, 0.13), mat_needle)
@@ -808,17 +969,20 @@ func _build_owl_prop(parent: Node3D) -> void:
 	mat_eyes.albedo_color = Color(0.9, 0.75, 0.2)
 	mat_eyes.metallic = 0.5
 	
-	# Тело совы
-	var body := _create_box(Vector3(0.12, 0.18, 0.10), mat_cedar)
+	# Тело совы из округлых форм, чтобы экспонат не выглядел ещё одним блоком.
+	var body := _create_sphere(0.075, mat_cedar)
+	body.scale = Vector3(0.85, 1.25, 0.78)
 	body.position = Vector3(0, 0.09, 0)
 	parent.add_child(body)
 	
 	# Глаза
-	var eye_l := _create_box(Vector3(0.03, 0.03, 0.02), mat_eyes)
+	var eye_l := _create_sphere(0.018, mat_eyes)
+	eye_l.scale.z = 0.55
 	eye_l.position = Vector3(-0.035, 0.14, 0.055)
 	parent.add_child(eye_l)
 	
-	var eye_r := _create_box(Vector3(0.03, 0.03, 0.02), mat_eyes)
+	var eye_r := _create_sphere(0.018, mat_eyes)
+	eye_r.scale.z = 0.55
 	eye_r.position = Vector3(0.035, 0.14, 0.055)
 	parent.add_child(eye_r)
 
@@ -851,6 +1015,42 @@ func _create_box(box_size: Vector3, mat: Material) -> MeshInstance3D:
 	if mat != null:
 		inst.material_override = mat
 	return inst
+
+func _create_cylinder(radius: float, height: float, mat: Material) -> MeshInstance3D:
+	var inst := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = height
+	mesh.radial_segments = 24
+	inst.mesh = mesh
+	if mat != null:
+		inst.material_override = mat
+	return inst
+
+func _create_sphere(radius: float, mat: Material) -> MeshInstance3D:
+	var inst := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = radius
+	mesh.height = radius * 2.0
+	mesh.radial_segments = 24
+	mesh.rings = 12
+	inst.mesh = mesh
+	if mat != null:
+		inst.material_override = mat
+	return inst
+
+func _textured_material(path: String, tint: Color, roughness: float, uv_scale: Vector3) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = tint
+	mat.roughness = roughness
+	var tex := load(path) as Texture2D
+	if tex != null:
+		mat.albedo_texture = tex
+		mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		mat.texture_repeat = true
+		mat.uv1_scale = uv_scale
+	return mat
 
 func _make_interactive_area(target_node: Node3D, prop_id: String, prop_title: String, col_size: Vector3) -> void:
 	var area := Area3D.new()

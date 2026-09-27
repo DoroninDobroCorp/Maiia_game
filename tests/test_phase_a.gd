@@ -77,7 +77,7 @@ func _run_test_a02_a03() -> void:
 	_assert_true(prog_rules.has_achievement(loaded_state, "master_curator"), "A03.5 Достижение 'master_curator' сохранено")
 
 func _run_test_a04() -> void:
-	print("\n--- Тест A04: Головоломка с ошибкой, подсказкой и решением ---")
+	print("\n--- Тест A04: Головоломка с ошибкой, загадкой-уликой и решением ---")
 	var quest_rules = preload("res://scripts/domain/quest_rules.gd")
 	var prog_rules = preload("res://scripts/domain/progression_rules.gd")
 	var save_svc = preload("res://scripts/services/save_service.gd")
@@ -87,23 +87,24 @@ func _run_test_a04() -> void:
 	var is_wrong_solved: bool = quest_rules.check_solution(wrong_dials)
 	_assert_true(not is_wrong_solved, "A04.1 Ошибочная комбинация не открывает замок")
 	
-	# Проверка подсказки (доступна без штрафа)
-	var hint: String = quest_rules.get_hint_text()
-	_assert_true(hint.contains("Гора (1)"), "A04.2 Подсказка содержит ясный намёк на диск 1")
-	_assert_true(hint.contains("Ветер (2)"), "A04.3 Подсказка содержит намёк на диск 2")
-	_assert_true(hint.contains("Звезда (3)"), "A04.4 Подсказка содержит намёк на диск 3")
+	# Проверка улики/загадки мира: выводится логически, без прямого ответа 'Гора (1)'
+	var clue: String = quest_rules.get_clue_text()
+	_assert_true(clue.contains("исполин") or clue.contains("хребт") or clue.contains("снег"), "A04.2 Улика содержит поэтический образ для диска 1 (Гора)")
+	_assert_true(clue.contains("дыхани") or clue.contains("хво"), "A04.3 Улика содержит поэтический образ для диска 2 (Ветер)")
+	_assert_true(clue.contains("искр") or clue.contains("курс"), "A04.4 Улика содержит поэтический образ для диска 3 (Звезда)")
+	_assert_true(not clue.contains("Гора (1)") and not clue.contains("Ветер (2)") and not clue.contains("Звезда (3)"), "A04.5 Улика не содержит прямых системных подсказок 'Гора / Ветер / Звезда'")
 	
 	# Правильная комбинация
 	var correct_dials: Array[int] = [0, 0, 0]
 	var is_correct_solved: bool = quest_rules.check_solution(correct_dials)
-	_assert_true(is_correct_solved, "A04.5 Правильная комбинация [0, 0, 0] открывает замок")
+	_assert_true(is_correct_solved, "A04.6 Правильная комбинация [0, 0, 0] открывает замок")
 	
 	# Проверка применения решения и защита от повторного начисления (идемпотентность)
 	var state: Dictionary = save_svc.load_game()
 	var unlock_1: bool = prog_rules.unlock_achievement(state, "first_world_change")
 	var unlock_2: bool = prog_rules.unlock_achievement(state, "first_world_change")
-	_assert_true(unlock_1 == true, "A04.6 Первое начисление достижения успешно")
-	_assert_true(unlock_2 == false, "A04.7 Повторное начисление отклонено (защита от дублирования)")
+	_assert_true(unlock_1 == true, "A04.7 Первое начисление достижения успешно")
+	_assert_true(unlock_2 == false, "A04.8 Повторное начисление отклонено (защита от дублирования)")
 
 func _run_test_a05() -> void:
 	print("\n--- Тест A05: Целостность журналов и прогресса пролога S00 ---")

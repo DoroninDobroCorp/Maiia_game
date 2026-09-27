@@ -5,6 +5,7 @@ extends Control
 
 signal settings_applied(new_name: String, new_emblem: String, new_prop_id: String)
 signal reset_to_default()
+signal dialogue_editor_requested()
 signal closed()
 
 const QuestRulesScript = preload("res://scripts/domain/quest_rules.gd")
@@ -25,10 +26,24 @@ func setup(current_name: String, current_emblem: String, current_prop: String, a
 	_build_ui(current_name)
 	_update_selections()
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			get_viewport().set_input_as_handled()
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("paper_flip")
+			closed.emit()
+
 func _build_ui(current_name: String) -> void:
 	var bg := ColorRect.new()
 	bg.color = Color(0.04, 0.05, 0.09, 0.82)
 	bg.set_anchors_preset(PRESET_FULL_RECT)
+	bg.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("paper_flip")
+			closed.emit()
+	)
 	add_child(bg)
 	
 	var center := CenterContainer.new()
@@ -184,6 +199,12 @@ func _build_ui(current_name: String) -> void:
 	btn_cancel.custom_minimum_size = Vector2(120, 40)
 	btn_cancel.pressed.connect(func(): closed.emit())
 	actions_hbox.add_child(btn_cancel)
+
+	var dialogue_btn := Button.new()
+	dialogue_btn.text = "✎ Редактор реплик"
+	dialogue_btn.tooltip_text = "Открыть безопасный редактор двух локальных реплик"
+	dialogue_btn.pressed.connect(func(): dialogue_editor_requested.emit())
+	actions_hbox.add_child(dialogue_btn)
 
 func _update_selections() -> void:
 	for i in range(QuestRulesScript.EMBLEM_PRESETS.size()):

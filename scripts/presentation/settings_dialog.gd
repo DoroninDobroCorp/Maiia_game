@@ -23,10 +23,24 @@ func setup(settings: Dictionary, audio_svc: Node) -> void:
 	current_settings = settings.duplicate(true)
 	_build_ui()
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE:
+			get_viewport().set_input_as_handled()
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("click_dial")
+			closed.emit()
+
 func _build_ui() -> void:
 	var bg := ColorRect.new()
 	bg.color = Color(0.04, 0.05, 0.08, 0.85)
 	bg.set_anchors_preset(PRESET_FULL_RECT)
+	bg.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("click_dial")
+			closed.emit()
+	)
 	add_child(bg)
 	
 	var center := CenterContainer.new()

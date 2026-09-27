@@ -28,6 +28,22 @@ func _ready() -> void:
 	
 	_generate_all_samples()
 
+func _exit_tree() -> void:
+	# Explicitly release procedural streams before the scene tree shuts down.
+	# Godot can otherwise keep the looping WAV playback alive until engine exit.
+	for child in get_children():
+		if child is AudioStreamPlayer:
+			if child.playing:
+				child.stop()
+			child.stream = null
+	samples.clear()
+	sfx_player = null
+	ambient_player = null
+	radio_player = null
+	# Give the audio thread one mix interval to release stopped WAV playbacks
+	# before Godot tears down ObjectDB (CoreAudio uses a ~10 ms buffer here).
+	OS.delay_msec(20)
+
 func play_sfx(sound_name: String) -> void:
 	if is_muted or not samples.has(sound_name):
 		return
