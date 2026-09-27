@@ -81,9 +81,12 @@ func _build_ui(state: Dictionary) -> void:
 func _build_atlas_tab(state: Dictionary) -> Control:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 7)
+	var station_name := str(state.get("station_name", "Лесная станция")).strip_edges()
+	if station_name.is_empty():
+		station_name = "Лесная станция"
 
 	var intro := Label.new()
-	intro.text = "Открыта только сама станция. Всё остальное уже видно на карте сквозь туман войны: близкая речка и водопады, вершина и скейт-парк, дальше Лаго-Пуэло и Барилоче, а по краям — будущие далёкие главы."
+	intro.text = "Открыта только станция «%s». Всё остальное уже видно на карте сквозь туман войны: близкая речка и водопады, вершина и скейт-парк, дальше Лаго-Пуэло и Барилоче, а по краям — будущие далёкие главы." % station_name
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", 12)
 	intro.add_theme_color_override("font_color", Color(0.76, 0.78, 0.74))
@@ -98,7 +101,7 @@ func _build_atlas_tab(state: Dictionary) -> Control:
 	atlas.location_selected.connect(_on_location_selected)
 
 	detail_label = Label.new()
-	detail_label.text = "◎ Лесная станция открыта. Выбери любую метку: туман покажет, что ждёт дальше, но не откроет место раньше времени."
+	detail_label.text = "◎ %s открыта. Выбери любую метку: туман покажет, что ждёт дальше, но не откроет место раньше времени." % station_name
 	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail_label.add_theme_font_size_override("font_size", 12)
 	detail_label.add_theme_color_override("font_color", Color(0.88, 0.84, 0.73))

@@ -111,9 +111,14 @@ const LOCATIONS: Array[Dictionary] = [
 
 static func list_locations(state: Dictionary) -> Array[Dictionary]:
 	var unlocked := _unlocked_ids(state)
+	var station_name := str(state.get("station_name", "Лесная станция")).strip_edges()
+	if station_name.is_empty():
+		station_name = "Лесная станция"
 	var result: Array[Dictionary] = []
 	for location in LOCATIONS:
 		var copy := location.duplicate(true)
+		if str(copy.get("id", "")) == "station":
+			copy["title"] = station_name
 		copy["unlocked"] = unlocked.has(str(copy.get("id", "")))
 		result.append(copy)
 	return result

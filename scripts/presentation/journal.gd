@@ -402,9 +402,12 @@ func _build_atlas_tab(state: Dictionary) -> Control:
 	vbox.add_theme_constant_override("separation", 12)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(vbox)
+	var station_name := str(state.get("station_name", "Лесная станция")).strip_edges()
+	if station_name.is_empty():
+		station_name = "Лесная станция"
 
 	var intro := Label.new()
-	intro.text = "Открыта только Лесная станция. Остальные места видны сквозь туман войны и будут раскрываться постепенно."
+	intro.text = "Открыта только станция «%s». Остальные места видны сквозь туман войны и будут раскрываться постепенно." % station_name
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_color_override("font_color", Color(0.78, 0.77, 0.70))
 	vbox.add_child(intro)
@@ -416,7 +419,7 @@ func _build_atlas_tab(state: Dictionary) -> Control:
 	atlas.setup(state)
 
 	var detail := Label.new()
-	detail.text = "◎ Лесная станция — единственная открытая точка. Нажми на метку в тумане, чтобы увидеть, что там появится позже."
+	detail.text = "◎ %s — единственная открытая точка. Нажми на метку в тумане, чтобы увидеть, что там появится позже." % station_name
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail.add_theme_font_size_override("font_size", 12)
 	detail.add_theme_color_override("font_color", Color(0.88, 0.84, 0.73))

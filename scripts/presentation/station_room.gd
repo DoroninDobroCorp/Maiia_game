@@ -964,27 +964,76 @@ func _build_owl_prop(parent: Node3D) -> void:
 	var mat_cedar := StandardMaterial3D.new()
 	mat_cedar.albedo_color = Color(0.48, 0.30, 0.16)
 	mat_cedar.roughness = 0.6
+
+	var mat_cedar_dark := StandardMaterial3D.new()
+	mat_cedar_dark.albedo_color = Color(0.31, 0.18, 0.09)
+	mat_cedar_dark.roughness = 0.72
+
+	var mat_beak := StandardMaterial3D.new()
+	mat_beak.albedo_color = Color(0.72, 0.48, 0.18)
+	mat_beak.roughness = 0.55
 	
 	var mat_eyes := StandardMaterial3D.new()
 	mat_eyes.albedo_color = Color(0.9, 0.75, 0.2)
 	mat_eyes.metallic = 0.5
 	
-	# Тело совы из округлых форм, чтобы экспонат не выглядел ещё одним блоком.
+	# Тело и голова: лёгкая асимметрия и отдельный силуэт делают фигурку читаемой из комнаты.
 	var body := _create_sphere(0.075, mat_cedar)
 	body.scale = Vector3(0.85, 1.25, 0.78)
 	body.position = Vector3(0, 0.09, 0)
 	parent.add_child(body)
-	
-	# Глаза
+
+	var head := _create_sphere(0.062, mat_cedar)
+	head.scale = Vector3(1.05, 0.86, 0.92)
+	head.position = Vector3(0, 0.155, 0.004)
+	parent.add_child(head)
+
+	# Ушные пучки.
+	for side in [-1.0, 1.0]:
+		var ear := _create_sphere(0.021, mat_cedar_dark)
+		ear.scale = Vector3(0.42, 1.05, 0.42)
+		ear.position = Vector3(0.042 * side, 0.202, 0.0)
+		ear.rotation_degrees = Vector3(0, 0, -18.0 * side)
+		parent.add_child(ear)
+
+	# Крылья имеют собственный объём и три ряда резных перьев с каждой стороны.
+	for side in [-1.0, 1.0]:
+		var wing := _create_sphere(0.058, mat_cedar_dark)
+		wing.scale = Vector3(0.48, 1.38, 0.45)
+		wing.position = Vector3(0.064 * side, 0.094, -0.002)
+		wing.rotation_degrees = Vector3(7, 0, -13.0 * side)
+		parent.add_child(wing)
+
+		for feather_i in range(3):
+			var feather := _create_sphere(0.027, mat_cedar)
+			feather.scale = Vector3(0.42, 1.15 + float(feather_i) * 0.16, 0.32)
+			feather.position = Vector3(
+				(0.073 + float(feather_i) * 0.008) * side,
+				0.115 - float(feather_i) * 0.030,
+				0.031 + float(feather_i) * 0.002
+			)
+			feather.rotation_degrees = Vector3(10, 0, (-18.0 - float(feather_i) * 4.0) * side)
+			parent.add_child(feather)
+
+	# Глаза и клюв.
 	var eye_l := _create_sphere(0.018, mat_eyes)
 	eye_l.scale.z = 0.55
-	eye_l.position = Vector3(-0.035, 0.14, 0.055)
+	eye_l.position = Vector3(-0.028, 0.166, 0.054)
 	parent.add_child(eye_l)
 	
 	var eye_r := _create_sphere(0.018, mat_eyes)
 	eye_r.scale.z = 0.55
-	eye_r.position = Vector3(0.035, 0.14, 0.055)
+	eye_r.position = Vector3(0.028, 0.166, 0.054)
 	parent.add_child(eye_r)
+
+	var beak := MeshInstance3D.new()
+	var beak_mesh := PrismMesh.new()
+	beak_mesh.size = Vector3(0.026, 0.035, 0.022)
+	beak.mesh = beak_mesh
+	beak.material_override = mat_beak
+	beak.position = Vector3(0, 0.145, 0.069)
+	beak.rotation_degrees = Vector3(82, 0, 0)
+	parent.add_child(beak)
 
 func _build_astrolabe_prop(parent: Node3D) -> void:
 	var mat_brass := StandardMaterial3D.new()

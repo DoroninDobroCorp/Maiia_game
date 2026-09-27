@@ -50,11 +50,12 @@ func _run_test_a02_a03() -> void:
 	print("\n--- Тесты A02 и A03: Изменение оформления и сохранение после перезапуска ---")
 	var save_svc = preload("res://scripts/services/save_service.gd")
 	var prog_rules = preload("res://scripts/domain/progression_rules.gd")
+	var atlas_svc = preload("res://scripts/services/atlas_service.gd")
 	
 	var test_state: Dictionary = save_svc.get_default_state()
 	test_state["station_name"] = "Маяк Рио Асуль"
 	test_state["station_emblem"] = "feather"
-	test_state["desk_prop_id"] = "crystal"
+	test_state["desk_prop_id"] = "owl"
 	
 	var s00: Dictionary = test_state.get("s00_progress", {})
 	s00["sign_named"] = true
@@ -72,9 +73,11 @@ func _run_test_a02_a03() -> void:
 	var loaded_state: Dictionary = save_svc.load_game()
 	_assert_true(loaded_state.get("station_name") == "Маяк Рио Асуль", "A03.1 Имя станции восстановлено после перезапуска")
 	_assert_true(loaded_state.get("station_emblem") == "feather", "A03.2 Символ восстановлен")
-	_assert_true(loaded_state.get("desk_prop_id") == "crystal", "A03.3 Экспонат 'crystal' восстановлен")
+	_assert_true(loaded_state.get("desk_prop_id") == "owl", "A03.3 Экспонат 'owl' восстановлен")
 	_assert_true(prog_rules.has_achievement(loaded_state, "station_keeper"), "A03.4 Достижение 'station_keeper' сохранено")
 	_assert_true(prog_rules.has_achievement(loaded_state, "master_curator"), "A03.5 Достижение 'master_curator' сохранено")
+	var atlas_station: Dictionary = atlas_svc.get_location(loaded_state, "station")
+	_assert_true(atlas_station.get("title") == "Маяк Рио Асуль", "A03.6 Атлас после перезапуска показывает сохранённое имя станции")
 
 func _run_test_a04() -> void:
 	print("\n--- Тест A04: Головоломка с ошибкой, загадкой-уликой и решением ---")

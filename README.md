@@ -79,4 +79,4 @@ godot --headless --path . --script res://tests/test_phase_c.gd
 
 ## Текущее состояние разработки
 
-Phase A, Phase B и Phase C реализованы и проверены локально 26 сентября 2026 года. Финальные автотесты: **26/26 Phase A**, **25/25 Phase B**, **21/21 Phase C**. Acceptance-кадры Phase C находятся в `screenshots/11_phase_c_world_explorer.png` … `14_phase_c_published_quest.png`; они показывают атлас с туманом войны, редактор содержания, каталог публикации и опубликованную экспедицию. Для продолжения в новом чате сначала читать `docs/NEXT_CHAT_HANDOFF.md`, затем этот README и основной `SUR_Maya_Game_Design_and_Agent_Brief.md`.
+Phase A, Phase B и Phase C реализованы и проверены локально 26 сентября 2026 года. Финальные автотесты: **27/27 Phase A**, **25/25 Phase B**, **21/21 Phase C**. Acceptance-кадры Phase C находятся в `screenshots/11_phase_c_world_explorer.png` … `14_phase_c_published_quest.png`; они показывают атлас с туманом войны, редактор содержания, каталог публикации и опубликованную экспедицию. Для продолжения в новом чате сначала читать `docs/NEXT_CHAT_HANDOFF.md`, затем этот README и основной `SUR_Maya_Game_Design_and_Agent_Brief.md`.
