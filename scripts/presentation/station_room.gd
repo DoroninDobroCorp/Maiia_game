@@ -32,6 +32,9 @@ var puzzle_box_dials: Array[MeshInstance3D] = []
 var phase_b_unlock_panel: Node3D
 var phase_b_unlock_label: Label3D
 var observatory_unlock_light: OmniLight3D
+var movement_ritual_marker: Node3D
+var movement_ritual_light: OmniLight3D
+var adventure_props: StationAdventureProps
 
 # Материалы для фаз
 var mat_lamp_off: StandardMaterial3D
@@ -47,21 +50,49 @@ var reduce_motion: bool = false
 var hovered_prop_id: String = ""
 var target_cam_offset := Vector3.ZERO
 var current_cam_offset := Vector3.ZERO
+var navigation_enabled := true
+var current_room_id := "station_main"
+var player_position := Vector3(0.0, 1.50, 2.42)
+var player_yaw := 0.0
+const WALK_SPEED := 1.35
+const STRAFE_SPEED := 1.0
+const TURN_SPEED := 72.0
+const ROOM_BOUNDS := {
+	"station_main": {"min_x": -1.75, "max_x": 1.75, "min_z": 0.15, "max_z": 2.55},
+	"observatory_annex": {"min_x": 5.55, "max_x": 8.45, "min_z": 0.15, "max_z": 2.75}
+}
+const ROOM_SPAWNS := {
+	"station_main": {"position": Vector3(0.0, 1.50, 2.42), "yaw": 0.0},
+	"observatory_annex": {"position": Vector3(7.0, 1.50, 2.42), "yaw": 0.0}
+}
 
 func _ready() -> void:
 	_setup_environment()
 	_setup_camera()
 	_setup_room_geometry()
+	_setup_observatory_annex()
 	_setup_lighting()
 	_setup_props()
 	_setup_phase_b_effects()
+	adventure_props = preload("res://scripts/presentation/station_adventure_props.gd").new()
+	add_child(adventure_props)
+	adventure_props.prop_clicked.connect(func(id: String): prop_clicked.emit(id))
+	adventure_props.prop_hovered.connect(func(id: String, title: String): prop_hovered.emit(id, title))
+	adventure_props.prop_unhovered.connect(func(id: String): prop_unhovered.emit(id))
+
+func apply_adventure_view(view: Dictionary) -> void:
+	if adventure_props != null:
+		adventure_props.apply_view(view)
 
 func _process(delta: float) -> void:
+	_update_navigation(delta)
 	if not reduce_motion:
 		current_cam_offset = current_cam_offset.lerp(target_cam_offset, delta * 4.0)
-		camera.position = base_camera_pos + current_cam_offset
+		var right := Vector3(cos(deg_to_rad(player_yaw)), 0.0, sin(deg_to_rad(player_yaw)))
+		camera.position = player_position + right * current_cam_offset.x + Vector3(0.0, current_cam_offset.y, 0.0)
 	else:
-		camera.position = base_camera_pos
+		camera.position = player_position
+	camera.rotation_degrees = Vector3(base_camera_rot.x, player_yaw, 0.0)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and not reduce_motion:
@@ -69,6 +100,54 @@ func _unhandled_input(event: InputEvent) -> void:
 		var norm_x: float = (event.position.x / vp_size.x) * 2.0 - 1.0
 		var norm_y: float = (event.position.y / vp_size.y) * 2.0 - 1.0
 		target_cam_offset = Vector3(norm_x * 0.07, -norm_y * 0.04, 0.0)
+
+func set_navigation_enabled(enabled: bool) -> void:
+	navigation_enabled = enabled
+
+func enter_room(room_id: String) -> bool:
+	if not ROOM_SPAWNS.has(room_id):
+		return false
+	current_room_id = room_id
+	var spawn: Dictionary = ROOM_SPAWNS[room_id]
+	player_position = spawn.get("position", player_position)
+	player_yaw = float(spawn.get("yaw", 0.0))
+	target_cam_offset = Vector3.ZERO
+	current_cam_offset = Vector3.ZERO
+	return true
+
+func _update_navigation(delta: float) -> void:
+	if not navigation_enabled:
+		return
+	var turn_axis := 0.0
+	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
+		turn_axis -= 1.0
+	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
+		turn_axis += 1.0
+	player_yaw += turn_axis * TURN_SPEED * delta
+
+	var move_axis := 0.0
+	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
+		move_axis += 1.0
+	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
+		move_axis -= 1.0
+	var strafe_axis := 0.0
+	if Input.is_key_pressed(KEY_Q):
+		strafe_axis -= 1.0
+	if Input.is_key_pressed(KEY_E):
+		strafe_axis += 1.0
+
+	var yaw_rad := deg_to_rad(player_yaw)
+	var forward := Vector3(sin(yaw_rad), 0.0, -cos(yaw_rad))
+	var right := Vector3(cos(yaw_rad), 0.0, sin(yaw_rad))
+	player_position += forward * move_axis * WALK_SPEED * delta
+	player_position += right * strafe_axis * STRAFE_SPEED * delta
+	_clamp_player_to_room()
+
+func _clamp_player_to_room() -> void:
+	var bounds: Dictionary = ROOM_BOUNDS.get(current_room_id, ROOM_BOUNDS["station_main"])
+	player_position.x = clampf(player_position.x, float(bounds.get("min_x", -1.75)), float(bounds.get("max_x", 1.75)))
+	player_position.z = clampf(player_position.z, float(bounds.get("min_z", 0.15)), float(bounds.get("max_z", 2.55)))
+	player_position.y = 1.50
 
 # ==================== СВЕТ И СТАДИИ МИРА ====================
 
@@ -153,7 +232,8 @@ func apply_phase_b_world_effects(effect_ids: Array) -> void:
 		"wind_parameter_saved": "VIENTO",
 		"display_room_sign": "SEÑAL",
 		"observatory_view_01": "OBS I",
-		"author_patch_accepted": "PATCH"
+		"author_patch_accepted": "PATCH",
+		"movement_ritual_light": "5 DÍAS"
 	}
 	var visible_tokens: Array[String] = []
 	for effect_id in tokens.keys():
@@ -163,6 +243,10 @@ func apply_phase_b_world_effects(effect_ids: Array) -> void:
 	phase_b_unlock_label.text = "ARCHIVO DE CAMPO  •  " + "  ✦  ".join(visible_tokens)
 	if observatory_unlock_light != null:
 		observatory_unlock_light.light_energy = 1.35 if effect_ids.has("observatory_view_01") else 0.0
+	if movement_ritual_marker != null:
+		movement_ritual_marker.visible = effect_ids.has("movement_ritual_light")
+	if movement_ritual_light != null:
+		movement_ritual_light.light_energy = 1.1 if effect_ids.has("movement_ritual_light") else 0.0
 
 func _setup_phase_b_effects() -> void:
 	phase_b_unlock_panel = Node3D.new()
@@ -183,6 +267,30 @@ func _setup_phase_b_effects() -> void:
 	phase_b_unlock_label.font_size = 14
 	phase_b_unlock_label.modulate = Color(0.95, 0.79, 0.46)
 	phase_b_unlock_label.outline_size = 4
+
+	movement_ritual_marker = Node3D.new()
+	movement_ritual_marker.position = Vector3(-1.65, 1.62, 0.55)
+	movement_ritual_marker.visible = false
+	add_child(movement_ritual_marker)
+	var ritual_mat := StandardMaterial3D.new()
+	ritual_mat.albedo_color = Color(0.88, 0.72, 0.35)
+	ritual_mat.emission_enabled = true
+	ritual_mat.emission = Color(0.75, 0.48, 0.18)
+	ritual_mat.emission_energy_multiplier = 1.7
+	var ritual_marker_mesh := _create_box(Vector3(0.12, 0.12, 0.12), ritual_mat)
+	movement_ritual_marker.add_child(ritual_marker_mesh)
+	var ritual_label := Label3D.new()
+	ritual_label.position = Vector3(0.0, 0.18, 0.0)
+	ritual_label.text = "5 ✦"
+	ritual_label.font_size = 24
+	ritual_label.modulate = Color(1.0, 0.87, 0.55)
+	movement_ritual_marker.add_child(ritual_label)
+	movement_ritual_light = OmniLight3D.new()
+	movement_ritual_light.position = Vector3(-1.65, 1.68, 0.65)
+	movement_ritual_light.omni_range = 1.5
+	movement_ritual_light.light_color = Color(1.0, 0.68, 0.32)
+	movement_ritual_light.light_energy = 0.0
+	add_child(movement_ritual_light)
 	phase_b_unlock_label.outline_modulate = Color(0.05, 0.035, 0.025, 0.95)
 	phase_b_unlock_panel.add_child(phase_b_unlock_label)
 	phase_b_unlock_panel.visible = false
@@ -399,6 +507,73 @@ func _setup_room_geometry() -> void:
 	
 	# Дверь в обсерваторию (справа сзади)
 	_build_observatory_door()
+
+func _setup_observatory_annex() -> void:
+	# Небольшой переход уже доступен как настоящая вторая комната. Дальняя дверь
+	# остаётся сюжетной границей, поэтому архитектуру можно расширять новыми ROOM_SPAWNS.
+	var mat_wall := _textured_material("res://assets/textures/plaster.png", Color(0.58, 0.60, 0.64), 0.92, Vector3(2.2, 1.8, 2.2))
+	var mat_floor := _textured_material("res://assets/textures/floorboards.png", Color(0.37, 0.29, 0.24), 0.78, Vector3(2.5, 2.5, 2.5))
+	var mat_wood := _textured_material("res://assets/textures/walnut.png", Color(0.30, 0.22, 0.18), 0.72, Vector3(2.8, 2.8, 2.8))
+	var mat_door := StandardMaterial3D.new()
+	mat_door.albedo_color = Color(0.20, 0.17, 0.18)
+	mat_door.roughness = 0.66
+	var mat_brass := StandardMaterial3D.new()
+	mat_brass.albedo_color = Color(0.72, 0.58, 0.28)
+	mat_brass.metallic = 0.75
+	mat_brass.roughness = 0.32
+
+	var floor_box := _create_box(Vector3(3.4, 0.10, 3.5), mat_floor)
+	floor_box.position = Vector3(7.0, -0.05, 1.05)
+	add_child(floor_box)
+	var back_wall := _create_box(Vector3(3.4, 3.2, 0.10), mat_wall)
+	back_wall.position = Vector3(7.0, 1.60, -0.65)
+	add_child(back_wall)
+	for x in [5.30, 8.70]:
+		var side_wall := _create_box(Vector3(0.10, 3.2, 3.5), mat_wall)
+		side_wall.position = Vector3(x, 1.60, 1.05)
+		add_child(side_wall)
+	var beam := _create_box(Vector3(3.3, 0.18, 0.24), mat_wood)
+	beam.position = Vector3(7.0, 2.65, -0.50)
+	add_child(beam)
+
+	var title := Label3D.new()
+	title.position = Vector3(7.0, 2.20, -0.56)
+	title.text = "ПЕРЕХОД К ОБСЕРВАТОРИИ"
+	title.font_size = 24
+	title.pixel_size = 0.0022
+	title.modulate = Color(0.78, 0.83, 0.92)
+	title.outline_size = 5
+	add_child(title)
+
+	var return_door := _create_box(Vector3(0.78, 1.72, 0.08), mat_wood)
+	return_door.position = Vector3(6.25, 1.02, -0.56)
+	add_child(return_door)
+	var return_handle := _create_box(Vector3(0.04, 0.12, 0.08), mat_brass)
+	return_handle.position = Vector3(6.52, 0.96, -0.49)
+	add_child(return_handle)
+	_make_interactive_area(return_door, "door_station_return", "Вернуться на станцию [Войти]", Vector3(0.86, 1.82, 0.22))
+
+	var inner_door := _create_box(Vector3(0.78, 1.72, 0.08), mat_door)
+	inner_door.position = Vector3(7.76, 1.02, -0.56)
+	add_child(inner_door)
+	var inner_handle := _create_box(Vector3(0.04, 0.12, 0.08), mat_brass)
+	inner_handle.position = Vector3(7.49, 0.96, -0.49)
+	add_child(inner_handle)
+	var inner_label := Label3D.new()
+	inner_label.position = Vector3(7.76, 1.72, -0.49)
+	inner_label.text = "ОБСЕРВАТОРИЯ"
+	inner_label.font_size = 17
+	inner_label.pixel_size = 0.0022
+	inner_label.modulate = Color(0.60, 0.72, 0.92)
+	add_child(inner_label)
+	_make_interactive_area(inner_door, "observatory_inner_door", "Дальняя дверь обсерватории [Осмотреть]", Vector3(0.86, 1.82, 0.22))
+
+	var annex_light := OmniLight3D.new()
+	annex_light.position = Vector3(7.0, 2.12, 0.65)
+	annex_light.omni_range = 4.2
+	annex_light.light_color = Color(0.62, 0.72, 0.94)
+	annex_light.light_energy = 0.72
+	add_child(annex_light)
 
 func _build_window_and_mountains() -> void:
 	var mat_frame := _textured_material("res://assets/textures/walnut.png", Color(0.46, 0.30, 0.18), 0.66, Vector3(2.0, 2.0, 2.0))

@@ -1,0 +1,307 @@
+{
+  "schema_version": 2,
+  "chapter_key": "station_on_air",
+  "title": "Станция на связи",
+  "required_quest_ids": [
+    "FG01",
+    "FG11",
+    "FG08"
+  ],
+  "entry_prerequisite": "S00",
+  "intro": [
+    "Пробуждение станции заметили жители долины. На столе три незавершённые записи.",
+    "Нора прислала конверт. Тео оставил чертёж. В полевом архиве ждёт вопрос о воде.",
+    "Любую линию можно начать первой; остальные дождутся возвращения."
+  ],
+  "secrets": [
+    {
+      "secret_id": "postcard_back",
+      "location_group": "station",
+      "entry_anchor_id": "station_postcard",
+      "title": "Оборот открытки",
+      "optional": true,
+      "prerequisite_stage_ids": [],
+      "budget_share": 0,
+      "work_recipe_id": "story_find",
+      "interaction": {
+        "interaction_id": "secret_postcard_back",
+        "type": "inspect_reveal",
+        "title": "Оборот открытки",
+        "prompt": "На обороте открытки видна крошечная подпись. Переверни её.",
+        "hints": [
+          "Посмотри на необычную деталь предмета.",
+          "Её можно открыть один раз без таймера и повторных щелчков.",
+          "Открой подпись детали: находка сохранится в истории."
+        ],
+        "config": {
+          "details": [
+            {
+              "id": "reveal",
+              "title": "Оборот открытки",
+              "text": "Письмо может идти долго. Имя отправителя дождётся своего читателя."
+            }
+          ],
+          "required_detail_ids": [
+            "reveal"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      }
+    },
+    {
+      "secret_id": "brass_stars",
+      "location_group": "station",
+      "entry_anchor_id": "station_brass_card",
+      "title": "Созвездие в латуни",
+      "optional": true,
+      "prerequisite_stage_ids": [],
+      "budget_share": 0,
+      "work_recipe_id": "story_find",
+      "interaction": {
+        "interaction_id": "secret_brass_stars",
+        "type": "inspect_reveal",
+        "title": "Созвездие в латуни",
+        "prompt": "Поднеси карточку к нарисованной лампе: отверстия складываются в узор.",
+        "hints": [
+          "Посмотри на необычную деталь предмета.",
+          "Её можно открыть один раз без таймера и повторных щелчков.",
+          "Открой подпись детали: находка сохранится в истории."
+        ],
+        "config": {
+          "details": [
+            {
+              "id": "reveal",
+              "title": "Созвездие в латуни",
+              "text": "Три отверстия образуют маленький треугольник — карту света для старой станции."
+            }
+          ],
+          "required_detail_ids": [
+            "reveal"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      }
+    },
+    {
+      "secret_id": "frame_initial",
+      "location_group": "gallery",
+      "entry_anchor_id": "gallery_frame",
+      "title": "Буквы внутри рамы",
+      "optional": true,
+      "prerequisite_stage_ids": [],
+      "budget_share": 0,
+      "work_recipe_id": "story_find",
+      "interaction": {
+        "interaction_id": "secret_frame_initial",
+        "type": "inspect_reveal",
+        "title": "Буквы внутри рамы",
+        "prompt": "У пустой рамы есть надпись на внутренней стороне.",
+        "hints": [
+          "Посмотри на необычную деталь предмета.",
+          "Её можно открыть один раз без таймера и повторных щелчков.",
+          "Открой подпись детали: находка сохранится в истории."
+        ],
+        "config": {
+          "details": [
+            {
+              "id": "reveal",
+              "title": "Буквы внутри рамы",
+              "text": "Здесь можно оставить незаконченное. Продолжение найдёт место позже."
+            }
+          ],
+          "required_detail_ids": [
+            "reveal"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      }
+    },
+    {
+      "secret_id": "gallery_echo",
+      "location_group": "gallery",
+      "entry_anchor_id": "gallery_bench",
+      "title": "Тихое эхо",
+      "optional": true,
+      "prerequisite_stage_ids": [],
+      "budget_share": 0,
+      "work_recipe_id": "story_find",
+      "interaction": {
+        "interaction_id": "secret_gallery_echo",
+        "type": "inspect_reveal",
+        "title": "Тихое эхо",
+        "prompt": "На скамье лежит карточка с двумя линиями. Открой её подпись.",
+        "hints": [
+          "Посмотри на необычную деталь предмета.",
+          "Её можно открыть один раз без таймера и повторных щелчков.",
+          "Открой подпись детали: находка сохранится в истории."
+        ],
+        "config": {
+          "details": [
+            {
+              "id": "reveal",
+              "title": "Тихое эхо",
+              "text": "Галерея умеет быть тихой. Посетителей можно пригласить, а можно посмотреть всё самой."
+            }
+          ],
+          "required_detail_ids": [
+            "reveal"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      }
+    },
+    {
+      "secret_id": "radio_reply",
+      "location_group": "object_ui",
+      "entry_anchor_id": "radio",
+      "title": "Ответный ритм",
+      "optional": true,
+      "prerequisite_stage_ids": [],
+      "budget_share": 0,
+      "work_recipe_id": "story_find",
+      "interaction": {
+        "interaction_id": "secret_radio_reply",
+        "type": "inspect_reveal",
+        "title": "Ответный ритм",
+        "prompt": "На шкале радио отмечены короткая, короткая и длинная черты.",
+        "hints": [
+          "Посмотри на необычную деталь предмета.",
+          "Её можно открыть один раз без таймера и повторных щелчков.",
+          "Открой подпись детали: находка сохранится в истории."
+        ],
+        "config": {
+          "details": [
+            {
+              "id": "reveal",
+              "title": "Ответный ритм",
+              "text": "Ответ станции: точка, точка, длинный свет. Этот ритм виден и при выключенном звуке."
+            }
+          ],
+          "required_detail_ids": [
+            "reveal"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      }
+    },
+    {
+      "secret_id": "atlas_margin",
+      "location_group": "object_ui",
+      "entry_anchor_id": "station_map",
+      "title": "Пометка на полях",
+      "optional": true,
+      "prerequisite_stage_ids": [],
+      "budget_share": 0,
+      "work_recipe_id": "story_find",
+      "interaction": {
+        "interaction_id": "secret_atlas_margin",
+        "type": "inspect_reveal",
+        "title": "Пометка на полях",
+        "prompt": "У края учебной карты торчит бумажный язычок.",
+        "hints": [
+          "Посмотри на необычную деталь предмета.",
+          "Её можно открыть один раз без таймера и повторных щелчков.",
+          "Открой подпись детали: находка сохранится в истории."
+        ],
+        "config": {
+          "details": [
+            {
+              "id": "reveal",
+              "title": "Пометка на полях",
+              "text": "Карта хранит историю наблюдений. Настоящую дорогу семья выбирает отдельно."
+            }
+          ],
+          "required_detail_ids": [
+            "reveal"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      }
+    }
+  ],
+  "secret_reward": {
+    "minimum_unique_finds": 3,
+    "grant_id": "secret_constellation_theme",
+    "budget_share": 0
+  },
+  "finale": {
+    "finale_id": "open_station_evening",
+    "required_completed_quest_ids": [
+      "FG01",
+      "FG11",
+      "FG08"
+    ],
+    "budget_share": 0,
+    "grant_ids": [
+      "gallery_evening_light",
+      "chapter_card"
+    ],
+    "work_recipe_id": "chapter_album",
+    "interaction": {
+      "interaction_id": "chapter_choose_exhibits",
+      "type": "exhibit_composition",
+      "title": "Вечер открытой станции",
+      "prompt": "Выбери название выставки и способ провести вечер. Запись эфира, игра и водный диптих остаются твоими работами; существующие места не заменяются автоматически.",
+      "hints": [
+        "Нужны результаты трёх завершённых приключений.",
+        "Выбор тихого вечера даёт ту же памятную карточку.",
+        "Можно выбрать «Тихая выставка», назвать её и оставить работы в альбоме."
+      ],
+      "config": {
+        "choices": [
+          {
+            "id": "quiet",
+            "text": "Тихая выставка"
+          },
+          {
+            "id": "guests",
+            "text": "Открытки гостей"
+          }
+        ],
+        "min_selected": 1,
+        "max_selected": 1,
+        "fields": [
+          {
+            "id": "exhibition_title",
+            "label": "Название вечера",
+            "required": true
+          },
+          {
+            "id": "radio_work_id",
+            "label": "Выбранная работа эфира",
+            "required": true
+          },
+          {
+            "id": "game_work_id",
+            "label": "Выбранная версия игры",
+            "required": true
+          },
+          {
+            "id": "water_work_id",
+            "label": "Выбранный водный диптих",
+            "required": true
+          }
+        ],
+        "source_stage_ids": []
+      },
+      "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+    },
+    "reactions": [
+      {
+        "speaker": "Нора",
+        "text": "В твоём альбоме есть выбранный позывной и сообщения. Можно открыть любимую страницу."
+      },
+      {
+        "speaker": "Тео",
+        "text": "У твоей игры есть сохранённая версия. Можно пригласить взрослого сыграть."
+      },
+      {
+        "speaker": "Архив",
+        "text": "Старый вопрос и твои наблюдения теперь стоят рядом. Здесь осталось место для следующей истории."
+      }
+    ],
+    "skip_animation_preserves_result": true,
+    "replay_budget_share": 0
+  },
+  "next_postcard": "В следующем письме — одна новая тема. Сначала можно побыть среди своих работ."
+}

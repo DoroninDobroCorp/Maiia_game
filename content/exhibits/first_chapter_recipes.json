@@ -1,0 +1,260 @@
+{
+  "schema_version": 2,
+  "recipes": {
+    "radio_contact_card": {
+      "recipe_id": "radio_contact_card",
+      "title": "Первый контакт",
+      "work_kind": "note",
+      "presentations": [
+        "frame",
+        "album"
+      ]
+    },
+    "radio_menu": {
+      "recipe_id": "radio_menu",
+      "title": "Моё меню",
+      "work_kind": "album",
+      "presentations": [
+        "frame",
+        "album"
+      ]
+    },
+    "station_word_label": {
+      "recipe_id": "station_word_label",
+      "title": "Подпись предмета",
+      "work_kind": "note",
+      "presentations": [
+        "frame",
+        "album"
+      ]
+    },
+    "valley_postcard": {
+      "recipe_id": "valley_postcard",
+      "title": "Моя долина",
+      "work_kind": "image",
+      "presentations": [
+        "frame",
+        "album"
+      ]
+    },
+    "radio_album": {
+      "recipe_id": "radio_album",
+      "title": "Альбом эфира",
+      "work_kind": "album",
+      "presentations": [
+        "frame",
+        "album"
+      ]
+    },
+    "radio_episode_card": {
+      "recipe_id": "radio_episode_card",
+      "title": "Карточка выпуска",
+      "work_kind": "album",
+      "presentations": [
+        "frame",
+        "album"
+      ]
+    },
+    "game_concept_card": {
+      "recipe_id": "game_concept_card",
+      "title": "Замысел игры",
+      "work_kind": "note",
+      "presentations": [
+        "terminal",
+        "frame"
+      ]
+    },
+    "game_project_version": {
+      "recipe_id": "game_project_version",
+      "title": "Версия моей игры",
+      "work_kind": "game",
+      "presentations": [
+        "terminal",
+        "frame"
+      ]
+    },
+    "game_premiere": {
+      "recipe_id": "game_premiere",
+      "title": "Премьера игры",
+      "work_kind": "game",
+      "presentations": [
+        "terminal",
+        "frame"
+      ]
+    },
+    "water_question_card": {
+      "recipe_id": "water_question_card",
+      "title": "Мой вопрос о воде",
+      "work_kind": "note",
+      "presentations": [
+        "frame",
+        "table",
+        "album"
+      ]
+    },
+    "field_plan": {
+      "recipe_id": "field_plan",
+      "title": "Полевая страница",
+      "work_kind": "note",
+      "presentations": [
+        "frame",
+        "table",
+        "album"
+      ]
+    },
+    "water_observation_page": {
+      "recipe_id": "water_observation_page",
+      "title": "Наблюдение воды",
+      "work_kind": "observation",
+      "presentations": [
+        "frame",
+        "table",
+        "album"
+      ]
+    },
+    "water_comparison": {
+      "recipe_id": "water_comparison",
+      "title": "Сравнение двух записей",
+      "work_kind": "observation",
+      "presentations": [
+        "frame",
+        "table",
+        "album"
+      ]
+    },
+    "water_diptych": {
+      "recipe_id": "water_diptych",
+      "title": "Два голоса воды",
+      "work_kind": "diptych",
+      "presentations": [
+        "frame",
+        "table",
+        "album"
+      ]
+    },
+    "home_water_study": {
+      "recipe_id": "home_water_study",
+      "title": "Исследование по материалам",
+      "work_kind": "observation",
+      "presentations": [
+        "frame",
+        "table",
+        "album"
+      ]
+    },
+    "silhouette_sheet": {
+      "recipe_id": "silhouette_sheet",
+      "title": "Три силуэта",
+      "work_kind": "image",
+      "presentations": [
+        "frame",
+        "table"
+      ]
+    },
+    "silhouette_frame": {
+      "recipe_id": "silhouette_frame",
+      "title": "Силуэт для вывески",
+      "work_kind": "image",
+      "presentations": [
+        "frame"
+      ]
+    }
+  },
+  "grants": {
+    "radio_first_contact": {
+      "grant_id": "radio_first_contact",
+      "title": "Первый контакт",
+      "kind": "known_presentation"
+    },
+    "radio_menu": {
+      "grant_id": "radio_menu",
+      "title": "Моё меню",
+      "kind": "known_presentation"
+    },
+    "station_word_label": {
+      "grant_id": "station_word_label",
+      "title": "Подпись предмета",
+      "kind": "known_presentation"
+    },
+    "valley_postcard": {
+      "grant_id": "valley_postcard",
+      "title": "Моя долина",
+      "kind": "known_presentation"
+    },
+    "radio_album": {
+      "grant_id": "radio_album",
+      "title": "Альбом эфира",
+      "kind": "known_presentation"
+    },
+    "radio_callsign": {
+      "grant_id": "radio_callsign",
+      "title": "Карточка выпуска",
+      "kind": "known_presentation"
+    },
+    "game_concept_card": {
+      "grant_id": "game_concept_card",
+      "title": "Замысел на верстаке",
+      "kind": "known_presentation"
+    },
+    "arcade_movement": {
+      "grant_id": "arcade_movement",
+      "title": "Герой на экране",
+      "kind": "known_presentation"
+    },
+    "arcade_counter": {
+      "grant_id": "arcade_counter",
+      "title": "Счётчик огоньков",
+      "kind": "known_presentation"
+    },
+    "arcade_victory_lamp": {
+      "grant_id": "arcade_victory_lamp",
+      "title": "Лампа победы",
+      "kind": "known_presentation"
+    },
+    "arcade_restart_button": {
+      "grant_id": "arcade_restart_button",
+      "title": "Кнопка перезапуска",
+      "kind": "known_presentation"
+    },
+    "arcade_premiere": {
+      "grant_id": "arcade_premiere",
+      "title": "Автомат с игрой",
+      "kind": "known_presentation"
+    },
+    "water_question_card": {
+      "grant_id": "water_question_card",
+      "title": "Вопрос на карте",
+      "kind": "known_presentation"
+    },
+    "field_album": {
+      "grant_id": "field_album",
+      "title": "Полевой альбом",
+      "kind": "known_presentation"
+    },
+    "river_diagram_panel": {
+      "grant_id": "river_diagram_panel",
+      "title": "Речная половина диорамы",
+      "kind": "known_presentation"
+    },
+    "fall_diagram_panel": {
+      "grant_id": "fall_diagram_panel",
+      "title": "Водопадная половина диорамы",
+      "kind": "known_presentation"
+    },
+    "water_compare_switch": {
+      "grant_id": "water_compare_switch",
+      "title": "Переключатель сравнения",
+      "kind": "known_presentation"
+    },
+    "water_diptych": {
+      "grant_id": "water_diptych",
+      "title": "Диптих наблюдений",
+      "kind": "known_presentation"
+    },
+    "silhouette_frame": {
+      "grant_id": "silhouette_frame",
+      "title": "Рамка новой вывески",
+      "kind": "known_presentation"
+    }
+  }
+}

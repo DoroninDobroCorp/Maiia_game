@@ -1,0 +1,810 @@
+{
+  "schema_version": 2,
+  "quest_id": "FG11",
+  "revision": 2,
+  "content_status": "DRAFT",
+  "kind": "project",
+  "title": "Автомат для станции",
+  "story_title": "Автомат для станции",
+  "summary": "Создать маленькую законченную игру и оставить её исходники и историю версий в личном архиве.",
+  "is_main_quest": true,
+  "chapter_id": "chapter_02",
+  "chapter_key": "station_on_air",
+  "location_id": "workshop_annex",
+  "entry_anchor_id": "workbench",
+  "goal_group": "maya_first_goals",
+  "goal_order": 2,
+  "estimated_minutes": {
+    "min": 5,
+    "max": 240
+  },
+  "completion_criteria": [
+    "Выбран герой и понятная цель.",
+    "Основа запущена отдельным проектом.",
+    "Майя предсказала и проверила одно изменение скорости или направления.",
+    "В проекте размещены три собираемых объекта.",
+    "Каждый исчезает при касании и увеличивает счётчик ровно один раз.",
+    "После одного и двух предметов победы нет.",
+    "После третьего появляется выбранное сообщение.",
+    "После перезапуска счётчик равен нулю.",
+    "Герой и все три предмета вернулись на свои стартовые места.",
+    "Повторный цикл снова проходим.",
+    "Взрослый прошёл игру от запуска до победы и перезапуска.",
+    "Есть одно наблюдение зрителя и выбранное Майей улучшение.",
+    "После улучшения полный цикл проверен снова.",
+    "Сохранены исходники, авторство и зарегистрированная версия."
+  ],
+  "variants": [
+    {
+      "id": "home",
+      "title": "Дом и семейные шаги",
+      "home_available": true
+    }
+  ],
+  "context": {
+    "adult_presence": "for_review",
+    "requires_purchase": false,
+    "requires_network": false,
+    "risk_tags": []
+  },
+  "evidence_policy": {
+    "allowed": [
+      "game_event",
+      "parent_observation",
+      "note",
+      "local_image"
+    ],
+    "required_media": false,
+    "reviewer": "parent"
+  },
+  "reward_policy": {
+    "activity_budget": 60,
+    "lane": "project",
+    "skill_weights_percent": {
+      "programming": 100
+    },
+    "world_effect_ids": []
+  },
+  "repeat_policy": {
+    "mode": "once",
+    "max_completions": 1
+  },
+  "provenance": {
+    "origin": "sur_first_chapter"
+  },
+  "required_capabilities": [
+    "adventure_v1",
+    "exhibits_v1"
+  ],
+  "content_dependencies": [],
+  "exhibit_ids": [
+    "game_concept_card",
+    "game_premiere",
+    "game_project_version"
+  ],
+  "adventure": {
+    "stages": [
+      {
+        "stage_id": "game_concept",
+        "title": "Замысел автомата",
+        "summary": "Пустой экран ждёт твоего героя и цели.",
+        "prerequisite_stage_ids": [],
+        "completion_policy": "self_attest",
+        "budget_share": 0,
+        "grant_ids": [
+          "game_concept_card"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "game_concept_card",
+        "interaction_ids": [
+          "game_choose_concept"
+        ],
+        "criteria": [
+          "Выбран герой и понятная цель."
+        ],
+        "next_hint": "Можно нарисовать обложку или открыть учебную основу вместе.",
+        "required": true
+      },
+      {
+        "stage_id": "game_move",
+        "title": "Движение",
+        "summary": "Измени speed в настройках учебной игры вместе; сравни одинаковое нажатие при двух значениях.",
+        "prerequisite_stage_ids": [
+          "game_concept"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 12,
+        "grant_ids": [
+          "arcade_movement"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "game_project_version",
+        "interaction_ids": [
+          "game_speed_prediction",
+          "game_move_return"
+        ],
+        "criteria": [
+          "Основа запущена отдельным проектом.",
+          "Майя предсказала и проверила одно изменение скорости или направления."
+        ],
+        "next_hint": "Можно сохранить текущую версию и закончить сегодня.",
+        "required": true,
+        "version_label": "0.1"
+      },
+      {
+        "stage_id": "game_goal",
+        "title": "Три огонька",
+        "summary": "Перенеси выбранную схему в отдельный проект. Собери предмет и вернись на его место: счётчик не должен измениться второй раз.",
+        "prerequisite_stage_ids": [
+          "game_move"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 12,
+        "grant_ids": [
+          "arcade_counter"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "game_project_version",
+        "interaction_ids": [
+          "game_choose_layout",
+          "game_goal_return"
+        ],
+        "criteria": [
+          "В проекте размещены три собираемых объекта.",
+          "Каждый исчезает при касании и увеличивает счётчик ровно один раз."
+        ],
+        "next_hint": "Можно сохранить текущую версию и закончить сегодня.",
+        "required": true,
+        "version_label": "0.2"
+      },
+      {
+        "stage_id": "game_win",
+        "title": "Понятная победа",
+        "summary": "Выбери текст победы. Проверь три промежуточных значения; готовый финал не должен включаться раньше.",
+        "prerequisite_stage_ids": [
+          "game_goal"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 12,
+        "grant_ids": [
+          "arcade_victory_lamp"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "game_project_version",
+        "interaction_ids": [
+          "game_win_sequence",
+          "game_win_return"
+        ],
+        "criteria": [
+          "После одного и двух предметов победы нет.",
+          "После третьего появляется выбранное сообщение."
+        ],
+        "next_hint": "Можно сохранить текущую версию и закончить сегодня.",
+        "required": true,
+        "version_label": "0.3"
+      },
+      {
+        "stage_id": "game_restart",
+        "title": "Снова с начала",
+        "summary": "Собери свет, нажми «Ещё раз» и проверь ноль, старт героя, три предмета и повторную победу.",
+        "prerequisite_stage_ids": [
+          "game_win"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 12,
+        "grant_ids": [
+          "arcade_restart_button"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "game_project_version",
+        "interaction_ids": [
+          "game_restart_return"
+        ],
+        "criteria": [
+          "После перезапуска счётчик равен нулю.",
+          "Герой и все три предмета вернулись на свои стартовые места.",
+          "Повторный цикл снова проходим."
+        ],
+        "next_hint": "Можно сохранить текущую версию и закончить сегодня.",
+        "required": true,
+        "version_label": "0.4"
+      },
+      {
+        "stage_id": "game_premiere",
+        "title": "Вечер первого запуска",
+        "summary": "Пригласи взрослого сыграть; выбери одно улучшение. Взрослый сохраняет копию исходников и регистрирует конкретную сборку отдельно.",
+        "prerequisite_stage_ids": [
+          "game_restart"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 12,
+        "grant_ids": [
+          "arcade_premiere"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "game_premiere",
+        "interaction_ids": [
+          "game_stubborn_counter",
+          "game_premiere_return"
+        ],
+        "criteria": [
+          "Взрослый прошёл игру от запуска до победы и перезапуска.",
+          "Есть одно наблюдение зрителя и выбранное Майей улучшение.",
+          "После улучшения полный цикл проверен снова.",
+          "Сохранены исходники, авторство и зарегистрированная версия."
+        ],
+        "next_hint": "Можно сохранить текущую версию и закончить сегодня.",
+        "required": true,
+        "version_label": "1.0"
+      }
+    ],
+    "interactions": {
+      "game_choose_concept": {
+        "interaction_id": "game_choose_concept",
+        "type": "exhibit_composition",
+        "title": "Чего хочет герой?",
+        "prompt": "Тео нашёл пустой корпус автомата. Выбери героя и цель; основа умеет собирать три предмета.",
+        "hints": [
+          "Герою достаточно одной понятной цели.",
+          "Все темы используют один цикл: двигаться, собрать три предмета, победить, начать снова.",
+          "Можно выбрать хранителя и три огонька; собственный рисунок добавишь позже."
+        ],
+        "config": {
+          "choices": [
+            {
+              "id": "lights",
+              "text": "Хранитель собирает огоньки"
+            },
+            {
+              "id": "postcards",
+              "text": "Почтальон собирает открытки"
+            },
+            {
+              "id": "stones",
+              "text": "Исследователь собирает камни"
+            }
+          ],
+          "min_selected": 1,
+          "max_selected": 1,
+          "fields": [
+            {
+              "id": "hero",
+              "label": "Кто герой?",
+              "required": true
+            },
+            {
+              "id": "goal",
+              "label": "Что он хочет собрать?",
+              "required": true
+            }
+          ],
+          "source_stage_ids": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "game_speed_prediction": {
+        "interaction_id": "game_speed_prediction",
+        "type": "scripted_dialogue",
+        "title": "Две дорожки Тео",
+        "prompt": "В макете один герой проходит за секунду 100 клеточных единиц, второй — 200. Сначала предположи, потом проверь в своей основе.",
+        "hints": [
+          "Сравниваем путь за одинаковое время.",
+          "Скорость отвечает за расстояние за секунду, а не за предметы.",
+          "При 200 вместо 100 герой за то же время идёт примерно вдвое дальше."
+        ],
+        "config": {
+          "start_node_id": "node_1",
+          "nodes": [
+            {
+              "node_id": "node_1",
+              "speaker": "Тео",
+              "text": "Если увеличить скорость с 100 до 200 при той же длительности, что изменится?",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Герой пройдёт примерно вдвое дальше.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Теперь проверь это в отдельном проекте: клавишу держим одинаковое время."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Огоньков станет вдвое больше.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Скорость меняет движение; количество огоньков задаётся отдельно."
+                },
+                {
+                  "id": "choice_3",
+                  "text": "Не знаю, хочу сравнить вместе.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Помощь разрешена. Сравните две скорости и запишите наблюдение."
+                }
+              ]
+            },
+            {
+              "node_id": "end",
+              "speaker": "Тео",
+              "text": "Сообщение дошло. Оставим его в альбоме; продолжить можно в любой день.",
+              "terminal": true,
+              "choices": []
+            }
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "game_choose_layout": {
+        "interaction_id": "game_choose_layout",
+        "type": "assemble_selection",
+        "title": "Три места для света",
+        "prompt": "Выбери три позиции для своей схемы; в реальном проекте проверь, что к ним можно подойти.",
+        "hints": [
+          "У каждого огонька должно быть своё место.",
+          "Можно расположить их треугольником или дорожкой.",
+          "Например: сверху слева, сверху справа, снизу справа."
+        ],
+        "config": {
+          "items": [
+            {
+              "id": "upper_left",
+              "text": "Сверху слева"
+            },
+            {
+              "id": "upper_right",
+              "text": "Сверху справа"
+            },
+            {
+              "id": "lower_left",
+              "text": "Снизу слева"
+            },
+            {
+              "id": "lower_right",
+              "text": "Снизу справа"
+            },
+            {
+              "id": "center",
+              "text": "В центре"
+            }
+          ],
+          "required_ids": [],
+          "min_selected": 3,
+          "max_selected": 3,
+          "ordered": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "game_win_sequence": {
+        "interaction_id": "game_win_sequence",
+        "type": "order_fragments",
+        "title": "Когда загорается лампа?",
+        "prompt": "Собери порядок проверки победы. До третьего огонька финал не показываем.",
+        "hints": [
+          "Сначала должно произойти касание.",
+          "Проверка общего количества идёт после обновления счётчика.",
+          "Касание → исчезновение и +1 → проверка трёх огоньков."
+        ],
+        "config": {
+          "fragments": [
+            {
+              "id": "fragment_2",
+              "text": "Огонёк исчезает; счётчик увеличивается один раз."
+            },
+            {
+              "id": "fragment_3",
+              "text": "Если собраны все три, появляется сообщение победы."
+            },
+            {
+              "id": "fragment_1",
+              "text": "Герой касается ещё не собранного огонька."
+            }
+          ],
+          "accepted_orders": [
+            [
+              "fragment_1",
+              "fragment_2",
+              "fragment_3"
+            ]
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "game_stubborn_counter": {
+        "interaction_id": "game_stubborn_counter",
+        "type": "match_cards",
+        "title": "Упрямый счётчик — отдельный пример",
+        "prompt": "Этот пример не меняет твою игру. После одного касания видим 2/3: сопоставь наблюдение и объяснение.",
+        "hints": [
+          "Сравни число событий и изменение числа.",
+          "Каждый огонёк должен перейти в состояние «собран» один раз.",
+          "Одно касание и +2 означает двойной учёт. Проверь защиту уже собранного предмета."
+        ],
+        "config": {
+          "cards": [
+            {
+              "id": "card_1",
+              "text": "Одно касание, счётчик +2"
+            },
+            {
+              "id": "card_2",
+              "text": "Собранный огонёк остаётся доступным"
+            },
+            {
+              "id": "card_3",
+              "text": "После перезапуска осталось 2/3"
+            }
+          ],
+          "targets": [
+            {
+              "id": "target_2",
+              "text": "Следующее касание может повторно увеличить счётчик"
+            },
+            {
+              "id": "target_3",
+              "text": "Счётчик не сброшен"
+            },
+            {
+              "id": "target_1",
+              "text": "Один предмет посчитан дважды"
+            }
+          ],
+          "accepted_pairs": {
+            "card_1": "target_1",
+            "card_2": "target_2",
+            "card_3": "target_3"
+          },
+          "pair_feedback": {
+            "card_1": "Одно касание, счётчик +2 — Один предмет посчитан дважды",
+            "card_2": "Собранный огонёк остаётся доступным — Следующее касание может повторно увеличить счётчик",
+            "card_3": "После перезапуска осталось 2/3 — Счётчик не сброшен"
+          }
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "game_move_return": {
+        "interaction_id": "game_move_return",
+        "type": "real_world_step",
+        "title": "Движение — проверить вместе",
+        "prompt": "Измени speed в настройках учебной игры вместе; сравни одинаковое нажатие при двух значениях.",
+        "hints": [
+          "Откройте соответствующую сохранённую версию проекта.",
+          "Проверьте конкретный критерий в работающей игре; одного нажатия «Запустить» недостаточно.",
+          "Коротко запишите наблюдение и собственную правку; если есть ошибка, предыдущая версия останется."
+        ],
+        "config": {
+          "criteria": [
+            "Основа запущена отдельным проектом.",
+            "Майя предсказала и проверила одно изменение скорости или направления."
+          ],
+          "fields": [
+            {
+              "id": "prediction",
+              "label": "Что ты ожидала изменить?",
+              "required": true
+            },
+            {
+              "id": "observation",
+              "label": "Что произошло после изменения?",
+              "required": true
+            },
+            {
+              "id": "own_change",
+              "label": "Что выбрала или изменила Майя?",
+              "required": true
+            },
+            {
+              "id": "own_contribution",
+              "label": "Какое решение или изменение сделала Майя на этом шаге?",
+              "required": true
+            }
+          ],
+          "materials": [
+            "Семейный компьютер",
+            "Godot и учебная основа",
+            "Помощь взрослого"
+          ],
+          "starter_project_id": "station_arcade_starter",
+          "learning_version": "0.1",
+          "requires_own_change": true,
+          "demonstration_is_completion": false,
+          "required_checks": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "game_goal_return": {
+        "interaction_id": "game_goal_return",
+        "type": "real_world_step",
+        "title": "Три огонька — проверить вместе",
+        "prompt": "Перенеси выбранную схему в отдельный проект. Собери предмет и вернись на его место: счётчик не должен измениться второй раз.",
+        "hints": [
+          "Откройте соответствующую сохранённую версию проекта.",
+          "Проверьте конкретный критерий в работающей игре; одного нажатия «Запустить» недостаточно.",
+          "Коротко запишите наблюдение и собственную правку; если есть ошибка, предыдущая версия останется."
+        ],
+        "config": {
+          "criteria": [
+            "В проекте размещены три собираемых объекта.",
+            "Каждый исчезает при касании и увеличивает счётчик ровно один раз."
+          ],
+          "fields": [
+            {
+              "id": "layout",
+              "label": "Как расположены три предмета?",
+              "required": true
+            },
+            {
+              "id": "observation",
+              "label": "Как проверили исчезновение и счётчик?",
+              "required": true
+            },
+            {
+              "id": "own_contribution",
+              "label": "Какое решение или изменение сделала Майя на этом шаге?",
+              "required": true
+            }
+          ],
+          "materials": [
+            "Семейный компьютер",
+            "Godot и учебная основа",
+            "Помощь взрослого"
+          ],
+          "starter_project_id": "station_arcade_starter",
+          "learning_version": "0.2",
+          "requires_own_change": true,
+          "demonstration_is_completion": false,
+          "required_checks": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "game_win_return": {
+        "interaction_id": "game_win_return",
+        "type": "real_world_step",
+        "title": "Понятная победа — проверить вместе",
+        "prompt": "Выбери текст победы. Проверь три промежуточных значения; готовый финал не должен включаться раньше.",
+        "hints": [
+          "Откройте соответствующую сохранённую версию проекта.",
+          "Проверьте конкретный критерий в работающей игре; одного нажатия «Запустить» недостаточно.",
+          "Коротко запишите наблюдение и собственную правку; если есть ошибка, предыдущая версия останется."
+        ],
+        "config": {
+          "criteria": [
+            "После одного и двух предметов победы нет.",
+            "После третьего появляется выбранное сообщение."
+          ],
+          "fields": [
+            {
+              "id": "win_message",
+              "label": "Какое сообщение ты выбрала?",
+              "required": true
+            },
+            {
+              "id": "observation",
+              "label": "Что происходит после 1, 2 и 3 предметов?",
+              "required": true
+            },
+            {
+              "id": "own_contribution",
+              "label": "Какое решение или изменение сделала Майя на этом шаге?",
+              "required": true
+            }
+          ],
+          "materials": [
+            "Семейный компьютер",
+            "Godot и учебная основа",
+            "Помощь взрослого"
+          ],
+          "starter_project_id": "station_arcade_starter",
+          "learning_version": "0.3",
+          "requires_own_change": true,
+          "demonstration_is_completion": false,
+          "required_checks": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "game_restart_return": {
+        "interaction_id": "game_restart_return",
+        "type": "real_world_step",
+        "title": "Снова с начала — проверить вместе",
+        "prompt": "Собери свет, нажми «Ещё раз» и проверь ноль, старт героя, три предмета и повторную победу.",
+        "hints": [
+          "Откройте соответствующую сохранённую версию проекта.",
+          "Проверьте конкретный критерий в работающей игре; одного нажатия «Запустить» недостаточно.",
+          "Коротко запишите наблюдение и собственную правку; если есть ошибка, предыдущая версия останется."
+        ],
+        "config": {
+          "criteria": [
+            "После перезапуска счётчик равен нулю.",
+            "Герой и все три предмета вернулись на свои стартовые места.",
+            "Повторный цикл снова проходим."
+          ],
+          "fields": [
+            {
+              "id": "observation",
+              "label": "Что сбросилось после кнопки и клавиши R?",
+              "required": true
+            },
+            {
+              "id": "own_contribution",
+              "label": "Какое решение или изменение сделала Майя на этом шаге?",
+              "required": true
+            }
+          ],
+          "materials": [
+            "Семейный компьютер",
+            "Godot и учебная основа",
+            "Помощь взрослого"
+          ],
+          "starter_project_id": "station_arcade_starter",
+          "learning_version": "0.4",
+          "requires_own_change": true,
+          "demonstration_is_completion": false,
+          "required_checks": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "game_premiere_return": {
+        "interaction_id": "game_premiere_return",
+        "type": "real_world_step",
+        "title": "Вечер первого запуска — проверить вместе",
+        "prompt": "Пригласи взрослого сыграть; выбери одно улучшение. Взрослый сохраняет копию исходников и регистрирует конкретную сборку отдельно.",
+        "hints": [
+          "Откройте соответствующую сохранённую версию проекта.",
+          "Проверьте конкретный критерий в работающей игре; одного нажатия «Запустить» недостаточно.",
+          "Коротко запишите наблюдение и собственную правку; если есть ошибка, предыдущая версия останется."
+        ],
+        "config": {
+          "criteria": [
+            "Взрослый прошёл игру от запуска до победы и перезапуска.",
+            "Есть одно наблюдение зрителя и выбранное Майей улучшение.",
+            "После улучшения полный цикл проверен снова.",
+            "Сохранены исходники, авторство и зарегистрированная версия."
+          ],
+          "fields": [
+            {
+              "id": "viewer_observation",
+              "label": "Что заметил первый игрок?",
+              "required": true
+            },
+            {
+              "id": "own_change",
+              "label": "Какое улучшение ты выбрала и внесла?",
+              "required": true
+            },
+            {
+              "id": "causal_explanation",
+              "label": "Почему изменение помогло?",
+              "required": true
+            },
+            {
+              "id": "shared_work",
+              "label": "Что сделали вместе?",
+              "required": true
+            },
+            {
+              "id": "source_version",
+              "label": "Какая сохранённая версия проекта?",
+              "required": true
+            },
+            {
+              "id": "own_contribution",
+              "label": "Какое решение или изменение сделала Майя на этом шаге?",
+              "required": true
+            }
+          ],
+          "materials": [
+            "Семейный компьютер",
+            "Godot и учебная основа",
+            "Помощь взрослого"
+          ],
+          "starter_project_id": "station_arcade_starter",
+          "learning_version": "1.0",
+          "requires_own_change": true,
+          "demonstration_is_completion": false,
+          "required_checks": [
+            "launches",
+            "movement",
+            "collection",
+            "win",
+            "clean_restart",
+            "own_improvement"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      }
+    },
+    "work_recipes": {
+      "game_concept_card": {
+        "recipe_id": "game_concept_card",
+        "title": "Замысел игры",
+        "work_kind": "note",
+        "presentations": [
+          "terminal",
+          "frame"
+        ]
+      },
+      "game_premiere": {
+        "recipe_id": "game_premiere",
+        "title": "Премьера игры",
+        "work_kind": "game",
+        "presentations": [
+          "terminal",
+          "frame"
+        ]
+      },
+      "game_project_version": {
+        "recipe_id": "game_project_version",
+        "title": "Версия моей игры",
+        "work_kind": "game",
+        "presentations": [
+          "terminal",
+          "frame"
+        ]
+      }
+    },
+    "grant_definitions": {
+      "arcade_counter": {
+        "grant_id": "arcade_counter",
+        "title": "Счётчик огоньков",
+        "kind": "known_presentation"
+      },
+      "arcade_movement": {
+        "grant_id": "arcade_movement",
+        "title": "Герой на экране",
+        "kind": "known_presentation"
+      },
+      "arcade_premiere": {
+        "grant_id": "arcade_premiere",
+        "title": "Автомат с игрой",
+        "kind": "known_presentation"
+      },
+      "arcade_restart_button": {
+        "grant_id": "arcade_restart_button",
+        "title": "Кнопка перезапуска",
+        "kind": "known_presentation"
+      },
+      "arcade_victory_lamp": {
+        "grant_id": "arcade_victory_lamp",
+        "title": "Лампа победы",
+        "kind": "known_presentation"
+      },
+      "game_concept_card": {
+        "grant_id": "game_concept_card",
+        "title": "Замысел на верстаке",
+        "kind": "known_presentation"
+      }
+    },
+    "dialogues": {
+      "intro": "Тео: «У меня есть корпус автомата. Какого героя ты поселишь на экране?»",
+      "return": "Твоя версия осталась на верстаке. Можно показать её или продолжить одну правку.",
+      "bug": "Здесь отдельный пример с двойным счётом. Твоя рабочая игра не менялась.",
+      "final": "На станции появилась игра. В карточке записано, какие решения её автор выбрала сама и что мы сделали вместе."
+    },
+    "return_text": "Уже сделанное осталось в архиве. Можно продолжить следующий маленький шаг или посмотреть свои работы.",
+    "starter_project_id": "station_arcade_starter",
+    "authorship_template": {
+      "prepared_foundation": "Учебная основа SUR, подготовлена разработчиком.",
+      "child_choices": "Заполняется по фактическим решениям Майи.",
+      "shared_work": "Заполняется по тому, что сделали вместе.",
+      "demonstration_only": true
+    },
+    "choice_effects": {
+      "theme": {
+        "lights": "game_concept_card",
+        "postcards": "game_concept_card",
+        "stones": "game_concept_card"
+      },
+      "layout": {
+        "upper_left": "arcade_counter",
+        "upper_right": "arcade_counter",
+        "lower_left": "arcade_counter",
+        "lower_right": "arcade_counter",
+        "center": "arcade_counter"
+      }
+    },
+    "choice_instructions": {
+      "theme": "Выбранная тема становится названием героя и предметов в собственной копии игры.",
+      "layout": "Выбранные три места перенести в координаты огоньков учебного проекта; проверить достижимость вместе."
+    }
+  },
+  "editorial_priority": 2
+}

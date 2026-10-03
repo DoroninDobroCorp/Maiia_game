@@ -1,0 +1,5145 @@
+{
+  "schema_version": 2,
+  "quest_id": "FG01",
+  "revision": 2,
+  "content_status": "DRAFT",
+  "kind": "project",
+  "title": "Голоса Южного Маяка",
+  "story_title": "Голоса Южного Маяка",
+  "summary": "Помочь Норе собрать передачу и личный альбом из ста полезных испанских слов.",
+  "is_main_quest": true,
+  "chapter_id": "chapter_02",
+  "chapter_key": "station_on_air",
+  "location_id": "radio_cafe",
+  "entry_anchor_id": "radio",
+  "goal_group": "maya_first_goals",
+  "goal_order": 1,
+  "estimated_minutes": {
+    "min": 5,
+    "max": 240
+  },
+  "completion_criteria": [
+    "Применены пять слов первого письма; выбран ответ и карточка позывного.",
+    "В личном наборе 25 разных лексем.",
+    "Завершены смысловые сцены конвертов 1–5.",
+    "В личном наборе 50 разных лексем.",
+    "Завершены смысловые сцены конвертов 6–10.",
+    "В личном наборе 75 разных лексем.",
+    "Завершены смысловые сцены конвертов 11–15.",
+    "В личном наборе 100 разных лексем.",
+    "Завершены смысловые сцены конвертов 16–20.",
+    "100 уникальных лексем; собственный выпуск; 14 из 20 ответов без карточки в смешанной проверке."
+  ],
+  "variants": [
+    {
+      "id": "home",
+      "title": "Дом и семейные шаги",
+      "home_available": true
+    }
+  ],
+  "context": {
+    "adult_presence": "for_review",
+    "requires_purchase": false,
+    "requires_network": false,
+    "risk_tags": []
+  },
+  "evidence_policy": {
+    "allowed": [
+      "game_event",
+      "parent_observation",
+      "note",
+      "local_image"
+    ],
+    "required_media": false,
+    "reviewer": "parent"
+  },
+  "reward_policy": {
+    "activity_budget": 40,
+    "lane": "project",
+    "skill_weights_percent": {
+      "spanish": 100
+    },
+    "world_effect_ids": []
+  },
+  "repeat_policy": {
+    "mode": "once",
+    "max_completions": 1
+  },
+  "provenance": {
+    "origin": "sur_first_chapter"
+  },
+  "required_capabilities": [
+    "adventure_v1",
+    "exhibits_v1"
+  ],
+  "content_dependencies": [],
+  "exhibit_ids": [
+    "radio_album",
+    "radio_contact_card",
+    "radio_episode_card",
+    "radio_menu",
+    "station_word_label",
+    "valley_postcard"
+  ],
+  "adventure": {
+    "stages": [
+      {
+        "stage_id": "es_intro",
+        "title": "Первый ответ",
+        "summary": "Нора запишет позывной после первого осмысленного ответа.",
+        "prerequisite_stage_ids": [],
+        "completion_policy": "automatic",
+        "budget_share": 0,
+        "grant_ids": [
+          "radio_first_contact"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "radio_contact_card",
+        "interaction_ids": [
+          "es_01_hello",
+          "es_callsign"
+        ],
+        "criteria": [
+          "Применены пять слов первого письма; выбран ответ и карточка позывного."
+        ],
+        "next_hint": "Можно открыть второе письмо или посмотреть первую открытку.",
+        "required": true
+      },
+      {
+        "stage_id": "es_channel_01",
+        "title": "Знакомство и радиокафе",
+        "summary": "Пять коротких ситуаций канала «Знакомство и радиокафе».",
+        "prerequisite_stage_ids": [
+          "es_intro"
+        ],
+        "completion_policy": "automatic",
+        "budget_share": 8,
+        "grant_ids": [
+          "radio_menu"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "radio_menu",
+        "interaction_ids": [
+          "es_02_postcards",
+          "es_03_tray",
+          "es_04_repeat",
+          "es_05_menu",
+          "es_05_order"
+        ],
+        "criteria": [
+          "В личном наборе 25 разных лексем.",
+          "Завершены смысловые сцены конвертов 1–5."
+        ],
+        "next_hint": "Можно открыть альбом или следующее письмо.",
+        "required": true,
+        "envelope_ids": [
+          "es_envelope_01",
+          "es_envelope_02",
+          "es_envelope_03",
+          "es_envelope_04",
+          "es_envelope_05"
+        ],
+        "required_lexeme_count": 25
+      },
+      {
+        "stage_id": "es_channel_02",
+        "title": "Дом и мастерская",
+        "summary": "Пять коротких ситуаций канала «Дом и мастерская».",
+        "prerequisite_stage_ids": [
+          "es_channel_01"
+        ],
+        "completion_policy": "automatic",
+        "budget_share": 8,
+        "grant_ids": [
+          "station_word_label"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "station_word_label",
+        "interaction_ids": [
+          "es_06_drawer",
+          "es_07_parcel",
+          "es_08_labels",
+          "es_09_mechanism",
+          "es_10_favorite"
+        ],
+        "criteria": [
+          "В личном наборе 50 разных лексем.",
+          "Завершены смысловые сцены конвертов 6–10."
+        ],
+        "next_hint": "Можно открыть альбом или следующее письмо.",
+        "required": true,
+        "envelope_ids": [
+          "es_envelope_06",
+          "es_envelope_07",
+          "es_envelope_08",
+          "es_envelope_09",
+          "es_envelope_10"
+        ],
+        "required_lexeme_count": 50
+      },
+      {
+        "stage_id": "es_channel_03",
+        "title": "Долина и вода",
+        "summary": "Пять коротких ситуаций канала «Долина и вода».",
+        "prerequisite_stage_ids": [
+          "es_channel_02"
+        ],
+        "completion_policy": "automatic",
+        "budget_share": 8,
+        "grant_ids": [
+          "valley_postcard"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "valley_postcard",
+        "interaction_ids": [
+          "es_11_valley",
+          "es_12_distance",
+          "es_13_caption",
+          "es_13_my_caption",
+          "es_14_weather",
+          "es_15_dispatch"
+        ],
+        "criteria": [
+          "В личном наборе 75 разных лексем.",
+          "Завершены смысловые сцены конвертов 11–15."
+        ],
+        "next_hint": "Можно открыть альбом или следующее письмо.",
+        "required": true,
+        "envelope_ids": [
+          "es_envelope_11",
+          "es_envelope_12",
+          "es_envelope_13",
+          "es_envelope_14",
+          "es_envelope_15"
+        ],
+        "required_lexeme_count": 75
+      },
+      {
+        "stage_id": "es_channel_04",
+        "title": "Действия и маленькие истории",
+        "summary": "Пять коротких ситуаций канала «Действия и маленькие истории».",
+        "prerequisite_stage_ids": [
+          "es_channel_03"
+        ],
+        "completion_policy": "automatic",
+        "budget_share": 8,
+        "grant_ids": [
+          "radio_album"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "radio_album",
+        "interaction_ids": [
+          "es_16_story",
+          "es_17_directions",
+          "es_17_walk",
+          "es_18_correction",
+          "es_19_senses",
+          "es_19_ending",
+          "es_20_broadcast",
+          "es_20_cover"
+        ],
+        "criteria": [
+          "В личном наборе 100 разных лексем.",
+          "Завершены смысловые сцены конвертов 16–20."
+        ],
+        "next_hint": "Можно открыть альбом или следующее письмо.",
+        "required": true,
+        "envelope_ids": [
+          "es_envelope_16",
+          "es_envelope_17",
+          "es_envelope_18",
+          "es_envelope_19",
+          "es_envelope_20"
+        ],
+        "required_lexeme_count": 100
+      },
+      {
+        "stage_id": "es_final",
+        "title": "Выпуск в эфире",
+        "summary": "Нора ждёт выбранные страницы и спокойную смешанную попытку.",
+        "prerequisite_stage_ids": [
+          "es_channel_04"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 8,
+        "grant_ids": [
+          "radio_callsign"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "radio_episode_card",
+        "interaction_ids": [
+          "es_mixed_check",
+          "es_joint_broadcast"
+        ],
+        "criteria": [
+          "100 уникальных лексем; собственный выпуск; 14 из 20 ответов без карточки в смешанной проверке."
+        ],
+        "next_hint": "Можно выставить альбом или открыть старые письма без повторной награды.",
+        "required": true
+      }
+    ],
+    "interactions": {
+      "es_01_hello": {
+        "interaction_id": "es_01_hello",
+        "type": "scripted_dialogue",
+        "title": "Первый ответ",
+        "prompt": "Выбери приветствие и ответ Норе. Nombre — имя; можно взять название станции.",
+        "hints": [
+          "Нора сначала здоровается: hola.",
+          "Sí — согласие, no — отказ. Оба решения разрешены.",
+          "Можно ответить: Hola. Sí, gracias. Позывной вписывается отдельно."
+        ],
+        "config": {
+          "start_node_id": "node_1",
+          "nodes": [
+            {
+              "node_id": "node_1",
+              "speaker": "Нора",
+              "text": "Hola. Ты хочешь оставить nombre станции в эфире?",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Hola. Sí, gracias.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Ты поздоровалась и согласилась. Теперь в карточке можно вписать позывной."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Hola. No, gracias.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Можно пока оставить позывной «Станция». Имя выберешь позже."
+                },
+                {
+                  "id": "choice_3",
+                  "text": "Gracias. Nombre.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Gracias благодарит, nombre называет имя. Сначала поздоровайся словом hola."
+                }
+              ]
+            },
+            {
+              "node_id": "end",
+              "speaker": "Нора",
+              "text": "Сообщение дошло. Оставим его в альбоме; продолжить можно в любой день.",
+              "terminal": true,
+              "choices": []
+            }
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_callsign": {
+        "interaction_id": "es_callsign",
+        "type": "exhibit_composition",
+        "title": "Позывной станции",
+        "prompt": "Выбери основу карточки; имя можно написать или оставить на потом.",
+        "hints": [
+          "Посмотри на табличку своей станции.",
+          "Позывной помогает узнать отправителя; он не проверка испанского.",
+          "Можно выбрать «Имя моей станции» и ничего не записывать голосом."
+        ],
+        "config": {
+          "choices": [
+            {
+              "id": "station",
+              "text": "Имя моей станции"
+            },
+            {
+              "id": "light",
+              "text": "Свет долины"
+            },
+            {
+              "id": "own",
+              "text": "Свой позывной"
+            }
+          ],
+          "min_selected": 1,
+          "max_selected": 1,
+          "fields": [
+            {
+              "id": "callsign",
+              "label": "Позывной",
+              "required": false
+            }
+          ],
+          "source_stage_ids": [],
+          "lexeme_credit": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_02_postcards": {
+        "interaction_id": "es_02_postcards",
+        "type": "match_cards",
+        "title": "Кому открытка?",
+        "prompt": "Подбери подписи: yo — я, tú — ты, amiga — подруга. Soy/eres означают «я/ты есть».",
+        "hints": [
+          "Ищи слово, которое прямо называет рисунок.",
+          "Yo рассказывает о говорящем, tú обращается к собеседнику.",
+          "Mi casa подходит к рисунку дома; carta — к письму."
+        ],
+        "config": {
+          "cards": [
+            {
+              "id": "card_1",
+              "text": "Yo soy Nora."
+            },
+            {
+              "id": "card_2",
+              "text": "Tú eres mi amiga."
+            },
+            {
+              "id": "card_3",
+              "text": "Mi casa."
+            },
+            {
+              "id": "card_4",
+              "text": "Una carta."
+            }
+          ],
+          "targets": [
+            {
+              "id": "target_2",
+              "text": "Карточка обращения к подруге"
+            },
+            {
+              "id": "target_3",
+              "text": "Рисунок дома"
+            },
+            {
+              "id": "target_4",
+              "text": "Конверт с письмом"
+            },
+            {
+              "id": "target_1",
+              "text": "Карточка, где Нора представляет себя"
+            }
+          ],
+          "accepted_pairs": {
+            "card_1": "target_1",
+            "card_2": "target_2",
+            "card_3": "target_3",
+            "card_4": "target_4"
+          },
+          "pair_feedback": {
+            "card_1": "Yo soy Nora. — Карточка, где Нора представляет себя",
+            "card_2": "Tú eres mi amiga. — Карточка обращения к подруге",
+            "card_3": "Mi casa. — Рисунок дома",
+            "card_4": "Una carta. — Конверт с письмом"
+          }
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_03_tray": {
+        "interaction_id": "es_03_tray",
+        "type": "assemble_selection",
+        "title": "Заказ у окна",
+        "prompt": "Pan y leche, gracias. Y означает «и». Поставь на поднос ровно два предмета.",
+        "hints": [
+          "В просьбе названы два предмета, соединённые y.",
+          "Pan — хлеб, leche — молоко. Чая в этом заказе нет.",
+          "Поставь pan и leche; остальные карточки оставь на столе."
+        ],
+        "config": {
+          "items": [
+            {
+              "id": "water",
+              "text": "Agua — вода"
+            },
+            {
+              "id": "bread",
+              "text": "Pan — хлеб"
+            },
+            {
+              "id": "milk",
+              "text": "Leche — молоко"
+            },
+            {
+              "id": "tea",
+              "text": "Té — чай"
+            },
+            {
+              "id": "cheese",
+              "text": "Queso — сыр"
+            }
+          ],
+          "required_ids": [
+            "bread",
+            "milk"
+          ],
+          "min_selected": 2,
+          "max_selected": 2,
+          "ordered": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_04_repeat": {
+        "interaction_id": "es_04_repeat",
+        "type": "scripted_dialogue",
+        "title": "Недостающий кусочек",
+        "prompt": "¿Puedes…? значит «Можешь…?» Выбери просьбу повторить, затем ответь на сообщение.",
+        "hints": [
+          "Неясность можно назвать: no entiendo.",
+          "Repetir — повторить; despacio — медленно.",
+          "Выбери «Perdón, ¿puedes repetir despacio?», затем «Pan y queso»."
+        ],
+        "config": {
+          "start_node_id": "node_1",
+          "nodes": [
+            {
+              "node_id": "node_1",
+              "speaker": "Нора",
+              "text": "… pan … [шорох]. Как попросить повторить?",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Perdón, ¿puedes repetir despacio?",
+                  "correct": true,
+                  "next_node_id": "node_2",
+                  "feedback": "Нора повторяет медленно: Pan y queso, gracias."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Sí, entiendo.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Это означает «Да, понимаю». Если фрагмент потерялся, можно переспросить."
+                },
+                {
+                  "id": "choice_3",
+                  "text": "No quiero escuchar.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Это «Не хочу слушать». Для переспроса пригодится repetir."
+                }
+              ]
+            },
+            {
+              "node_id": "node_2",
+              "speaker": "Нора",
+              "text": "Pan y queso, gracias.",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Pan y queso.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Теперь оба предмета названы."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Pan y leche.",
+                  "correct": false,
+                  "next_node_id": "node_2",
+                  "feedback": "Молоко было в прошлом заказе. Сейчас Нора сказала queso — сыр."
+                }
+              ]
+            },
+            {
+              "node_id": "end",
+              "speaker": "Нора",
+              "text": "Сообщение дошло. Оставим его в альбоме; продолжить можно в любой день.",
+              "terminal": true,
+              "choices": []
+            }
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_05_menu": {
+        "interaction_id": "es_05_menu",
+        "type": "assemble_selection",
+        "title": "Моё меню",
+        "prompt": "Оставь sopa и jugo для гостя, а третий пункт выбери сама. Quiero значит «хочу».",
+        "hints": [
+          "Заказ Норы — sopa y jugo.",
+          "Два нужных пункта обязательны для этой сценки; третий выбираешь ты.",
+          "Добавь sopa, jugo и, например, pan."
+        ],
+        "config": {
+          "items": [
+            {
+              "id": "soup",
+              "text": "Sopa — суп"
+            },
+            {
+              "id": "juice",
+              "text": "Jugo — сок"
+            },
+            {
+              "id": "coffee",
+              "text": "Café — кофе"
+            },
+            {
+              "id": "tea",
+              "text": "Té — чай"
+            },
+            {
+              "id": "bread",
+              "text": "Pan — хлеб"
+            }
+          ],
+          "required_ids": [
+            "soup",
+            "juice"
+          ],
+          "min_selected": 3,
+          "max_selected": 3,
+          "ordered": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_05_order": {
+        "interaction_id": "es_05_order",
+        "type": "scripted_dialogue",
+        "title": "Первый гость",
+        "prompt": "Можно отвечать кнопками или разыграть сцену вместе.",
+        "hints": [
+          "Сначала найди заказ на своём меню.",
+          "Dulce описывает вкус, а не новый предмет.",
+          "«Sí. Sopa y jugo, gracias» подтверждает нужные два пункта."
+        ],
+        "config": {
+          "start_node_id": "node_1",
+          "nodes": [
+            {
+              "node_id": "node_1",
+              "speaker": "Нора",
+              "text": "Quiero sopa y jugo. ¿El jugo es dulce? (Сок сладкий?)",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Sí. Sopa y jugo, gracias.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Заказ соответствует меню. Сладкий — dulce."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Quiero café.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Это твой заказ кофе. Нора попросила суп и сок."
+                }
+              ]
+            },
+            {
+              "node_id": "end",
+              "speaker": "Нора",
+              "text": "Сообщение дошло. Оставим его в альбоме; продолжить можно в любой день.",
+              "terminal": true,
+              "choices": []
+            }
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_06_drawer": {
+        "interaction_id": "es_06_drawer",
+        "type": "inspect_reveal",
+        "title": "Что где лежит?",
+        "prompt": "En означает «в/на». Открой три подписанных детали, чтобы найти ключ.",
+        "hints": [
+          "Llave — предмет, который ищет Нора.",
+          "Она сказала caja, а не mesa или silla.",
+          "Осмотри коробку «Caja: llave»; затем подпись двери."
+        ],
+        "config": {
+          "details": [
+            {
+              "id": "desk",
+              "title": "Mesa y silla",
+              "text": "Стол и стул: на столе письмо, под стулом ничего не спрятано."
+            },
+            {
+              "id": "box",
+              "title": "Caja: llave",
+              "text": "В коробке лежит llave — ключ."
+            },
+            {
+              "id": "door",
+              "title": "Puerta",
+              "text": "Нора: теперь ключ можно оставить рядом с дверью, а подпись — в альбоме."
+            }
+          ],
+          "required_detail_ids": [
+            "desk",
+            "box",
+            "door"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_07_parcel": {
+        "interaction_id": "es_07_parcel",
+        "type": "assemble_selection",
+        "title": "Собрать посылку",
+        "prompt": "Положи в bolsa ровно три вещи из списка Тео.",
+        "hints": [
+          "Bolsa — сама сумка, её не кладут внутрь себя.",
+          "Список: papel, lápiz, cinta. Libro в нём нет.",
+          "Выбери бумагу, карандаш и ленту."
+        ],
+        "config": {
+          "items": [
+            {
+              "id": "paper",
+              "text": "Papel — бумага"
+            },
+            {
+              "id": "pencil",
+              "text": "Lápiz — карандаш"
+            },
+            {
+              "id": "book",
+              "text": "Libro — книга"
+            },
+            {
+              "id": "bag",
+              "text": "Bolsa — сумка"
+            },
+            {
+              "id": "tape",
+              "text": "Cinta — лента"
+            }
+          ],
+          "required_ids": [
+            "paper",
+            "pencil",
+            "tape"
+          ],
+          "min_selected": 3,
+          "max_selected": 3,
+          "ordered": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_08_labels": {
+        "interaction_id": "es_08_labels",
+        "type": "match_cards",
+        "title": "Цвет и размер",
+        "prompt": "Цвета названы словами, поэтому цвет экрана не нужен. Roja — форма rojo для caja.",
+        "hints": [
+          "Начни с знакомых существительных: caja, lápiz, puerta.",
+          "Rojo/roja — один красный цвет; pequeño/pequeña — один размер.",
+          "Caja roja — красная коробка; mesa grande — большой стол."
+        ],
+        "config": {
+          "cards": [
+            {
+              "id": "card_1",
+              "text": "Caja roja"
+            },
+            {
+              "id": "card_2",
+              "text": "Lápiz azul"
+            },
+            {
+              "id": "card_3",
+              "text": "Puerta verde"
+            },
+            {
+              "id": "card_4",
+              "text": "Mesa grande"
+            },
+            {
+              "id": "card_5",
+              "text": "Caja pequeña"
+            }
+          ],
+          "targets": [
+            {
+              "id": "target_2",
+              "text": "Синий карандаш"
+            },
+            {
+              "id": "target_3",
+              "text": "Зелёная дверь"
+            },
+            {
+              "id": "target_4",
+              "text": "Большой стол"
+            },
+            {
+              "id": "target_5",
+              "text": "Маленькая коробка"
+            },
+            {
+              "id": "target_1",
+              "text": "Красная коробка"
+            }
+          ],
+          "accepted_pairs": {
+            "card_1": "target_1",
+            "card_2": "target_2",
+            "card_3": "target_3",
+            "card_4": "target_4",
+            "card_5": "target_5"
+          },
+          "pair_feedback": {
+            "card_1": "Caja roja — Красная коробка",
+            "card_2": "Lápiz azul — Синий карандаш",
+            "card_3": "Puerta verde — Зелёная дверь",
+            "card_4": "Mesa grande — Большой стол",
+            "card_5": "Caja pequeña — Маленькая коробка"
+          }
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_09_mechanism": {
+        "interaction_id": "es_09_mechanism",
+        "type": "scripted_dialogue",
+        "title": "Как помочь?",
+        "prompt": "Abrir — открыть, sacar — достать. Выбери действия по порядку.",
+        "hints": [
+          "Подумай, что закрывает доступ к письму.",
+          "Сначала abrir, затем sacar. Poner — положить обратно.",
+          "«Abrir la caja» откроет крышку, «Sacar la carta» достанет письмо."
+        ],
+        "config": {
+          "start_node_id": "node_1",
+          "nodes": [
+            {
+              "node_id": "node_1",
+              "speaker": "Тео",
+              "text": "Крышка закрыта. Что поможет добраться до письма?",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Abrir la caja.",
+                  "correct": true,
+                  "next_node_id": "node_2",
+                  "feedback": "Крышка открыта; теперь письмо видно."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Cerrar la caja.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Cerrar закрывает. Сейчас нужна открытая коробка."
+                },
+                {
+                  "id": "choice_3",
+                  "text": "Poner la caja en la mesa.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Коробка уже на столе. Сначала открой крышку."
+                }
+              ]
+            },
+            {
+              "node_id": "node_2",
+              "speaker": "Тео",
+              "text": "Письмо видно. Что дальше?",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Sacar la carta.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Ты достала письмо. Ayudar — помочь."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Cerrar la caja.",
+                  "correct": false,
+                  "next_node_id": "node_2",
+                  "feedback": "Письмо пока внутри. Sacar означает достать."
+                }
+              ]
+            },
+            {
+              "node_id": "end",
+              "speaker": "Тео",
+              "text": "Сообщение дошло. Оставим его в альбоме; продолжить можно в любой день.",
+              "terminal": true,
+              "choices": []
+            }
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_10_favorite": {
+        "interaction_id": "es_10_favorite",
+        "type": "exhibit_composition",
+        "title": "Карточка вещи",
+        "prompt": "Выбери подпись или напиши свою. Mi — мой/моя; favorito — любимый; suave — мягкий.",
+        "hints": [
+          "Выбери знакомый предмет, не самый красивый.",
+          "Mi связывает подпись с тобой; nuevo и viejo описывают возраст вещи.",
+          "Можно выбрать «Mi libro viejo favorito» и добавить пару слов о своей книге."
+        ],
+        "config": {
+          "choices": [
+            {
+              "id": "book",
+              "text": "Mi libro viejo favorito — моя любимая старая книга"
+            },
+            {
+              "id": "pencil",
+              "text": "Mi lápiz nuevo — мой новый карандаш"
+            },
+            {
+              "id": "paper",
+              "text": "Mi papel suave — моя мягкая бумага"
+            }
+          ],
+          "min_selected": 1,
+          "max_selected": 1,
+          "fields": [
+            {
+              "id": "description",
+              "label": "Что это за вещь и почему ты её выбрала?",
+              "required": false
+            }
+          ],
+          "source_stage_ids": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_11_valley": {
+        "interaction_id": "es_11_valley",
+        "type": "match_cards",
+        "title": "Подписать открытку",
+        "prompt": "Разложи названия у словесных описаний пяти деталей.",
+        "hints": [
+          "Río и cascada оба про воду, но её движение разное.",
+          "Montaña — гора целиком; piedra — отдельный камень.",
+          "К подписи «вода падает уступом» подходит cascada."
+        ],
+        "config": {
+          "cards": [
+            {
+              "id": "card_1",
+              "text": "Río"
+            },
+            {
+              "id": "card_2",
+              "text": "Cascada"
+            },
+            {
+              "id": "card_3",
+              "text": "Montaña"
+            },
+            {
+              "id": "card_4",
+              "text": "Árbol"
+            },
+            {
+              "id": "card_5",
+              "text": "Piedra"
+            }
+          ],
+          "targets": [
+            {
+              "id": "target_2",
+              "text": "Вода падает уступом"
+            },
+            {
+              "id": "target_3",
+              "text": "Высокая каменная вершина"
+            },
+            {
+              "id": "target_4",
+              "text": "Ствол с кроной"
+            },
+            {
+              "id": "target_5",
+              "text": "Отдельный камень у берега"
+            },
+            {
+              "id": "target_1",
+              "text": "Вода течёт вдоль берега"
+            }
+          ],
+          "accepted_pairs": {
+            "card_1": "target_1",
+            "card_2": "target_2",
+            "card_3": "target_3",
+            "card_4": "target_4",
+            "card_5": "target_5"
+          },
+          "pair_feedback": {
+            "card_1": "Río — Вода течёт вдоль берега",
+            "card_2": "Cascada — Вода падает уступом",
+            "card_3": "Montaña — Высокая каменная вершина",
+            "card_4": "Árbol — Ствол с кроной",
+            "card_5": "Piedra — Отдельный камень у берега"
+          }
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_12_distance": {
+        "interaction_id": "es_12_distance",
+        "type": "order_fragments",
+        "title": "Подпись панорамы",
+        "prompt": "Собери фразу «Длинная река; высокая гора далеко». La/el — служебные слова перед названием.",
+        "hints": [
+          "Фраза начинается с реки, потом переходит к горе.",
+          "Largo — длинный, alta — высокая, lejos — далеко. Corto и bajo описывают другой рисунок.",
+          "El río largo; → la montaña alta → está lejos."
+        ],
+        "config": {
+          "fragments": [
+            {
+              "id": "fragment_2",
+              "text": "la montaña alta"
+            },
+            {
+              "id": "fragment_3",
+              "text": "está lejos."
+            },
+            {
+              "id": "fragment_1",
+              "text": "El río largo;"
+            }
+          ],
+          "accepted_orders": [
+            [
+              "fragment_1",
+              "fragment_2",
+              "fragment_3"
+            ]
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_13_caption": {
+        "interaction_id": "es_13_caption",
+        "type": "assemble_selection",
+        "title": "Подпись к рисунку",
+        "prompt": "Для подписи «рисунок: синяя линия, свет» возьми dibujo, línea azul, luz.",
+        "hints": [
+          "Начни с названия работы: dibujo.",
+          "В подписи есть линия и свет; тень сюда можно добавить в другой версии.",
+          "Выбери Dibujo, Línea azul и Luz."
+        ],
+        "config": {
+          "items": [
+            {
+              "id": "drawing",
+              "text": "Dibujo — рисунок"
+            },
+            {
+              "id": "line",
+              "text": "Línea azul — синяя линия"
+            },
+            {
+              "id": "light",
+              "text": "Luz — свет"
+            },
+            {
+              "id": "shadow",
+              "text": "Sombra — тень"
+            },
+            {
+              "id": "color",
+              "text": "Color verde — зелёный цвет"
+            }
+          ],
+          "required_ids": [
+            "drawing",
+            "line",
+            "light"
+          ],
+          "min_selected": 3,
+          "max_selected": 3,
+          "ordered": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_13_my_caption": {
+        "interaction_id": "es_13_my_caption",
+        "type": "exhibit_composition",
+        "title": "Мой вариант",
+        "prompt": "Теперь выбери настроение своей подписи; учебную картинку можно заменить своим рисунком.",
+        "hints": [
+          "Варианты равноценны.",
+          "Подпись может быть очень короткой.",
+          "Можно оставить «Una línea azul»."
+        ],
+        "config": {
+          "choices": [
+            {
+              "id": "light",
+              "text": "Luz en el río — свет на реке"
+            },
+            {
+              "id": "shadow",
+              "text": "Sombra del árbol — тень дерева"
+            },
+            {
+              "id": "line",
+              "text": "Una línea azul — синяя линия"
+            }
+          ],
+          "min_selected": 1,
+          "max_selected": 1,
+          "fields": [
+            {
+              "id": "caption",
+              "label": "Моя подпись",
+              "required": false
+            }
+          ],
+          "source_stage_ids": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_14_weather": {
+        "interaction_id": "es_14_weather",
+        "type": "scripted_dialogue",
+        "title": "Когда идёт дождь?",
+        "prompt": "Hoy — сегодня, mañana — завтра. Hay значит «есть/бывает».",
+        "hints": [
+          "Найди слово mañana.",
+          "Hoy и mañana разделяют две части сообщения.",
+          "После mañana стоят lluvia y viento — дождь и ветер."
+        ],
+        "config": {
+          "start_node_id": "node_1",
+          "nodes": [
+            {
+              "node_id": "node_1",
+              "speaker": "Нора",
+              "text": "Hoy hay sol. Mañana hay lluvia y viento. Что нарисовать в окошке «завтра»?",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Lluvia y viento.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Верно для этой вымышленной истории: дождь и ветер завтра."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Sol.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Солнце стоит после hoy — сегодня."
+                },
+                {
+                  "id": "choice_3",
+                  "text": "Una montaña.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Гора — место, а Нора сейчас говорит о погоде."
+                }
+              ]
+            },
+            {
+              "node_id": "end",
+              "speaker": "Нора",
+              "text": "Сообщение дошло. Оставим его в альбоме; продолжить можно в любой день.",
+              "terminal": true,
+              "choices": []
+            }
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_15_dispatch": {
+        "interaction_id": "es_15_dispatch",
+        "type": "exhibit_composition",
+        "title": "Заметка из долины",
+        "prompt": "Aquí — здесь, allí — там. Выбери тему: она определит оформление финальной открытки.",
+        "hints": [
+          "Выбери одну деталь своей или учебной картинки.",
+          "Aquí указывает на близкое; allí — на то, что дальше на рисунке.",
+          "Можно выбрать «Aquí está mi dibujo del valle» и подписать открытку."
+        ],
+        "config": {
+          "choices": [
+            {
+              "id": "valley",
+              "text": "Aquí está mi dibujo del valle — здесь мой рисунок долины"
+            },
+            {
+              "id": "sky",
+              "text": "Allí hay una nube en el cielo — там облако в небе"
+            },
+            {
+              "id": "river",
+              "text": "Allí está el río — там река"
+            }
+          ],
+          "min_selected": 1,
+          "max_selected": 1,
+          "fields": [
+            {
+              "id": "broadcast_theme",
+              "label": "Моя тема выпуска",
+              "required": false
+            },
+            {
+              "id": "dispatch",
+              "label": "Моя заметка",
+              "required": false
+            }
+          ],
+          "source_stage_ids": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_16_story": {
+        "interaction_id": "es_16_story",
+        "type": "order_fragments",
+        "title": "Пять кадров",
+        "prompt": "Поставь кадры по описанной истории. Формы llega/busca связаны с карточками llegar/buscar.",
+        "hints": [
+          "Сначала Нора приходит; ключ нельзя найти раньше поиска.",
+          "Llegar → buscar → encontrar → llevar → volver.",
+          "Начни с «Nora llega a casa», затем «Nora busca la llave»."
+        ],
+        "config": {
+          "fragments": [
+            {
+              "id": "fragment_2",
+              "text": "Nora busca la llave."
+            },
+            {
+              "id": "fragment_3",
+              "text": "Nora encuentra la llave."
+            },
+            {
+              "id": "fragment_4",
+              "text": "Nora lleva la carta."
+            },
+            {
+              "id": "fragment_5",
+              "text": "Nora vuelve a la estación."
+            },
+            {
+              "id": "fragment_1",
+              "text": "Nora llega a casa."
+            }
+          ],
+          "accepted_orders": [
+            [
+              "fragment_1",
+              "fragment_2",
+              "fragment_3",
+              "fragment_4",
+              "fragment_5"
+            ]
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_17_directions": {
+        "interaction_id": "es_17_directions",
+        "type": "match_cards",
+        "title": "Где находится?",
+        "prompt": "Подбери направление для предметов на словесной схеме.",
+        "hints": [
+          "Представь, что смотришь в ту же сторону, что герой.",
+          "Delante и detrás описывают вперёд/назад, не влево/вправо.",
+          "Письмо справа: derecha. Коробка позади: detrás."
+        ],
+        "config": {
+          "cards": [
+            {
+              "id": "card_1",
+              "text": "Izquierda"
+            },
+            {
+              "id": "card_2",
+              "text": "Derecha"
+            },
+            {
+              "id": "card_3",
+              "text": "Delante"
+            },
+            {
+              "id": "card_4",
+              "text": "Detrás"
+            }
+          ],
+          "targets": [
+            {
+              "id": "target_2",
+              "text": "Правая сторона, где письмо"
+            },
+            {
+              "id": "target_3",
+              "text": "Впереди, где стол"
+            },
+            {
+              "id": "target_4",
+              "text": "Позади, где коробка"
+            },
+            {
+              "id": "target_1",
+              "text": "Левая сторона"
+            }
+          ],
+          "accepted_pairs": {
+            "card_1": "target_1",
+            "card_2": "target_2",
+            "card_3": "target_3",
+            "card_4": "target_4"
+          },
+          "pair_feedback": {
+            "card_1": "Izquierda — Левая сторона",
+            "card_2": "Derecha — Правая сторона, где письмо",
+            "card_3": "Delante — Впереди, где стол",
+            "card_4": "Detrás — Позади, где коробка"
+          }
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_17_walk": {
+        "interaction_id": "es_17_walk",
+        "type": "scripted_dialogue",
+        "title": "Дойти до письма",
+        "prompt": "Caminar — идти пешком. Выбери одно указание.",
+        "hints": [
+          "Письмо справа от старта.",
+          "A la derecha — направо.",
+          "Выбери «Caminar a la derecha»."
+        ],
+        "config": {
+          "start_node_id": "node_1",
+          "nodes": [
+            {
+              "node_id": "node_1",
+              "speaker": "Тео",
+              "text": "Письмо справа. Куда отправить героя?",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Caminar a la derecha.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Герой бумажной сцены дошёл до письма."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Caminar a la izquierda.",
+                  "correct": false,
+                  "next_node_id": "node_1",
+                  "feedback": "Это налево. Письмо находится справа — derecha."
+                }
+              ]
+            },
+            {
+              "node_id": "end",
+              "speaker": "Тео",
+              "text": "Сообщение дошло. Оставим его в альбоме; продолжить можно в любой день.",
+              "terminal": true,
+              "choices": []
+            }
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_18_correction": {
+        "interaction_id": "es_18_correction",
+        "type": "assemble_selection",
+        "title": "Исправить подпись",
+        "prompt": "На рисунке: камень ● и камень ●. Выбери подпись, соответствующую двум камням.",
+        "hints": [
+          "Посчитай отмеченные камни: один, два.",
+          "Uno/una — один, dos — два, tres — три. В старой подписи на один больше: más.",
+          "Выбери «Dos piedras». Это на один меньше: menos."
+        ],
+        "config": {
+          "items": [
+            {
+              "id": "one",
+              "text": "Una piedra — один камень"
+            },
+            {
+              "id": "two",
+              "text": "Dos piedras — два камня"
+            },
+            {
+              "id": "three",
+              "text": "Tres piedras — три камня"
+            }
+          ],
+          "required_ids": [
+            "two"
+          ],
+          "min_selected": 1,
+          "max_selected": 1,
+          "ordered": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_19_senses": {
+        "interaction_id": "es_19_senses",
+        "type": "match_cards",
+        "title": "Что заметил герой?",
+        "prompt": "Раздели три наблюдения. Это текстовая сцена: звук включать не нужно.",
+        "hints": [
+          "Глаголы различают способы заметить мир.",
+          "Ver/veo — видеть, oír/oigo — слышать, sentir/siento — чувствовать.",
+          "Oigo la lluvia значит «Слышу дождь»."
+        ],
+        "config": {
+          "cards": [
+            {
+              "id": "card_1",
+              "text": "Veo el río."
+            },
+            {
+              "id": "card_2",
+              "text": "Oigo la lluvia."
+            },
+            {
+              "id": "card_3",
+              "text": "Siento el viento."
+            }
+          ],
+          "targets": [
+            {
+              "id": "target_2",
+              "text": "Слышу дождь"
+            },
+            {
+              "id": "target_3",
+              "text": "Чувствую ветер"
+            },
+            {
+              "id": "target_1",
+              "text": "Вижу реку"
+            }
+          ],
+          "accepted_pairs": {
+            "card_1": "target_1",
+            "card_2": "target_2",
+            "card_3": "target_3"
+          },
+          "pair_feedback": {
+            "card_1": "Veo el río. — Вижу реку",
+            "card_2": "Oigo la lluvia. — Слышу дождь",
+            "card_3": "Siento el viento. — Чувствую ветер"
+          }
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_19_ending": {
+        "interaction_id": "es_19_ending",
+        "type": "scripted_dialogue",
+        "title": "Выбрать финал",
+        "prompt": "Elegir — выбирать, contar — рассказывать. Обе концовки подходят известным фактам.",
+        "hints": [
+          "Оба наблюдения присутствуют в истории.",
+          "Здесь нет единственной любимой автором концовки.",
+          "Выбери про реку или дождь; решение останется в альбоме."
+        ],
+        "config": {
+          "start_node_id": "node_1",
+          "nodes": [
+            {
+              "node_id": "node_1",
+              "speaker": "Нора",
+              "text": "Что герой расскажет в конце?",
+              "choices": [
+                {
+                  "id": "choice_1",
+                  "text": "Elijo contar: veo el río.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Финал будет про реку, которую он увидел."
+                },
+                {
+                  "id": "choice_2",
+                  "text": "Elijo contar: oigo la lluvia.",
+                  "correct": true,
+                  "next_node_id": "end",
+                  "feedback": "Финал будет про дождь, который он услышал."
+                }
+              ]
+            },
+            {
+              "node_id": "end",
+              "speaker": "Нора",
+              "text": "Сообщение дошло. Оставим его в альбоме; продолжить можно в любой день.",
+              "terminal": true,
+              "choices": []
+            }
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_20_broadcast": {
+        "interaction_id": "es_20_broadcast",
+        "type": "assemble_selection",
+        "title": "Мой выпуск",
+        "prompt": "Выбери три страницы для выпуска. Voz — голос, mensaje — сообщение, historia — история; juntos — вместе.",
+        "hints": [
+          "Вспомни три страницы, которые хочется показать.",
+          "Здесь выбираешь ты: порядок вкусов не оценивается.",
+          "Можно взять первый контакт, открытку долины и историю у окна."
+        ],
+        "config": {
+          "items": [
+            {
+              "id": "greeting",
+              "text": "Hola: первый контакт"
+            },
+            {
+              "id": "menu",
+              "text": "Моё меню"
+            },
+            {
+              "id": "object",
+              "text": "Любимая вещь"
+            },
+            {
+              "id": "valley",
+              "text": "Открытка долины"
+            },
+            {
+              "id": "story",
+              "text": "История у окна"
+            }
+          ],
+          "required_ids": [],
+          "min_selected": 3,
+          "max_selected": 3,
+          "ordered": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_20_cover": {
+        "interaction_id": "es_20_cover",
+        "type": "exhibit_composition",
+        "title": "Обложка эфира",
+        "prompt": "Выбери оформление выпуска и, если хочешь, название. Hasta mañana — до завтра; возвращаться именно завтра необязательно.",
+        "hints": [
+          "Обложка может продолжить тему пятнадцатого письма.",
+          "Любую обложку можно позднее заменить без новой награды.",
+          "Выбери один вариант и оставь короткое название."
+        ],
+        "config": {
+          "choices": [
+            {
+              "id": "valley",
+              "text": "Historia del valle — история долины"
+            },
+            {
+              "id": "cafe",
+              "text": "Juntos en el café — вместе в кафе"
+            },
+            {
+              "id": "workshop",
+              "text": "Un mensaje de mi estación — сообщение моей станции"
+            }
+          ],
+          "min_selected": 1,
+          "max_selected": 1,
+          "fields": [
+            {
+              "id": "title",
+              "label": "Название моего выпуска",
+              "required": false
+            }
+          ],
+          "source_stage_ids": [],
+          "lexeme_credit": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_mixed_check": {
+        "interaction_id": "es_mixed_check",
+        "type": "match_cards",
+        "title": "Смешанный эфир",
+        "prompt": "Двадцать слов из всех четырёх каналов. Цель этой версии — 14 узнаваний или применений без открытия карточки. Помощь разрешена; она отмечается у конкретной попытки.",
+        "hints": [
+          "Можно сделать паузу и вернуться к письмам.",
+          "Вспомни сцену, где встречалось слово: заказ, предмет, пейзаж или история.",
+          "Открытая карточка помогает продолжить, но это слово в этой попытке не считается ответом без помощи."
+        ],
+        "config": {
+          "cards": [
+            {
+              "id": "card_1",
+              "text": "hola"
+            },
+            {
+              "id": "card_2",
+              "text": "tú"
+            },
+            {
+              "id": "card_3",
+              "text": "pan"
+            },
+            {
+              "id": "card_4",
+              "text": "despacio"
+            },
+            {
+              "id": "card_5",
+              "text": "dulce"
+            },
+            {
+              "id": "card_6",
+              "text": "silla"
+            },
+            {
+              "id": "card_7",
+              "text": "libro"
+            },
+            {
+              "id": "card_8",
+              "text": "verde"
+            },
+            {
+              "id": "card_9",
+              "text": "poner"
+            },
+            {
+              "id": "card_10",
+              "text": "viejo"
+            },
+            {
+              "id": "card_11",
+              "text": "río"
+            },
+            {
+              "id": "card_12",
+              "text": "corto"
+            },
+            {
+              "id": "card_13",
+              "text": "sombra"
+            },
+            {
+              "id": "card_14",
+              "text": "lluvia"
+            },
+            {
+              "id": "card_15",
+              "text": "valle"
+            },
+            {
+              "id": "card_16",
+              "text": "buscar"
+            },
+            {
+              "id": "card_17",
+              "text": "delante"
+            },
+            {
+              "id": "card_18",
+              "text": "tres"
+            },
+            {
+              "id": "card_19",
+              "text": "oír"
+            },
+            {
+              "id": "card_20",
+              "text": "junto"
+            }
+          ],
+          "targets": [
+            {
+              "id": "target_2",
+              "text": "ты"
+            },
+            {
+              "id": "target_3",
+              "text": "хлеб"
+            },
+            {
+              "id": "target_4",
+              "text": "медленно"
+            },
+            {
+              "id": "target_5",
+              "text": "сладкий"
+            },
+            {
+              "id": "target_6",
+              "text": "стул"
+            },
+            {
+              "id": "target_7",
+              "text": "книга"
+            },
+            {
+              "id": "target_8",
+              "text": "зелёный"
+            },
+            {
+              "id": "target_9",
+              "text": "положить; поставить"
+            },
+            {
+              "id": "target_10",
+              "text": "старый"
+            },
+            {
+              "id": "target_11",
+              "text": "река"
+            },
+            {
+              "id": "target_12",
+              "text": "короткий"
+            },
+            {
+              "id": "target_13",
+              "text": "тень"
+            },
+            {
+              "id": "target_14",
+              "text": "дождь"
+            },
+            {
+              "id": "target_15",
+              "text": "долина"
+            },
+            {
+              "id": "target_16",
+              "text": "искать"
+            },
+            {
+              "id": "target_17",
+              "text": "впереди"
+            },
+            {
+              "id": "target_18",
+              "text": "три"
+            },
+            {
+              "id": "target_19",
+              "text": "слышать"
+            },
+            {
+              "id": "target_20",
+              "text": "вместе; рядом"
+            },
+            {
+              "id": "target_1",
+              "text": "привет"
+            }
+          ],
+          "accepted_pairs": {
+            "card_1": "target_1",
+            "card_2": "target_2",
+            "card_3": "target_3",
+            "card_4": "target_4",
+            "card_5": "target_5",
+            "card_6": "target_6",
+            "card_7": "target_7",
+            "card_8": "target_8",
+            "card_9": "target_9",
+            "card_10": "target_10",
+            "card_11": "target_11",
+            "card_12": "target_12",
+            "card_13": "target_13",
+            "card_14": "target_14",
+            "card_15": "target_15",
+            "card_16": "target_16",
+            "card_17": "target_17",
+            "card_18": "target_18",
+            "card_19": "target_19",
+            "card_20": "target_20"
+          },
+          "pair_feedback": {
+            "card_1": "hola — привет",
+            "card_2": "tú — ты",
+            "card_3": "pan — хлеб",
+            "card_4": "despacio — медленно",
+            "card_5": "dulce — сладкий",
+            "card_6": "silla — стул",
+            "card_7": "libro — книга",
+            "card_8": "verde — зелёный",
+            "card_9": "poner — положить; поставить",
+            "card_10": "viejo — старый",
+            "card_11": "río — река",
+            "card_12": "corto — короткий",
+            "card_13": "sombra — тень",
+            "card_14": "lluvia — дождь",
+            "card_15": "valle — долина",
+            "card_16": "buscar — искать",
+            "card_17": "delante — впереди",
+            "card_18": "tres — три",
+            "card_19": "oír — слышать",
+            "card_20": "junto — вместе; рядом"
+          },
+          "lexeme_ids": [
+            "es_001",
+            "es_007",
+            "es_012",
+            "es_018",
+            "es_024",
+            "es_027",
+            "es_033",
+            "es_038",
+            "es_043",
+            "es_049",
+            "es_051",
+            "es_057",
+            "es_062",
+            "es_069",
+            "es_075",
+            "es_077",
+            "es_083",
+            "es_088",
+            "es_092",
+            "es_099"
+          ],
+          "minimum_unassisted_correct": 14,
+          "selection_policy": "balanced_fixed_sample",
+          "replay_awards": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "es_joint_broadcast": {
+        "interaction_id": "es_joint_broadcast",
+        "type": "real_world_step",
+        "title": "Завершить передачу вместе",
+        "prompt": "Посмотрите смешанную попытку и выбранный выпуск. Открытие карточек само по себе не означает знание слов.",
+        "hints": [
+          "Откройте альбом и результат последней попытки.",
+          "Если пока меньше 14, предметы каналов остаются; можно выбрать несколько писем для повторения.",
+          "Вместе отметьте конкретный результат. Порог меняется только в новой согласованной ревизии."
+        ],
+        "config": {
+          "criteria": [
+            "В наборе 100 разных лексем.",
+            "Собран собственный выпуск.",
+            "Есть не менее 14 ответов без помощи из 20 в одной сохранённой смешанной попытке."
+          ],
+          "fields": [
+            {
+              "id": "review_note",
+              "label": "Что получилось применить?",
+              "required": true
+            },
+            {
+              "id": "authorship",
+              "label": "Что выбрала Майя?",
+              "required": false
+            }
+          ],
+          "materials": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      }
+    },
+    "work_recipes": {
+      "radio_album": {
+        "recipe_id": "radio_album",
+        "title": "Альбом эфира",
+        "work_kind": "album",
+        "presentations": [
+          "frame",
+          "album"
+        ]
+      },
+      "radio_contact_card": {
+        "recipe_id": "radio_contact_card",
+        "title": "Первый контакт",
+        "work_kind": "note",
+        "presentations": [
+          "frame",
+          "album"
+        ]
+      },
+      "radio_episode_card": {
+        "recipe_id": "radio_episode_card",
+        "title": "Карточка выпуска",
+        "work_kind": "album",
+        "presentations": [
+          "frame",
+          "album"
+        ]
+      },
+      "radio_menu": {
+        "recipe_id": "radio_menu",
+        "title": "Моё меню",
+        "work_kind": "album",
+        "presentations": [
+          "frame",
+          "album"
+        ]
+      },
+      "station_word_label": {
+        "recipe_id": "station_word_label",
+        "title": "Подпись предмета",
+        "work_kind": "note",
+        "presentations": [
+          "frame",
+          "album"
+        ]
+      },
+      "valley_postcard": {
+        "recipe_id": "valley_postcard",
+        "title": "Моя долина",
+        "work_kind": "image",
+        "presentations": [
+          "frame",
+          "album"
+        ]
+      }
+    },
+    "grant_definitions": {
+      "radio_album": {
+        "grant_id": "radio_album",
+        "title": "Альбом эфира",
+        "kind": "known_presentation"
+      },
+      "radio_callsign": {
+        "grant_id": "radio_callsign",
+        "title": "Карточка выпуска",
+        "kind": "known_presentation"
+      },
+      "radio_first_contact": {
+        "grant_id": "radio_first_contact",
+        "title": "Первый контакт",
+        "kind": "known_presentation"
+      },
+      "radio_menu": {
+        "grant_id": "radio_menu",
+        "title": "Моё меню",
+        "kind": "known_presentation"
+      },
+      "station_word_label": {
+        "grant_id": "station_word_label",
+        "title": "Подпись предмета",
+        "kind": "known_presentation"
+      },
+      "valley_postcard": {
+        "grant_id": "valley_postcard",
+        "title": "Моя долина",
+        "kind": "known_presentation"
+      }
+    },
+    "dialogues": {
+      "first_success": "Теперь я знаю, как зовётся твоя станция. Оставлю это имя в журнале эфира.",
+      "after_hint": "Вот недостающий кусочек. Попробуем собрать сообщение ещё раз.",
+      "return": "У нас осталось письмо про мастерскую. Можно продолжить его или открыть альбом.",
+      "pause": "Письма останутся на столе. Можно закончить сегодня.",
+      "final": "У передачи теперь есть твои выбранные сообщения. Позывной и альбом остаются на станции."
+    },
+    "return_text": "Уже сделанное осталось в архиве. Можно продолжить следующий маленький шаг или посмотреть свои работы.",
+    "lexicon": [
+      {
+        "lexeme_id": "es_001",
+        "channel_id": "es_channel_01",
+        "base_form": "hola",
+        "lemma": "hola",
+        "translation": "привет",
+        "accepted_variants": [
+          "hola"
+        ],
+        "example": "Hola, Nora.",
+        "example_translation": "Привет, Нора.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "привет"
+      },
+      {
+        "lexeme_id": "es_002",
+        "channel_id": "es_channel_01",
+        "base_form": "gracias",
+        "lemma": "gracias",
+        "translation": "спасибо",
+        "accepted_variants": [
+          "gracias"
+        ],
+        "example": "Gracias, Nora.",
+        "example_translation": "Спасибо, Нора.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "спасибо"
+      },
+      {
+        "lexeme_id": "es_003",
+        "channel_id": "es_channel_01",
+        "base_form": "sí",
+        "lemma": "sí",
+        "translation": "да",
+        "accepted_variants": [
+          "sí"
+        ],
+        "example": "Sí, gracias.",
+        "example_translation": "Да, спасибо.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "да"
+      },
+      {
+        "lexeme_id": "es_004",
+        "channel_id": "es_channel_01",
+        "base_form": "no",
+        "lemma": "no",
+        "translation": "нет",
+        "accepted_variants": [
+          "no"
+        ],
+        "example": "No, gracias.",
+        "example_translation": "Нет, спасибо.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "нет"
+      },
+      {
+        "lexeme_id": "es_005",
+        "channel_id": "es_channel_01",
+        "base_form": "nombre",
+        "lemma": "nombre",
+        "translation": "имя",
+        "accepted_variants": [
+          "nombre"
+        ],
+        "example": "Mi nombre es Maya.",
+        "example_translation": "Меня зовут Майя.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "имя"
+      },
+      {
+        "lexeme_id": "es_006",
+        "channel_id": "es_channel_01",
+        "base_form": "yo",
+        "lemma": "yo",
+        "translation": "я",
+        "accepted_variants": [
+          "yo"
+        ],
+        "example": "Yo soy Nora.",
+        "example_translation": "Я Нора.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "я"
+      },
+      {
+        "lexeme_id": "es_007",
+        "channel_id": "es_channel_01",
+        "base_form": "tú",
+        "lemma": "tú",
+        "translation": "ты",
+        "accepted_variants": [
+          "tú"
+        ],
+        "example": "Tú eres Maya.",
+        "example_translation": "Ты Майя.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "ты"
+      },
+      {
+        "lexeme_id": "es_008",
+        "channel_id": "es_channel_01",
+        "base_form": "amiga",
+        "lemma": "amiga",
+        "translation": "подруга",
+        "accepted_variants": [
+          "amiga",
+          "amigo",
+          "amigas",
+          "amigos"
+        ],
+        "example": "Mi amiga es Nora.",
+        "example_translation": "Моя подруга — Нора.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "подруга"
+      },
+      {
+        "lexeme_id": "es_009",
+        "channel_id": "es_channel_01",
+        "base_form": "casa",
+        "lemma": "casa",
+        "translation": "дом",
+        "accepted_variants": [
+          "casa"
+        ],
+        "example": "Mi casa.",
+        "example_translation": "Мой дом.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "дом"
+      },
+      {
+        "lexeme_id": "es_010",
+        "channel_id": "es_channel_01",
+        "base_form": "carta",
+        "lemma": "carta",
+        "translation": "письмо",
+        "accepted_variants": [
+          "carta"
+        ],
+        "example": "Una carta para mi amiga.",
+        "example_translation": "Письмо моей подруге.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "письмо"
+      },
+      {
+        "lexeme_id": "es_011",
+        "channel_id": "es_channel_01",
+        "base_form": "agua",
+        "lemma": "agua",
+        "translation": "вода",
+        "accepted_variants": [
+          "agua"
+        ],
+        "example": "Agua, gracias.",
+        "example_translation": "Воду, спасибо.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "вода"
+      },
+      {
+        "lexeme_id": "es_012",
+        "channel_id": "es_channel_01",
+        "base_form": "pan",
+        "lemma": "pan",
+        "translation": "хлеб",
+        "accepted_variants": [
+          "pan"
+        ],
+        "example": "Pan, gracias.",
+        "example_translation": "Хлеб, спасибо.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "хлеб"
+      },
+      {
+        "lexeme_id": "es_013",
+        "channel_id": "es_channel_01",
+        "base_form": "leche",
+        "lemma": "leche",
+        "translation": "молоко",
+        "accepted_variants": [
+          "leche"
+        ],
+        "example": "Pan y leche.",
+        "example_translation": "Хлеб и молоко.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "молоко"
+      },
+      {
+        "lexeme_id": "es_014",
+        "channel_id": "es_channel_01",
+        "base_form": "té",
+        "lemma": "té",
+        "translation": "чай",
+        "accepted_variants": [
+          "té"
+        ],
+        "example": "Té, gracias.",
+        "example_translation": "Чай, спасибо.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "чай"
+      },
+      {
+        "lexeme_id": "es_015",
+        "channel_id": "es_channel_01",
+        "base_form": "queso",
+        "lemma": "queso",
+        "translation": "сыр",
+        "accepted_variants": [
+          "queso"
+        ],
+        "example": "Pan y queso.",
+        "example_translation": "Хлеб и сыр.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "сыр"
+      },
+      {
+        "lexeme_id": "es_016",
+        "channel_id": "es_channel_01",
+        "base_form": "repetir",
+        "lemma": "repetir",
+        "translation": "повторить",
+        "accepted_variants": [
+          "repetir",
+          "repite",
+          "repetís"
+        ],
+        "example": "¿Puedes repetir?",
+        "example_translation": "Можешь повторить?",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "повторить"
+      },
+      {
+        "lexeme_id": "es_017",
+        "channel_id": "es_channel_01",
+        "base_form": "escuchar",
+        "lemma": "escuchar",
+        "translation": "слушать",
+        "accepted_variants": [
+          "escuchar"
+        ],
+        "example": "Quiero escuchar.",
+        "example_translation": "Хочу послушать.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "слушать"
+      },
+      {
+        "lexeme_id": "es_018",
+        "channel_id": "es_channel_01",
+        "base_form": "despacio",
+        "lemma": "despacio",
+        "translation": "медленно",
+        "accepted_variants": [
+          "despacio"
+        ],
+        "example": "Más despacio, gracias.",
+        "example_translation": "Помедленнее, спасибо.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "медленно"
+      },
+      {
+        "lexeme_id": "es_019",
+        "channel_id": "es_channel_01",
+        "base_form": "perdón",
+        "lemma": "perdón",
+        "translation": "извини; простите",
+        "accepted_variants": [
+          "perdón"
+        ],
+        "example": "Perdón, ¿puedes repetir?",
+        "example_translation": "Прости, можешь повторить?",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "извини; простите"
+      },
+      {
+        "lexeme_id": "es_020",
+        "channel_id": "es_channel_01",
+        "base_form": "entender",
+        "lemma": "entender",
+        "translation": "понимать",
+        "accepted_variants": [
+          "entender",
+          "entiendo",
+          "entendés"
+        ],
+        "example": "No entiendo.",
+        "example_translation": "Я не понимаю.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "понимать"
+      },
+      {
+        "lexeme_id": "es_021",
+        "channel_id": "es_channel_01",
+        "base_form": "café",
+        "lemma": "café",
+        "translation": "кофе; кафе",
+        "accepted_variants": [
+          "café"
+        ],
+        "example": "Un café, gracias.",
+        "example_translation": "Кофе, спасибо.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "кофе; кафе"
+      },
+      {
+        "lexeme_id": "es_022",
+        "channel_id": "es_channel_01",
+        "base_form": "jugo",
+        "lemma": "jugo",
+        "translation": "сок",
+        "accepted_variants": [
+          "jugo"
+        ],
+        "example": "Quiero jugo.",
+        "example_translation": "Хочу сок.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "сок"
+      },
+      {
+        "lexeme_id": "es_023",
+        "channel_id": "es_channel_01",
+        "base_form": "sopa",
+        "lemma": "sopa",
+        "translation": "суп",
+        "accepted_variants": [
+          "sopa"
+        ],
+        "example": "Quiero sopa.",
+        "example_translation": "Хочу суп.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "суп"
+      },
+      {
+        "lexeme_id": "es_024",
+        "channel_id": "es_channel_01",
+        "base_form": "dulce",
+        "lemma": "dulce",
+        "translation": "сладкий",
+        "accepted_variants": [
+          "dulce"
+        ],
+        "example": "El jugo es dulce.",
+        "example_translation": "Сок сладкий.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "сладкий"
+      },
+      {
+        "lexeme_id": "es_025",
+        "channel_id": "es_channel_01",
+        "base_form": "querer",
+        "lemma": "querer",
+        "translation": "хотеть",
+        "accepted_variants": [
+          "querer",
+          "quiero",
+          "querés",
+          "quiere"
+        ],
+        "example": "Quiero pan.",
+        "example_translation": "Хочу хлеб.",
+        "topics": [
+          "Знакомство и радиокафе"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "хотеть"
+      },
+      {
+        "lexeme_id": "es_026",
+        "channel_id": "es_channel_02",
+        "base_form": "mesa",
+        "lemma": "mesa",
+        "translation": "стол",
+        "accepted_variants": [
+          "mesa"
+        ],
+        "example": "La carta está en la mesa.",
+        "example_translation": "Письмо на столе.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "стол"
+      },
+      {
+        "lexeme_id": "es_027",
+        "channel_id": "es_channel_02",
+        "base_form": "silla",
+        "lemma": "silla",
+        "translation": "стул",
+        "accepted_variants": [
+          "silla"
+        ],
+        "example": "Una silla para mi amiga.",
+        "example_translation": "Стул для моей подруги.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "стул"
+      },
+      {
+        "lexeme_id": "es_028",
+        "channel_id": "es_channel_02",
+        "base_form": "caja",
+        "lemma": "caja",
+        "translation": "коробка",
+        "accepted_variants": [
+          "caja"
+        ],
+        "example": "La caja está en la mesa.",
+        "example_translation": "Коробка на столе.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "коробка"
+      },
+      {
+        "lexeme_id": "es_029",
+        "channel_id": "es_channel_02",
+        "base_form": "llave",
+        "lemma": "llave",
+        "translation": "ключ",
+        "accepted_variants": [
+          "llave"
+        ],
+        "example": "La llave está en la caja.",
+        "example_translation": "Ключ в коробке.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "ключ"
+      },
+      {
+        "lexeme_id": "es_030",
+        "channel_id": "es_channel_02",
+        "base_form": "puerta",
+        "lemma": "puerta",
+        "translation": "дверь",
+        "accepted_variants": [
+          "puerta"
+        ],
+        "example": "La llave de la puerta.",
+        "example_translation": "Ключ от двери.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "дверь"
+      },
+      {
+        "lexeme_id": "es_031",
+        "channel_id": "es_channel_02",
+        "base_form": "papel",
+        "lemma": "papel",
+        "translation": "бумага",
+        "accepted_variants": [
+          "papel"
+        ],
+        "example": "Papel para una carta.",
+        "example_translation": "Бумага для письма.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "бумага"
+      },
+      {
+        "lexeme_id": "es_032",
+        "channel_id": "es_channel_02",
+        "base_form": "lápiz",
+        "lemma": "lápiz",
+        "translation": "карандаш",
+        "accepted_variants": [
+          "lápiz"
+        ],
+        "example": "Un lápiz en la mesa.",
+        "example_translation": "Карандаш на столе.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "карандаш"
+      },
+      {
+        "lexeme_id": "es_033",
+        "channel_id": "es_channel_02",
+        "base_form": "libro",
+        "lemma": "libro",
+        "translation": "книга",
+        "accepted_variants": [
+          "libro"
+        ],
+        "example": "El libro está en la caja.",
+        "example_translation": "Книга в коробке.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "книга"
+      },
+      {
+        "lexeme_id": "es_034",
+        "channel_id": "es_channel_02",
+        "base_form": "bolsa",
+        "lemma": "bolsa",
+        "translation": "сумка; пакет",
+        "accepted_variants": [
+          "bolsa"
+        ],
+        "example": "Una bolsa de papel.",
+        "example_translation": "Бумажный пакет.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "сумка; пакет"
+      },
+      {
+        "lexeme_id": "es_035",
+        "channel_id": "es_channel_02",
+        "base_form": "cinta",
+        "lemma": "cinta",
+        "translation": "лента; скотч",
+        "accepted_variants": [
+          "cinta"
+        ],
+        "example": "La cinta está en la caja.",
+        "example_translation": "Лента в коробке.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "лента; скотч"
+      },
+      {
+        "lexeme_id": "es_036",
+        "channel_id": "es_channel_02",
+        "base_form": "rojo",
+        "lemma": "rojo",
+        "translation": "красный",
+        "accepted_variants": [
+          "rojo",
+          "roja",
+          "rojos",
+          "rojas"
+        ],
+        "example": "Una caja roja.",
+        "example_translation": "Красная коробка.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "красный"
+      },
+      {
+        "lexeme_id": "es_037",
+        "channel_id": "es_channel_02",
+        "base_form": "azul",
+        "lemma": "azul",
+        "translation": "синий",
+        "accepted_variants": [
+          "azul"
+        ],
+        "example": "Un lápiz azul.",
+        "example_translation": "Синий карандаш.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "синий"
+      },
+      {
+        "lexeme_id": "es_038",
+        "channel_id": "es_channel_02",
+        "base_form": "verde",
+        "lemma": "verde",
+        "translation": "зелёный",
+        "accepted_variants": [
+          "verde"
+        ],
+        "example": "Una puerta verde.",
+        "example_translation": "Зелёная дверь.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "зелёный"
+      },
+      {
+        "lexeme_id": "es_039",
+        "channel_id": "es_channel_02",
+        "base_form": "grande",
+        "lemma": "grande",
+        "translation": "большой",
+        "accepted_variants": [
+          "grande"
+        ],
+        "example": "Una mesa grande.",
+        "example_translation": "Большой стол.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "большой"
+      },
+      {
+        "lexeme_id": "es_040",
+        "channel_id": "es_channel_02",
+        "base_form": "pequeño",
+        "lemma": "pequeño",
+        "translation": "маленький",
+        "accepted_variants": [
+          "pequeño",
+          "pequeña"
+        ],
+        "example": "Una caja pequeña.",
+        "example_translation": "Маленькая коробка.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "маленький"
+      },
+      {
+        "lexeme_id": "es_041",
+        "channel_id": "es_channel_02",
+        "base_form": "abrir",
+        "lemma": "abrir",
+        "translation": "открыть",
+        "accepted_variants": [
+          "abrir"
+        ],
+        "example": "Abrir la caja.",
+        "example_translation": "Открыть коробку.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "открыть"
+      },
+      {
+        "lexeme_id": "es_042",
+        "channel_id": "es_channel_02",
+        "base_form": "cerrar",
+        "lemma": "cerrar",
+        "translation": "закрыть",
+        "accepted_variants": [
+          "cerrar"
+        ],
+        "example": "Cerrar la puerta.",
+        "example_translation": "Закрыть дверь.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "закрыть"
+      },
+      {
+        "lexeme_id": "es_043",
+        "channel_id": "es_channel_02",
+        "base_form": "poner",
+        "lemma": "poner",
+        "translation": "положить; поставить",
+        "accepted_variants": [
+          "poner"
+        ],
+        "example": "Poner el libro en la mesa.",
+        "example_translation": "Положить книгу на стол.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "положить; поставить"
+      },
+      {
+        "lexeme_id": "es_044",
+        "channel_id": "es_channel_02",
+        "base_form": "sacar",
+        "lemma": "sacar",
+        "translation": "достать; вынуть",
+        "accepted_variants": [
+          "sacar"
+        ],
+        "example": "Sacar el lápiz de la caja.",
+        "example_translation": "Достать карандаш из коробки.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "достать; вынуть"
+      },
+      {
+        "lexeme_id": "es_045",
+        "channel_id": "es_channel_02",
+        "base_form": "ayudar",
+        "lemma": "ayudar",
+        "translation": "помочь",
+        "accepted_variants": [
+          "ayudar"
+        ],
+        "example": "Quiero ayudar.",
+        "example_translation": "Хочу помочь.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "помочь"
+      },
+      {
+        "lexeme_id": "es_046",
+        "channel_id": "es_channel_02",
+        "base_form": "mi",
+        "lemma": "mi",
+        "translation": "мой; моя",
+        "accepted_variants": [
+          "mi"
+        ],
+        "example": "Mi libro.",
+        "example_translation": "Моя книга.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "мой; моя"
+      },
+      {
+        "lexeme_id": "es_047",
+        "channel_id": "es_channel_02",
+        "base_form": "favorito",
+        "lemma": "favorito",
+        "translation": "любимый",
+        "accepted_variants": [
+          "favorito",
+          "favorita"
+        ],
+        "example": "Mi libro favorito.",
+        "example_translation": "Моя любимая книга.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "любимый"
+      },
+      {
+        "lexeme_id": "es_048",
+        "channel_id": "es_channel_02",
+        "base_form": "nuevo",
+        "lemma": "nuevo",
+        "translation": "новый",
+        "accepted_variants": [
+          "nuevo",
+          "nueva"
+        ],
+        "example": "Un lápiz nuevo.",
+        "example_translation": "Новый карандаш.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "новый"
+      },
+      {
+        "lexeme_id": "es_049",
+        "channel_id": "es_channel_02",
+        "base_form": "viejo",
+        "lemma": "viejo",
+        "translation": "старый",
+        "accepted_variants": [
+          "viejo",
+          "vieja"
+        ],
+        "example": "Un libro viejo.",
+        "example_translation": "Старая книга.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "старый"
+      },
+      {
+        "lexeme_id": "es_050",
+        "channel_id": "es_channel_02",
+        "base_form": "suave",
+        "lemma": "suave",
+        "translation": "мягкий; нежный",
+        "accepted_variants": [
+          "suave"
+        ],
+        "example": "Papel suave.",
+        "example_translation": "Мягкая бумага.",
+        "topics": [
+          "Дом и мастерская"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "мягкий; нежный"
+      },
+      {
+        "lexeme_id": "es_051",
+        "channel_id": "es_channel_03",
+        "base_form": "río",
+        "lemma": "río",
+        "translation": "река",
+        "accepted_variants": [
+          "río"
+        ],
+        "example": "El río es azul.",
+        "example_translation": "Река синяя.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "река"
+      },
+      {
+        "lexeme_id": "es_052",
+        "channel_id": "es_channel_03",
+        "base_form": "cascada",
+        "lemma": "cascada",
+        "translation": "водопад",
+        "accepted_variants": [
+          "cascada"
+        ],
+        "example": "Una cascada grande.",
+        "example_translation": "Большой водопад.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "водопад"
+      },
+      {
+        "lexeme_id": "es_053",
+        "channel_id": "es_channel_03",
+        "base_form": "montaña",
+        "lemma": "montaña",
+        "translation": "гора",
+        "accepted_variants": [
+          "montaña"
+        ],
+        "example": "Una montaña grande.",
+        "example_translation": "Большая гора.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "гора"
+      },
+      {
+        "lexeme_id": "es_054",
+        "channel_id": "es_channel_03",
+        "base_form": "árbol",
+        "lemma": "árbol",
+        "translation": "дерево",
+        "accepted_variants": [
+          "árbol"
+        ],
+        "example": "Un árbol verde.",
+        "example_translation": "Зелёное дерево.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "дерево"
+      },
+      {
+        "lexeme_id": "es_055",
+        "channel_id": "es_channel_03",
+        "base_form": "piedra",
+        "lemma": "piedra",
+        "translation": "камень",
+        "accepted_variants": [
+          "piedra"
+        ],
+        "example": "Una piedra pequeña.",
+        "example_translation": "Маленький камень.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "камень"
+      },
+      {
+        "lexeme_id": "es_056",
+        "channel_id": "es_channel_03",
+        "base_form": "largo",
+        "lemma": "largo",
+        "translation": "длинный",
+        "accepted_variants": [
+          "largo",
+          "larga"
+        ],
+        "example": "Un río largo.",
+        "example_translation": "Длинная река.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "длинный"
+      },
+      {
+        "lexeme_id": "es_057",
+        "channel_id": "es_channel_03",
+        "base_form": "corto",
+        "lemma": "corto",
+        "translation": "короткий",
+        "accepted_variants": [
+          "corto",
+          "corta"
+        ],
+        "example": "Un lápiz corto.",
+        "example_translation": "Короткий карандаш.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "короткий"
+      },
+      {
+        "lexeme_id": "es_058",
+        "channel_id": "es_channel_03",
+        "base_form": "alto",
+        "lemma": "alto",
+        "translation": "высокий",
+        "accepted_variants": [
+          "alto",
+          "alta"
+        ],
+        "example": "Un árbol alto.",
+        "example_translation": "Высокое дерево.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "высокий"
+      },
+      {
+        "lexeme_id": "es_059",
+        "channel_id": "es_channel_03",
+        "base_form": "bajo",
+        "lemma": "bajo",
+        "translation": "низкий",
+        "accepted_variants": [
+          "bajo",
+          "baja"
+        ],
+        "example": "Una mesa baja.",
+        "example_translation": "Низкий стол.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "низкий"
+      },
+      {
+        "lexeme_id": "es_060",
+        "channel_id": "es_channel_03",
+        "base_form": "lejos",
+        "lemma": "lejos",
+        "translation": "далеко",
+        "accepted_variants": [
+          "lejos"
+        ],
+        "example": "La montaña está lejos.",
+        "example_translation": "Гора далеко.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "далеко"
+      },
+      {
+        "lexeme_id": "es_061",
+        "channel_id": "es_channel_03",
+        "base_form": "luz",
+        "lemma": "luz",
+        "translation": "свет",
+        "accepted_variants": [
+          "luz"
+        ],
+        "example": "La luz de mi casa.",
+        "example_translation": "Свет моего дома.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "свет"
+      },
+      {
+        "lexeme_id": "es_062",
+        "channel_id": "es_channel_03",
+        "base_form": "sombra",
+        "lemma": "sombra",
+        "translation": "тень",
+        "accepted_variants": [
+          "sombra"
+        ],
+        "example": "La sombra del árbol.",
+        "example_translation": "Тень дерева.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "тень"
+      },
+      {
+        "lexeme_id": "es_063",
+        "channel_id": "es_channel_03",
+        "base_form": "línea",
+        "lemma": "línea",
+        "translation": "линия",
+        "accepted_variants": [
+          "línea"
+        ],
+        "example": "Una línea azul.",
+        "example_translation": "Синяя линия.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "линия"
+      },
+      {
+        "lexeme_id": "es_064",
+        "channel_id": "es_channel_03",
+        "base_form": "color",
+        "lemma": "color",
+        "translation": "цвет",
+        "accepted_variants": [
+          "color"
+        ],
+        "example": "Mi color favorito.",
+        "example_translation": "Мой любимый цвет.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "цвет"
+      },
+      {
+        "lexeme_id": "es_065",
+        "channel_id": "es_channel_03",
+        "base_form": "dibujo",
+        "lemma": "dibujo",
+        "translation": "рисунок",
+        "accepted_variants": [
+          "dibujo"
+        ],
+        "example": "Un dibujo del río.",
+        "example_translation": "Рисунок реки.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "рисунок"
+      },
+      {
+        "lexeme_id": "es_066",
+        "channel_id": "es_channel_03",
+        "base_form": "hoy",
+        "lemma": "hoy",
+        "translation": "сегодня",
+        "accepted_variants": [
+          "hoy"
+        ],
+        "example": "Hoy hay sol.",
+        "example_translation": "Сегодня солнечно.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "сегодня"
+      },
+      {
+        "lexeme_id": "es_067",
+        "channel_id": "es_channel_03",
+        "base_form": "mañana",
+        "lemma": "mañana",
+        "translation": "завтра; утро",
+        "accepted_variants": [
+          "mañana"
+        ],
+        "example": "Mañana hay lluvia en la historia.",
+        "example_translation": "В истории завтра дождь.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "завтра; утро"
+      },
+      {
+        "lexeme_id": "es_068",
+        "channel_id": "es_channel_03",
+        "base_form": "sol",
+        "lemma": "sol",
+        "translation": "солнце",
+        "accepted_variants": [
+          "sol"
+        ],
+        "example": "El sol y la montaña.",
+        "example_translation": "Солнце и гора.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "солнце"
+      },
+      {
+        "lexeme_id": "es_069",
+        "channel_id": "es_channel_03",
+        "base_form": "lluvia",
+        "lemma": "lluvia",
+        "translation": "дождь",
+        "accepted_variants": [
+          "lluvia"
+        ],
+        "example": "Hoy hay lluvia.",
+        "example_translation": "Сегодня дождь.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "дождь"
+      },
+      {
+        "lexeme_id": "es_070",
+        "channel_id": "es_channel_03",
+        "base_form": "viento",
+        "lemma": "viento",
+        "translation": "ветер",
+        "accepted_variants": [
+          "viento"
+        ],
+        "example": "Hay viento.",
+        "example_translation": "Ветрено.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "ветер"
+      },
+      {
+        "lexeme_id": "es_071",
+        "channel_id": "es_channel_03",
+        "base_form": "aquí",
+        "lemma": "aquí",
+        "translation": "здесь",
+        "accepted_variants": [
+          "aquí"
+        ],
+        "example": "Aquí está mi dibujo.",
+        "example_translation": "Вот мой рисунок.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "здесь"
+      },
+      {
+        "lexeme_id": "es_072",
+        "channel_id": "es_channel_03",
+        "base_form": "allí",
+        "lemma": "allí",
+        "translation": "там",
+        "accepted_variants": [
+          "allí"
+        ],
+        "example": "Allí está el río.",
+        "example_translation": "Там река.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "там"
+      },
+      {
+        "lexeme_id": "es_073",
+        "channel_id": "es_channel_03",
+        "base_form": "cielo",
+        "lemma": "cielo",
+        "translation": "небо",
+        "accepted_variants": [
+          "cielo"
+        ],
+        "example": "El cielo es azul.",
+        "example_translation": "Небо синее.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "небо"
+      },
+      {
+        "lexeme_id": "es_074",
+        "channel_id": "es_channel_03",
+        "base_form": "nube",
+        "lemma": "nube",
+        "translation": "облако",
+        "accepted_variants": [
+          "nube"
+        ],
+        "example": "Una nube grande.",
+        "example_translation": "Большое облако.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "облако"
+      },
+      {
+        "lexeme_id": "es_075",
+        "channel_id": "es_channel_03",
+        "base_form": "valle",
+        "lemma": "valle",
+        "translation": "долина",
+        "accepted_variants": [
+          "valle"
+        ],
+        "example": "Un dibujo del valle.",
+        "example_translation": "Рисунок долины.",
+        "topics": [
+          "Долина и вода"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "долина"
+      },
+      {
+        "lexeme_id": "es_076",
+        "channel_id": "es_channel_04",
+        "base_form": "llegar",
+        "lemma": "llegar",
+        "translation": "приходить; прибывать",
+        "accepted_variants": [
+          "llegar",
+          "llega"
+        ],
+        "example": "Nora llega a casa.",
+        "example_translation": "Нора приходит домой.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "приходить; прибывать"
+      },
+      {
+        "lexeme_id": "es_077",
+        "channel_id": "es_channel_04",
+        "base_form": "buscar",
+        "lemma": "buscar",
+        "translation": "искать",
+        "accepted_variants": [
+          "buscar",
+          "busca"
+        ],
+        "example": "Nora busca la llave.",
+        "example_translation": "Нора ищет ключ.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "искать"
+      },
+      {
+        "lexeme_id": "es_078",
+        "channel_id": "es_channel_04",
+        "base_form": "encontrar",
+        "lemma": "encontrar",
+        "translation": "находить",
+        "accepted_variants": [
+          "encontrar",
+          "encuentra"
+        ],
+        "example": "Nora encuentra la llave.",
+        "example_translation": "Нора находит ключ.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "находить"
+      },
+      {
+        "lexeme_id": "es_079",
+        "channel_id": "es_channel_04",
+        "base_form": "llevar",
+        "lemma": "llevar",
+        "translation": "нести; брать с собой",
+        "accepted_variants": [
+          "llevar",
+          "lleva"
+        ],
+        "example": "Nora lleva la carta.",
+        "example_translation": "Нора несёт письмо.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "нести; брать с собой"
+      },
+      {
+        "lexeme_id": "es_080",
+        "channel_id": "es_channel_04",
+        "base_form": "volver",
+        "lemma": "volver",
+        "translation": "возвращаться",
+        "accepted_variants": [
+          "volver",
+          "vuelve"
+        ],
+        "example": "Nora vuelve a casa.",
+        "example_translation": "Нора возвращается домой.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "возвращаться"
+      },
+      {
+        "lexeme_id": "es_081",
+        "channel_id": "es_channel_04",
+        "base_form": "izquierda",
+        "lemma": "izquierda",
+        "translation": "лево; левая сторона",
+        "accepted_variants": [
+          "izquierda"
+        ],
+        "example": "A la izquierda.",
+        "example_translation": "Налево.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "лево; левая сторона"
+      },
+      {
+        "lexeme_id": "es_082",
+        "channel_id": "es_channel_04",
+        "base_form": "derecha",
+        "lemma": "derecha",
+        "translation": "право; правая сторона",
+        "accepted_variants": [
+          "derecha"
+        ],
+        "example": "A la derecha.",
+        "example_translation": "Направо.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "право; правая сторона"
+      },
+      {
+        "lexeme_id": "es_083",
+        "channel_id": "es_channel_04",
+        "base_form": "delante",
+        "lemma": "delante",
+        "translation": "впереди",
+        "accepted_variants": [
+          "delante"
+        ],
+        "example": "Delante de la mesa.",
+        "example_translation": "Перед столом.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "впереди"
+      },
+      {
+        "lexeme_id": "es_084",
+        "channel_id": "es_channel_04",
+        "base_form": "detrás",
+        "lemma": "detrás",
+        "translation": "позади",
+        "accepted_variants": [
+          "detrás"
+        ],
+        "example": "Detrás de la caja.",
+        "example_translation": "За коробкой.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "позади"
+      },
+      {
+        "lexeme_id": "es_085",
+        "channel_id": "es_channel_04",
+        "base_form": "caminar",
+        "lemma": "caminar",
+        "translation": "идти пешком",
+        "accepted_variants": [
+          "caminar"
+        ],
+        "example": "Caminar a la derecha.",
+        "example_translation": "Идти направо.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "идти пешком"
+      },
+      {
+        "lexeme_id": "es_086",
+        "channel_id": "es_channel_04",
+        "base_form": "uno",
+        "lemma": "uno",
+        "translation": "один",
+        "accepted_variants": [
+          "uno",
+          "un",
+          "una"
+        ],
+        "example": "Un lápiz.",
+        "example_translation": "Один карандаш.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "один"
+      },
+      {
+        "lexeme_id": "es_087",
+        "channel_id": "es_channel_04",
+        "base_form": "dos",
+        "lemma": "dos",
+        "translation": "два",
+        "accepted_variants": [
+          "dos"
+        ],
+        "example": "Dos cartas.",
+        "example_translation": "Два письма.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "два"
+      },
+      {
+        "lexeme_id": "es_088",
+        "channel_id": "es_channel_04",
+        "base_form": "tres",
+        "lemma": "tres",
+        "translation": "три",
+        "accepted_variants": [
+          "tres"
+        ],
+        "example": "Tres piedras.",
+        "example_translation": "Три камня.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "три"
+      },
+      {
+        "lexeme_id": "es_089",
+        "channel_id": "es_channel_04",
+        "base_form": "más",
+        "lemma": "más",
+        "translation": "больше; ещё",
+        "accepted_variants": [
+          "más"
+        ],
+        "example": "Más luz.",
+        "example_translation": "Больше света.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "больше; ещё"
+      },
+      {
+        "lexeme_id": "es_090",
+        "channel_id": "es_channel_04",
+        "base_form": "menos",
+        "lemma": "menos",
+        "translation": "меньше",
+        "accepted_variants": [
+          "menos"
+        ],
+        "example": "Menos viento.",
+        "example_translation": "Меньше ветра.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "меньше"
+      },
+      {
+        "lexeme_id": "es_091",
+        "channel_id": "es_channel_04",
+        "base_form": "ver",
+        "lemma": "ver",
+        "translation": "видеть",
+        "accepted_variants": [
+          "ver",
+          "veo"
+        ],
+        "example": "Veo el río.",
+        "example_translation": "Я вижу реку.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "видеть"
+      },
+      {
+        "lexeme_id": "es_092",
+        "channel_id": "es_channel_04",
+        "base_form": "oír",
+        "lemma": "oír",
+        "translation": "слышать",
+        "accepted_variants": [
+          "oír",
+          "oigo"
+        ],
+        "example": "Oigo la lluvia.",
+        "example_translation": "Я слышу дождь.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "слышать"
+      },
+      {
+        "lexeme_id": "es_093",
+        "channel_id": "es_channel_04",
+        "base_form": "sentir",
+        "lemma": "sentir",
+        "translation": "чувствовать",
+        "accepted_variants": [
+          "sentir",
+          "siento"
+        ],
+        "example": "Siento el viento.",
+        "example_translation": "Я чувствую ветер.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "чувствовать"
+      },
+      {
+        "lexeme_id": "es_094",
+        "channel_id": "es_channel_04",
+        "base_form": "elegir",
+        "lemma": "elegir",
+        "translation": "выбирать",
+        "accepted_variants": [
+          "elegir",
+          "elijo"
+        ],
+        "example": "Elijo mi dibujo favorito.",
+        "example_translation": "Я выбираю любимый рисунок.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "выбирать"
+      },
+      {
+        "lexeme_id": "es_095",
+        "channel_id": "es_channel_04",
+        "base_form": "contar",
+        "lemma": "contar",
+        "translation": "рассказывать; считать",
+        "accepted_variants": [
+          "contar",
+          "cuento"
+        ],
+        "example": "Quiero contar una historia.",
+        "example_translation": "Хочу рассказать историю.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "рассказывать; считать"
+      },
+      {
+        "lexeme_id": "es_096",
+        "channel_id": "es_channel_04",
+        "base_form": "voz",
+        "lemma": "voz",
+        "translation": "голос",
+        "accepted_variants": [
+          "voz"
+        ],
+        "example": "La voz de Nora.",
+        "example_translation": "Голос Норы.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "голос"
+      },
+      {
+        "lexeme_id": "es_097",
+        "channel_id": "es_channel_04",
+        "base_form": "mensaje",
+        "lemma": "mensaje",
+        "translation": "сообщение",
+        "accepted_variants": [
+          "mensaje"
+        ],
+        "example": "Un mensaje para mi amiga.",
+        "example_translation": "Сообщение моей подруге.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "сообщение"
+      },
+      {
+        "lexeme_id": "es_098",
+        "channel_id": "es_channel_04",
+        "base_form": "historia",
+        "lemma": "historia",
+        "translation": "история",
+        "accepted_variants": [
+          "historia"
+        ],
+        "example": "Mi historia del valle.",
+        "example_translation": "Моя история долины.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "история"
+      },
+      {
+        "lexeme_id": "es_099",
+        "channel_id": "es_channel_04",
+        "base_form": "junto",
+        "lemma": "junto",
+        "translation": "вместе; рядом",
+        "accepted_variants": [
+          "junto",
+          "juntos",
+          "juntas",
+          "junta"
+        ],
+        "example": "Juntos en la estación.",
+        "example_translation": "Вместе на станции.",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "вместе; рядом"
+      },
+      {
+        "lexeme_id": "es_100",
+        "channel_id": "es_channel_04",
+        "base_form": "hasta",
+        "lemma": "hasta",
+        "translation": "до",
+        "accepted_variants": [
+          "hasta"
+        ],
+        "example": "¡Hasta mañana!",
+        "example_translation": "До завтра!",
+        "topics": [
+          "Действия и маленькие истории"
+        ],
+        "status": "not_met",
+        "normalization": {
+          "casefold": true,
+          "trim_spaces": true,
+          "preserve_diacritics": true
+        },
+        "support_text": "до"
+      }
+    ],
+    "envelopes": [
+      {
+        "envelope_id": "es_envelope_01",
+        "number": 1,
+        "channel_id": "es_channel_01",
+        "title": "Имя в эфире",
+        "story": "Из приёмника слышен осторожный голос. Нора нашла пустую строчку в журнале: кому отвечает Южный Маяк?",
+        "lexeme_ids": [
+          "es_001",
+          "es_002",
+          "es_003",
+          "es_004",
+          "es_005"
+        ],
+        "review_lexeme_ids": [],
+        "interaction_ids": [
+          "es_01_hello",
+          "es_callsign"
+        ],
+        "world_reaction": "Теперь я знаю, как зовётся твоя станция. Оставлю это имя в журнале эфира.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_02",
+        "number": 2,
+        "channel_id": "es_channel_01",
+        "title": "Две перепутанные открытки",
+        "story": "Нора подписала два конверта одинаково. На одном дом, на другом подруга с письмом. Помоги вернуть маленьким сообщениям их место.",
+        "lexeme_ids": [
+          "es_006",
+          "es_007",
+          "es_008",
+          "es_009",
+          "es_010"
+        ],
+        "review_lexeme_ids": [
+          "es_001",
+          "es_005"
+        ],
+        "interaction_ids": [
+          "es_02_postcards"
+        ],
+        "world_reaction": "У открыток появились понятные отправители. Нора оставила на обороте маленькую звезду.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_03",
+        "number": 3,
+        "channel_id": "es_channel_01",
+        "title": "Поднос у окна",
+        "story": "Слушатель пришёл почитать письмо. Он просит pan y leche; Нора по ошибке поставила на поднос чай. Собери нужный заказ.",
+        "lexeme_ids": [
+          "es_011",
+          "es_012",
+          "es_013",
+          "es_014",
+          "es_015"
+        ],
+        "review_lexeme_ids": [
+          "es_002",
+          "es_010"
+        ],
+        "interaction_ids": [
+          "es_03_tray"
+        ],
+        "world_reaction": "На столике радиокафе стоит твой первый собранный поднос.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_04",
+        "number": 4,
+        "channel_id": "es_channel_01",
+        "title": "Шорох в приёмнике",
+        "story": "Шуршащая бумага заглушила часть сообщения. Не нужно угадывать: у радио есть вежливая кнопка переспроса.",
+        "lexeme_ids": [
+          "es_016",
+          "es_017",
+          "es_018",
+          "es_019",
+          "es_020"
+        ],
+        "review_lexeme_ids": [
+          "es_012",
+          "es_015",
+          "es_013",
+          "es_002"
+        ],
+        "interaction_ids": [
+          "es_04_repeat"
+        ],
+        "world_reaction": "Вот недостающий кусочек. Попробуем собрать сообщение ещё раз.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_05",
+        "number": 5,
+        "channel_id": "es_channel_01",
+        "title": "Меню маленького кафе",
+        "story": "Передача готова открыть первый столик. Ты решаешь, что будет в меню, а Нора пробует заказать суп и сок.",
+        "lexeme_ids": [
+          "es_021",
+          "es_022",
+          "es_023",
+          "es_024",
+          "es_025"
+        ],
+        "review_lexeme_ids": [
+          "es_012",
+          "es_014",
+          "es_002"
+        ],
+        "interaction_ids": [
+          "es_05_menu",
+          "es_05_order"
+        ],
+        "world_reaction": "Твоё меню появится на столике кафе. Первая часть альбома собрана.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_06",
+        "number": 6,
+        "channel_id": "es_channel_02",
+        "title": "Ключ из деревянного ящика",
+        "story": "Нора ищет ключ от двери. Она помнит: llave en la caja — ключ в коробке. Осмотри уголок и найди нужное место.",
+        "lexeme_ids": [
+          "es_026",
+          "es_027",
+          "es_028",
+          "es_029",
+          "es_030"
+        ],
+        "review_lexeme_ids": [
+          "es_010",
+          "es_009"
+        ],
+        "interaction_ids": [
+          "es_06_drawer"
+        ],
+        "world_reaction": "Коробка получила бирку llave. Ключ остаётся в учебной сцене.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_07",
+        "number": 7,
+        "channel_id": "es_channel_02",
+        "title": "Посылка Тео",
+        "story": "Тео просит три вещи для бумажного чертежа: papel, lápiz, cinta. Книга выглядит интересной, но в список не попала.",
+        "lexeme_ids": [
+          "es_031",
+          "es_032",
+          "es_033",
+          "es_034",
+          "es_035"
+        ],
+        "review_lexeme_ids": [
+          "es_028",
+          "es_026"
+        ],
+        "interaction_ids": [
+          "es_07_parcel"
+        ],
+        "world_reaction": "На верстаке появляется посылка с твоей аккуратной описью.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_08",
+        "number": 8,
+        "channel_id": "es_channel_02",
+        "title": "Подписи на станции",
+        "story": "Таблички с цветами оторвались. На этой учебной картинке есть красная коробка, синий карандаш и зелёная дверь: верни надписи.",
+        "lexeme_ids": [
+          "es_036",
+          "es_037",
+          "es_038",
+          "es_039",
+          "es_040"
+        ],
+        "review_lexeme_ids": [
+          "es_028",
+          "es_032",
+          "es_030",
+          "es_026"
+        ],
+        "interaction_ids": [
+          "es_08_labels"
+        ],
+        "world_reaction": "Одну выбранную подпись можно оставить у предмета станции.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_09",
+        "number": 9,
+        "channel_id": "es_channel_02",
+        "title": "Бумажный механизм",
+        "story": "В макете Тео письмо застряло в коробке. Он предлагает сначала открыть крышку, затем достать письмо. Это бумажный пример; инструменты не нужны.",
+        "lexeme_ids": [
+          "es_041",
+          "es_042",
+          "es_043",
+          "es_044",
+          "es_045"
+        ],
+        "review_lexeme_ids": [
+          "es_010",
+          "es_028",
+          "es_026"
+        ],
+        "interaction_ids": [
+          "es_09_mechanism"
+        ],
+        "world_reaction": "Бумажная дверца снова работает. Тео оставляет рядом твою последовательность.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_10",
+        "number": 10,
+        "channel_id": "es_channel_02",
+        "title": "Любимая вещь",
+        "story": "Нора хочет передать не каталог магазина, а историю твоей вещи. Старый предмет может быть любимым так же, как новый.",
+        "lexeme_ids": [
+          "es_046",
+          "es_047",
+          "es_048",
+          "es_049",
+          "es_050"
+        ],
+        "review_lexeme_ids": [
+          "es_033",
+          "es_032",
+          "es_031"
+        ],
+        "interaction_ids": [
+          "es_10_favorite"
+        ],
+        "world_reaction": "У станции есть твоя подпись предмета и вторая часть альбома.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_11",
+        "number": 11,
+        "channel_id": "es_channel_03",
+        "title": "Открытка с пятью видами",
+        "story": "В конверте рисунок долины: река огибает камень, над ней гора, рядом дерево и условный водопад. Это рисунок, а не маршрут.",
+        "lexeme_ids": [
+          "es_051",
+          "es_052",
+          "es_053",
+          "es_054",
+          "es_055"
+        ],
+        "review_lexeme_ids": [
+          "es_011",
+          "es_037",
+          "es_038"
+        ],
+        "interaction_ids": [
+          "es_11_valley"
+        ],
+        "world_reaction": "На открытке появились пять названий. Она ещё не означает реальный выход.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_12",
+        "number": 12,
+        "channel_id": "es_channel_03",
+        "title": "Два придуманных места",
+        "story": "Нора сравнивает два рисунка: на первом длинная река и высокая гора далеко, на втором короткий ручей и низкий столик. Помоги восстановить подпись первого.",
+        "lexeme_ids": [
+          "es_056",
+          "es_057",
+          "es_058",
+          "es_059",
+          "es_060"
+        ],
+        "review_lexeme_ids": [
+          "es_051",
+          "es_053"
+        ],
+        "interaction_ids": [
+          "es_12_distance"
+        ],
+        "world_reaction": "У вымышленной панорамы восстановлена подпись. Никаких советов о настоящей дороге она не даёт.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_13",
+        "number": 13,
+        "channel_id": "es_channel_03",
+        "title": "Линия воды",
+        "story": "Хочется подписать свой рисунок. Нора предлагает слова luz, sombra, línea, color, dibujo — они помогают рассказать, что ты заметила.",
+        "lexeme_ids": [
+          "es_061",
+          "es_062",
+          "es_063",
+          "es_064",
+          "es_065"
+        ],
+        "review_lexeme_ids": [
+          "es_037",
+          "es_051",
+          "es_054"
+        ],
+        "interaction_ids": [
+          "es_13_caption",
+          "es_13_my_caption"
+        ],
+        "world_reaction": "В альбоме появилась подпись рисунка, выбранная тобой.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_14",
+        "number": 14,
+        "channel_id": "es_channel_03",
+        "title": "Погода внутри истории",
+        "story": "Нора читает придуманный прогноз для открытки. На карточке явно написано: учебная история. Реальную погоду радио показывает отдельно.",
+        "lexeme_ids": [
+          "es_066",
+          "es_067",
+          "es_068",
+          "es_069",
+          "es_070"
+        ],
+        "review_lexeme_ids": [
+          "es_053",
+          "es_010"
+        ],
+        "interaction_ids": [
+          "es_14_weather"
+        ],
+        "world_reaction": "В учебной открытке меняется маленькое окошко погоды. Это не прогноз для семейного выхода.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_15",
+        "number": 15,
+        "channel_id": "es_channel_03",
+        "title": "Моя заметка из долины",
+        "story": "Теперь радио ждёт твою маленькую заметку: что здесь, а что там? Можно говорить о рисунке, не выдавая его за посещённое место.",
+        "lexeme_ids": [
+          "es_071",
+          "es_072",
+          "es_073",
+          "es_074",
+          "es_075"
+        ],
+        "review_lexeme_ids": [
+          "es_065",
+          "es_051",
+          "es_053"
+        ],
+        "interaction_ids": [
+          "es_15_dispatch"
+        ],
+        "world_reaction": "Твоя открытка готова к атласу как рисунок, без отметки о посещении.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_16",
+        "number": 16,
+        "channel_id": "es_channel_04",
+        "title": "Потерянный ключ",
+        "story": "Нора прислала кадры маленького происшествия: пришла домой, искала ключ, нашла, взяла письмо и вернулась на станцию. Кадры перепутались.",
+        "lexeme_ids": [
+          "es_076",
+          "es_077",
+          "es_078",
+          "es_079",
+          "es_080"
+        ],
+        "review_lexeme_ids": [
+          "es_009",
+          "es_029",
+          "es_010"
+        ],
+        "interaction_ids": [
+          "es_16_story"
+        ],
+        "world_reaction": "В альбоме есть история из пяти кадров, а не пять разрозненных переводов.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_17",
+        "number": 17,
+        "channel_id": "es_channel_04",
+        "title": "Прогулка бумажного героя",
+        "story": "Тео нарисовал комнату на клетчатой бумаге. Герой в центре, письмо справа, коробка за героем. Настоящую комнату обходить не нужно.",
+        "lexeme_ids": [
+          "es_081",
+          "es_082",
+          "es_083",
+          "es_084",
+          "es_085"
+        ],
+        "review_lexeme_ids": [
+          "es_010",
+          "es_026",
+          "es_028"
+        ],
+        "interaction_ids": [
+          "es_17_directions",
+          "es_17_walk"
+        ],
+        "world_reaction": "Бумажный герой получил понятное указание.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_18",
+        "number": 18,
+        "channel_id": "es_channel_04",
+        "title": "Лишний камень в подписи",
+        "story": "На картинке ровно два камня, но Нора подписала tres piedras. Она просит помочь заметить разницу.",
+        "lexeme_ids": [
+          "es_086",
+          "es_087",
+          "es_088",
+          "es_089",
+          "es_090"
+        ],
+        "review_lexeme_ids": [
+          "es_055",
+          "es_065"
+        ],
+        "interaction_ids": [
+          "es_18_correction"
+        ],
+        "world_reaction": "Нора: «Я написала лишнее. Хорошо, что можно спокойно исправить подпись».",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_19",
+        "number": 19,
+        "channel_id": "es_channel_04",
+        "title": "Конец маленькой истории",
+        "story": "Герой дошёл до окна: видит реку, слышит дождь, чувствует ветер. Какую деталь оставить в конце рассказа, решаешь ты.",
+        "lexeme_ids": [
+          "es_091",
+          "es_092",
+          "es_093",
+          "es_094",
+          "es_095"
+        ],
+        "review_lexeme_ids": [
+          "es_051",
+          "es_069",
+          "es_070"
+        ],
+        "interaction_ids": [
+          "es_19_senses",
+          "es_19_ending"
+        ],
+        "world_reaction": "В рассказе осталась твоя выбранная последняя реплика.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      },
+      {
+        "envelope_id": "es_envelope_20",
+        "number": 20,
+        "channel_id": "es_channel_04",
+        "title": "Выпуск Южного Маяка",
+        "story": "В архиве уже двадцать конвертов. Нора освобождает место в эфире: какие три сообщения из твоего альбома услышат гости?",
+        "lexeme_ids": [
+          "es_096",
+          "es_097",
+          "es_098",
+          "es_099",
+          "es_100"
+        ],
+        "review_lexeme_ids": [
+          "es_001",
+          "es_021",
+          "es_075",
+          "es_046"
+        ],
+        "interaction_ids": [
+          "es_20_broadcast",
+          "es_20_cover"
+        ],
+        "world_reaction": "Полный альбом эфира собран. Осталось спокойно применить слова в смешанной проверке вместе.",
+        "real_world_variants": [
+          {
+            "id": "character",
+            "title": "С готовым персонажем",
+            "description": "Прочитать или выбрать реплики в этой сцене."
+          },
+          {
+            "id": "together",
+            "title": "Вместе",
+            "description": "Разыграть эту же ситуацию с взрослым; говорить вслух необязательно."
+          },
+          {
+            "id": "paper",
+            "title": "На бумаге",
+            "description": "Перенести одну реплику или подпись в свой блокнот."
+          }
+        ]
+      }
+    ],
+    "channels": [
+      {
+        "channel_id": "es_channel_01",
+        "title": "Знакомство и радиокафе",
+        "lexeme_ids": [
+          "es_001",
+          "es_002",
+          "es_003",
+          "es_004",
+          "es_005",
+          "es_006",
+          "es_007",
+          "es_008",
+          "es_009",
+          "es_010",
+          "es_011",
+          "es_012",
+          "es_013",
+          "es_014",
+          "es_015",
+          "es_016",
+          "es_017",
+          "es_018",
+          "es_019",
+          "es_020",
+          "es_021",
+          "es_022",
+          "es_023",
+          "es_024",
+          "es_025"
+        ]
+      },
+      {
+        "channel_id": "es_channel_02",
+        "title": "Дом и мастерская",
+        "lexeme_ids": [
+          "es_026",
+          "es_027",
+          "es_028",
+          "es_029",
+          "es_030",
+          "es_031",
+          "es_032",
+          "es_033",
+          "es_034",
+          "es_035",
+          "es_036",
+          "es_037",
+          "es_038",
+          "es_039",
+          "es_040",
+          "es_041",
+          "es_042",
+          "es_043",
+          "es_044",
+          "es_045",
+          "es_046",
+          "es_047",
+          "es_048",
+          "es_049",
+          "es_050"
+        ]
+      },
+      {
+        "channel_id": "es_channel_03",
+        "title": "Долина и вода",
+        "lexeme_ids": [
+          "es_051",
+          "es_052",
+          "es_053",
+          "es_054",
+          "es_055",
+          "es_056",
+          "es_057",
+          "es_058",
+          "es_059",
+          "es_060",
+          "es_061",
+          "es_062",
+          "es_063",
+          "es_064",
+          "es_065",
+          "es_066",
+          "es_067",
+          "es_068",
+          "es_069",
+          "es_070",
+          "es_071",
+          "es_072",
+          "es_073",
+          "es_074",
+          "es_075"
+        ]
+      },
+      {
+        "channel_id": "es_channel_04",
+        "title": "Действия и маленькие истории",
+        "lexeme_ids": [
+          "es_076",
+          "es_077",
+          "es_078",
+          "es_079",
+          "es_080",
+          "es_081",
+          "es_082",
+          "es_083",
+          "es_084",
+          "es_085",
+          "es_086",
+          "es_087",
+          "es_088",
+          "es_089",
+          "es_090",
+          "es_091",
+          "es_092",
+          "es_093",
+          "es_094",
+          "es_095",
+          "es_096",
+          "es_097",
+          "es_098",
+          "es_099",
+          "es_100"
+        ]
+      }
+    ],
+    "final_check": {
+      "interaction_id": "es_mixed_check",
+      "sample_size": 20,
+      "minimum_unassisted_correct": 14,
+      "per_channel": 5
+    },
+    "grammar_support": [
+      {
+        "text": "el / la / un / una",
+        "translation": "служебные слова перед названием"
+      },
+      {
+        "text": "y",
+        "translation": "и"
+      },
+      {
+        "text": "en",
+        "translation": "в / на"
+      },
+      {
+        "text": "de / del",
+        "translation": "из / принадлежность"
+      },
+      {
+        "text": "es / está",
+        "translation": "есть / находится"
+      },
+      {
+        "text": "hay",
+        "translation": "есть, имеется"
+      },
+      {
+        "text": "¿Puedes…?",
+        "translation": "Можешь…?"
+      },
+      {
+        "text": "para",
+        "translation": "для"
+      },
+      {
+        "text": "soy / eres",
+        "translation": "я / ты есть"
+      },
+      {
+        "text": "a",
+        "translation": "к / в направлении"
+      }
+    ],
+    "choice_effects": {
+      "broadcast_theme": {
+        "valley": "valley_postcard",
+        "sky": "radio_album",
+        "river": "valley_postcard"
+      }
+    }
+  },
+  "editorial_priority": 1
+}

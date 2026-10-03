@@ -7,6 +7,8 @@ var failed_count: int = 0
 var passed_count: int = 0
 
 func _init() -> void:
+	var save_svc = preload("res://scripts/services/save_service.gd")
+	save_svc.use_test_storage("user://test_phase_a_")
 	print("\n==================================================")
 	print("  SUR — Запуск приёмочных проверок Фазы A (A01-A06)")
 	print("==================================================\n")
@@ -17,6 +19,7 @@ func _init() -> void:
 	_run_test_a05()
 	_run_test_a06()
 	
+	save_svc.cleanup_test_storage()
 	print("\n==================================================")
 	if failed_count == 0:
 		print("  ИТОГ: ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО! (", passed_count, " проверок)")

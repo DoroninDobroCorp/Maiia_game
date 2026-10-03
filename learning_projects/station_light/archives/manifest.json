@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "starter_project_id": "station_arcade_starter",
+  "kind": "prepared_learning_starter",
+  "title": "Собери свет для станции",
+  "engine_tested": "Godot 4.7.2",
+  "entry_project": "project.godot",
+  "authorship": "AUTHORSHIP.json",
+  "launch_registration": "Not performed; owned by the SUR launcher integration.",
+  "versions": [
+    {
+      "version": "0.1",
+      "stage": 1,
+      "project_path": "versions/0.1/project.godot",
+      "source_archive": "archives/station_light_0.1.zip",
+      "sha256": "3eb9be862c9ea82df0de0e0e86bfa8c550263c14aba3e08c683ef71a9c4c3882",
+      "source_sha256": {
+        "project.godot": "3813da357b2e95af7be35c603e0ff27dc0fe949e36e966852bb62a78e75e8a65",
+        "main.tscn": "c0a80ba4bb7afbcd852cb027d2d5b5aa0a36437a87ef8fbe23eefc46786e3e37",
+        "main.gd": "db6e7f3f026b7ba471969081230e0d63db6f8a5594f5b8b8e1c414f3af4435c3",
+        "game_state.gd": "cd4939b8393bb140a7c20955ae169af7d38c317a5b505fed217118708acd2879",
+        "lesson.json": "6b15a724f2c166e94a5fb9b845b83f0a1f79d61ea67695838ce45a22fda0f975",
+        "README.md": "3fcc4b196f67f6e3cccdb57d82bb7fba7db9890f05ca679b6dec39c70ee5a63c",
+        "AUTHORSHIP.json": "821892514ec1d1c52d24e4995f35cb9718a2592d28f6c46d384133e92b1c78b5"
+      }
+    },
+    {
+      "version": "0.2",
+      "stage": 2,
+      "project_path": "versions/0.2/project.godot",
+      "source_archive": "archives/station_light_0.2.zip",
+      "sha256": "708a18f40c47442b6d63836876761e4bc96ca7215af87714f31eb0bd0b376c48",
+      "source_sha256": {
+        "project.godot": "132648d1cf85216bd42d8050f93ce7c9d0003d6c1670f8cf4b83215ad98fd1c8",
+        "main.tscn": "c0a80ba4bb7afbcd852cb027d2d5b5aa0a36437a87ef8fbe23eefc46786e3e37",
+        "main.gd": "db6e7f3f026b7ba471969081230e0d63db6f8a5594f5b8b8e1c414f3af4435c3",
+        "game_state.gd": "cd4939b8393bb140a7c20955ae169af7d38c317a5b505fed217118708acd2879",
+        "lesson.json": "e669ab295063dd9a432aa69e4aa5c8edbbf9cb03ff94a69fce6e0dd11e0888e1",
+        "README.md": "3fcc4b196f67f6e3cccdb57d82bb7fba7db9890f05ca679b6dec39c70ee5a63c",
+        "AUTHORSHIP.json": "821892514ec1d1c52d24e4995f35cb9718a2592d28f6c46d384133e92b1c78b5"
+      }
+    },
+    {
+      "version": "0.3",
+      "stage": 3,
+      "project_path": "versions/0.3/project.godot",
+      "source_archive": "archives/station_light_0.3.zip",
+      "sha256": "33676970ac64e53ca10dc9fff15336112755edd134ffc35488855c4dcc02c53c",
+      "source_sha256": {
+        "project.godot": "c8206892d4bb2fd6811df9eb6392decfe2c843fb173f92b3f8ce44fd4d0bcda5",
+        "main.tscn": "c0a80ba4bb7afbcd852cb027d2d5b5aa0a36437a87ef8fbe23eefc46786e3e37",
+        "main.gd": "db6e7f3f026b7ba471969081230e0d63db6f8a5594f5b8b8e1c414f3af4435c3",
+        "game_state.gd": "cd4939b8393bb140a7c20955ae169af7d38c317a5b505fed217118708acd2879",
+        "lesson.json": "4c6a9d62bb532ebb707056ef386109f2be7f635916f8d797197f237bc9819a34",
+        "README.md": "3fcc4b196f67f6e3cccdb57d82bb7fba7db9890f05ca679b6dec39c70ee5a63c",
+        "AUTHORSHIP.json": "821892514ec1d1c52d24e4995f35cb9718a2592d28f6c46d384133e92b1c78b5"
+      }
+    },
+    {
+      "version": "0.4",
+      "stage": 4,
+      "project_path": "versions/0.4/project.godot",
+      "source_archive": "archives/station_light_0.4.zip",
+      "sha256": "87e7f4cb918ebab133e5de4ff9ccfe71eb53b82ba19263932056bb697e6a2581",
+      "source_sha256": {
+        "project.godot": "7497827fa13496228a1239b26b0af96d5c964870711eb5a0299d5add3b593c5c",
+        "main.tscn": "c0a80ba4bb7afbcd852cb027d2d5b5aa0a36437a87ef8fbe23eefc46786e3e37",
+        "main.gd": "db6e7f3f026b7ba471969081230e0d63db6f8a5594f5b8b8e1c414f3af4435c3",
+        "game_state.gd": "cd4939b8393bb140a7c20955ae169af7d38c317a5b505fed217118708acd2879",
+        "lesson.json": "38810c6588be9b83bd1a68297329a7c59e29c197e0f5a38a99dedf5e64f6578f",
+        "README.md": "3fcc4b196f67f6e3cccdb57d82bb7fba7db9890f05ca679b6dec39c70ee5a63c",
+        "AUTHORSHIP.json": "821892514ec1d1c52d24e4995f35cb9718a2592d28f6c46d384133e92b1c78b5"
+      }
+    },
+    {
+      "version": "1.0",
+      "stage": 5,
+      "project_path": "versions/1.0/project.godot",
+      "source_archive": "archives/station_light_1.0.zip",
+      "sha256": "ee262e68833b61d58346e6d9f4d90050fb43d56f9a4ffe5e767c56d52b7f5c2a",
+      "source_sha256": {
+        "project.godot": "e5aa1bf4999e0dba686a95703d0cd0339b863139f397eeb819c6b29fe45ed19c",
+        "main.tscn": "c0a80ba4bb7afbcd852cb027d2d5b5aa0a36437a87ef8fbe23eefc46786e3e37",
+        "main.gd": "db6e7f3f026b7ba471969081230e0d63db6f8a5594f5b8b8e1c414f3af4435c3",
+        "game_state.gd": "cd4939b8393bb140a7c20955ae169af7d38c317a5b505fed217118708acd2879",
+        "lesson.json": "5f0e66e242e8e5f4c6b41e31f19395408a332ef22a515f629fc64195394c2080",
+        "README.md": "3fcc4b196f67f6e3cccdb57d82bb7fba7db9890f05ca679b6dec39c70ee5a63c",
+        "AUTHORSHIP.json": "821892514ec1d1c52d24e4995f35cb9718a2592d28f6c46d384133e92b1c78b5"
+      }
+    }
+  ],
+  "source_bundle": {
+    "path": "archives/station_light_source.zip",
+    "sha256": "f651d1fe35d41b288f3a582df43bd3e1ae8c63825e5e23f0413e77feddc38d31"
+  }
+}

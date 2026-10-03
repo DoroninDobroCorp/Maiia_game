@@ -9,6 +9,8 @@ signal revoke_requested(quest_id: String, revision: int)
 signal draft_save_requested(quest: Dictionary)
 signal package_import_requested(path: String)
 signal package_export_requested()
+signal adventure_editor_requested()
+signal adventure_setup_requested()
 
 const ContentRepositoryScript = preload("res://scripts/services/content_repository.gd")
 const ContentLibraryServiceScript = preload("res://scripts/services/content_library_service.gd")
@@ -92,6 +94,16 @@ func _build_ui(state: Dictionary) -> void:
 	note.add_theme_font_size_override("font_size", 12)
 	note.add_theme_color_override("font_color", Color(0.72, 0.74, 0.70))
 	root.add_child(note)
+	var adventure_actions := HBoxContainer.new()
+	root.add_child(adventure_actions)
+	var chapter_button := Button.new()
+	chapter_button.text = "Новая глава и семейные инструменты"
+	chapter_button.pressed.connect(func(): adventure_setup_requested.emit())
+	adventure_actions.add_child(chapter_button)
+	var adventure_editor_button := Button.new()
+	adventure_editor_button.text = "Конструктор приключений"
+	adventure_editor_button.pressed.connect(func(): adventure_editor_requested.emit())
+	adventure_actions.add_child(adventure_editor_button)
 
 	var tabs := TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -143,7 +155,8 @@ func _build_publish_tab(state: Dictionary) -> Control:
 		row.add_child(text_box)
 
 		var q_title := Label.new()
-		q_title.text = "%s • v%d • %s" % [qid, revision, str(quest.get("title", ""))]
+		var first_goal_marker := "★ ПЕРВАЯ ЦЕЛЬ • " if str(quest.get("goal_group", "")) == "maya_first_goals" else ""
+		q_title.text = "%s%s • v%d • %s" % [first_goal_marker, qid, revision, str(quest.get("title", ""))]
 		q_title.add_theme_font_size_override("font_size", 14)
 		q_title.add_theme_color_override("font_color", Color(0.96, 0.88, 0.67))
 		text_box.add_child(q_title)
@@ -190,6 +203,9 @@ func _build_review_tab(state: Dictionary) -> Control:
 	for activity_value in activities.values():
 		var activity: Dictionary = activity_value
 		if str(activity.get("status", "")) != "SUBMITTED":
+			continue
+		var source: Dictionary = phase_b.get("quest_instances", {}).get(str(activity.get("instance_id", "")), {})
+		if not str(source.get("superseded_by_instance_id", "")).is_empty():
 			continue
 		found = true
 		var qid := str(activity.get("quest_id", ""))
@@ -246,7 +262,7 @@ func _build_content_editor_tab(state: Dictionary) -> Control:
 	scroll.add_child(root)
 
 	var intro := Label.new()
-	intro.text = "Phase C • 24 готовые заготовки по 8 направлениям + семейные карточки. Встроенные версии не переписываются: редактор создаёт новую ревизию, которую взрослый затем отдельно публикует."
+	intro.text = "Phase C • 11 выбранных первых целей Майи + 13 универсальных карточек, всего по 3 на каждое из 8 направлений. Встроенные версии не переписываются: редактор создаёт новую ревизию, которую взрослый затем отдельно публикует."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_color_override("font_color", Color(0.82, 0.80, 0.72))
 	root.add_child(intro)

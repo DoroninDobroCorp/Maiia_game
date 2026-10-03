@@ -1,0 +1,281 @@
+{
+  "schema_version": 2,
+  "package_type": "sur_quest_pack",
+  "package_id": "sur_family_three_silhouettes",
+  "required_capabilities": [
+    "adventure_v1",
+    "exhibits_v1"
+  ],
+  "quests": [
+    {
+      "schema_version": 2,
+      "quest_id": "AR02",
+      "revision": 1,
+      "content_status": "DRAFT",
+      "kind": "project",
+      "title": "Три силуэта для новой вывески",
+      "story_title": "Три силуэта для новой вывески",
+      "summary": "Сделать три формы одного предмета и выбрать понятный силуэт для вывески.",
+      "is_main_quest": false,
+      "chapter_id": "chapter_02",
+      "chapter_key": "station_on_air",
+      "location_id": "workshop_annex",
+      "entry_anchor_id": "workbench",
+      "estimated_minutes": {
+        "min": 5,
+        "max": 240
+      },
+      "completion_criteria": [
+        "Открыты три образца.",
+        "Есть три разных силуэта одного предмета.",
+        "Один вариант выбран; есть короткое объяснение."
+      ],
+      "variants": [
+        {
+          "id": "home",
+          "title": "Дом и семейные шаги",
+          "home_available": true
+        }
+      ],
+      "context": {
+        "adult_presence": "for_review",
+        "requires_purchase": false,
+        "requires_network": false,
+        "risk_tags": []
+      },
+      "evidence_policy": {
+        "allowed": [
+          "game_event",
+          "parent_observation",
+          "note",
+          "local_image"
+        ],
+        "required_media": false,
+        "reviewer": "parent"
+      },
+      "reward_policy": {
+        "activity_budget": 20,
+        "lane": "project",
+        "skill_weights_percent": {
+          "drawing": 100
+        },
+        "world_effect_ids": []
+      },
+      "repeat_policy": {
+        "mode": "once",
+        "max_completions": 1
+      },
+      "provenance": {
+        "origin": "sur_first_chapter"
+      },
+      "required_capabilities": [
+        "adventure_v1",
+        "exhibits_v1"
+      ],
+      "content_dependencies": [],
+      "exhibit_ids": [
+        "silhouette_frame",
+        "silhouette_sheet"
+      ],
+      "adventure": {
+        "stages": [
+          {
+            "stage_id": "silhouette_inspect",
+            "title": "Образцы на верстаке",
+            "summary": "Осмотреть три примера.",
+            "prerequisite_stage_ids": [],
+            "completion_policy": "automatic",
+            "budget_share": 0,
+            "grant_ids": [],
+            "atlas_unlock_ids": [],
+            "work_recipe_id": "silhouette_sheet",
+            "interaction_ids": [
+              "silhouette_samples"
+            ],
+            "criteria": [
+              "Открыты три образца."
+            ],
+            "next_hint": "Можно сделать свои три формы.",
+            "required": true
+          },
+          {
+            "stage_id": "silhouette_make",
+            "title": "Мои три формы",
+            "summary": "Сделать три варианта.",
+            "prerequisite_stage_ids": [
+              "silhouette_inspect"
+            ],
+            "completion_policy": "joint_review",
+            "budget_share": 10,
+            "grant_ids": [],
+            "atlas_unlock_ids": [],
+            "work_recipe_id": "silhouette_sheet",
+            "interaction_ids": [
+              "silhouette_draw"
+            ],
+            "criteria": [
+              "Есть три разных силуэта одного предмета."
+            ],
+            "next_hint": "Можно выбрать любимый вариант.",
+            "required": true
+          },
+          {
+            "stage_id": "silhouette_exhibit",
+            "title": "Новая вывеска",
+            "summary": "Выбрать и объяснить один вариант.",
+            "prerequisite_stage_ids": [
+              "silhouette_make"
+            ],
+            "completion_policy": "self_attest",
+            "budget_share": 10,
+            "grant_ids": [
+              "silhouette_frame"
+            ],
+            "atlas_unlock_ids": [],
+            "work_recipe_id": "silhouette_frame",
+            "interaction_ids": [
+              "silhouette_pick"
+            ],
+            "criteria": [
+              "Один вариант выбран; есть короткое объяснение."
+            ],
+            "next_hint": "Рамка готова к выставке.",
+            "required": true
+          }
+        ],
+        "interactions": {
+          "silhouette_samples": {
+            "interaction_id": "silhouette_samples",
+            "type": "inspect_reveal",
+            "title": "Что видно издалека?",
+            "prompt": "Тео предлагает выбрать силуэт для новой вывески. Осмотри три словесных образца.",
+            "hints": [
+              "Силуэт показывает внешний край.",
+              "Менять можно пропорции и положение ручки.",
+              "Сравни высокую и широкую чашку: форма различается даже без деталей."
+            ],
+            "config": {
+              "details": [
+                {
+                  "id": "round",
+                  "title": "Круглая чашка",
+                  "text": "Один крупный контур, ручка видна сбоку."
+                },
+                {
+                  "id": "tall",
+                  "title": "Высокая чашка",
+                  "text": "Узкий вытянутый контур, ручка около середины."
+                },
+                {
+                  "id": "wide",
+                  "title": "Широкая чашка",
+                  "text": "Низкий контур, большая ручка и широкое основание."
+                }
+              ],
+              "required_detail_ids": [
+                "round",
+                "tall",
+                "wide"
+              ]
+            },
+            "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+          },
+          "silhouette_draw": {
+            "interaction_id": "silhouette_draw",
+            "type": "real_world_step",
+            "title": "Три собственных варианта",
+            "prompt": "Нарисуй один выбранный предмет тремя разными силуэтами. Достаточно бумаги и карандаша; художественный вкус не оценивается.",
+            "hints": [
+              "Выбери простой знакомый предмет.",
+              "В одном варианте измени высоту, в другом — ширину или наклон.",
+              "Например: три чашки — высокая, широкая и с большой ручкой."
+            ],
+            "config": {
+              "criteria": [
+                "Есть три различающихся силуэта одного предмета."
+              ],
+              "fields": [
+                {
+                  "id": "variants_note",
+                  "label": "Чем отличаются три варианта?",
+                  "required": true
+                }
+              ],
+              "materials": [
+                "Бумага",
+                "Карандаш"
+              ]
+            },
+            "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+          },
+          "silhouette_pick": {
+            "interaction_id": "silhouette_pick",
+            "type": "exhibit_composition",
+            "title": "Вывеска, которую узнают",
+            "prompt": "Выбери один свой вариант и объясни выбор одной фразой.",
+            "hints": [
+              "Покажи три собственных варианта рядом.",
+              "Подумай, какой легче узнать издалека.",
+              "Можно написать: «У этого хорошо видна ручка»."
+            ],
+            "config": {
+              "choices": [
+                {
+                  "id": "first",
+                  "text": "Первый силуэт"
+                },
+                {
+                  "id": "second",
+                  "text": "Второй силуэт"
+                },
+                {
+                  "id": "third",
+                  "text": "Третий силуэт"
+                }
+              ],
+              "min_selected": 1,
+              "max_selected": 1,
+              "fields": [
+                {
+                  "id": "reason",
+                  "label": "Почему этот вариант?",
+                  "required": true
+                }
+              ],
+              "source_stage_ids": []
+            },
+            "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+          }
+        },
+        "work_recipes": {
+          "silhouette_frame": {
+            "recipe_id": "silhouette_frame",
+            "title": "Силуэт для вывески",
+            "work_kind": "image",
+            "presentations": [
+              "frame"
+            ]
+          },
+          "silhouette_sheet": {
+            "recipe_id": "silhouette_sheet",
+            "title": "Три силуэта",
+            "work_kind": "image",
+            "presentations": [
+              "frame",
+              "table"
+            ]
+          }
+        },
+        "grant_definitions": {
+          "silhouette_frame": {
+            "grant_id": "silhouette_frame",
+            "title": "Рамка новой вывески",
+            "kind": "known_presentation"
+          }
+        },
+        "dialogues": {},
+        "return_text": "Уже сделанное осталось в архиве. Можно продолжить следующий маленький шаг или посмотреть свои работы."
+      }
+    }
+  ]
+}

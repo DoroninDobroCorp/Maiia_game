@@ -6,6 +6,7 @@ extends Control
 signal closed()
 signal quest_open_requested(quest: Dictionary, instance: Dictionary)
 signal artifact_delete_requested(artifact_id: String)
+signal ritual_day_requested()
 
 const ProgressionRulesScript = preload("res://scripts/domain/progression_rules.gd")
 const ContentRepositoryScript = preload("res://scripts/services/content_repository.gd")
@@ -14,6 +15,7 @@ const QuestServiceScript = preload("res://scripts/services/quest_service.gd")
 const ArtifactServiceScript = preload("res://scripts/services/artifact_service.gd")
 const AuthorPatchServiceScript = preload("res://scripts/services/author_patch_service.gd")
 const ProgressServiceScript = preload("res://scripts/services/progress_service.gd")
+const RitualServiceScript = preload("res://scripts/services/ritual_service.gd")
 const AtlasMapScript = preload("res://scripts/presentation/atlas_map.gd")
 
 var audio_service: Node
@@ -96,30 +98,44 @@ func _build_ui(state: Dictionary) -> void:
 	tab_quest.name = "Задачи (S00)"
 	tab_container.add_child(tab_quest)
 	
-	# 2. Опубликованные семейные экспедиции Phase B.
+	# 2. Три приключения, выбранные на самый первый игровой отрезок.
+	var tab_featured := _build_featured_goals_tab(state)
+	tab_featured.name = "Активные приключения"
+	tab_container.add_child(tab_featured)
+
+	# 3. Опубликованные семейные экспедиции Phase B.
 	var tab_phase_b := _build_phase_b_quests_tab(state)
 	tab_phase_b.name = "Экспедиции"
 	tab_container.add_child(tab_phase_b)
 
-	# 3. Семь направлений развития.
+	# 4. Семейный маршрут из выбранных первых целей Майи.
+	var tab_first_goals := _build_first_goals_tab(state)
+	tab_first_goals.name = "Первые цели"
+	tab_container.add_child(tab_first_goals)
+
+	# 5. Восемь направлений развития.
 	var tab_skills := _build_skills_tab(state)
 	tab_skills.name = "Навыки"
 	tab_container.add_child(tab_skills)
 
-	# 4. Архив подтверждённой работы и локальных вложений.
+	# 6. Архив подтверждённой работы и локальных вложений.
 	var tab_archive := _build_archive_tab(state)
 	tab_archive.name = "Архив"
 	tab_container.add_child(tab_archive)
 
-	# 5. Вкладка «Атлас долины»
+	# 7. Вкладка «Атлас долины»
 	var tab_atlas := _build_atlas_tab(state)
 	tab_atlas.name = "Атлас долины"
 	tab_container.add_child(tab_atlas)
 	
-	# 6. Достижения пролога.
+	# 8. Достижения пролога.
 	var tab_achieve := _build_achievements_tab(state)
 	tab_achieve.name = "Достижения"
 	tab_container.add_child(tab_achieve)
+
+	var s00: Dictionary = state.get("s00_progress", {})
+	if bool(s00.get("station_awakened", false)):
+		tab_container.current_tab = 1
 
 func _build_quest_tab(state: Dictionary) -> Control:
 	var scroll := ScrollContainer.new()
@@ -184,7 +200,7 @@ func _build_phase_b_quests_tab(state: Dictionary) -> Control:
 		vbox.add_child(finale)
 
 	var intro := Label.new()
-	intro.text = "Только карточки, которые взрослый уже одобрил и опубликовал. Принятие задания фиксирует точную версию — будущие правки её не меняют."
+	intro.text = "Экспедиции станции. Выбирай любое направление, знакомься с планом и отправляйся в путь."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", 11)
 	intro.add_theme_color_override("font_color", Color(0.70, 0.69, 0.66))
@@ -193,7 +209,7 @@ func _build_phase_b_quests_tab(state: Dictionary) -> Control:
 	var quests := QuestServiceScript.list_player_quests(state)
 	if quests.is_empty():
 		var empty := Label.new()
-		empty.text = "Новые экспедиции пока не открыты. Взрослый может выбрать одну карточку в локальной родительской консоли [P]."
+		empty.text = "Здесь появятся дополнительные экспедиции. А прямо сейчас можно открыть приключения во вкладках «Активные приключения» и «Первые цели»!"
 		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		empty.add_theme_color_override("font_color", Color(0.78, 0.74, 0.66))
 		vbox.add_child(empty)
@@ -236,6 +252,230 @@ func _build_phase_b_quests_tab(state: Dictionary) -> Control:
 		var open_btn := Button.new()
 		open_btn.text = "Открыть"
 		var exact_quest: Dictionary = quest.duplicate(true)
+		var exact_instance: Dictionary = instance.duplicate(true)
+		open_btn.pressed.connect(func(): quest_open_requested.emit(exact_quest, exact_instance))
+		row.add_child(open_btn)
+
+	return scroll
+
+func _build_featured_goals_tab(state: Dictionary) -> Control:
+	var scroll := ScrollContainer.new()
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 12)
+	scroll.add_child(vbox)
+
+	var heading := Label.new()
+	heading.text = "ТРИ ПЕРВЫХ ПРИКЛЮЧЕНИЯ"
+	heading.add_theme_font_size_override("font_size", 16)
+	heading.add_theme_color_override("font_color", Color(1.0, 0.86, 0.52))
+	vbox.add_child(heading)
+	var intro := Label.new()
+	intro.text = "Не список уроков, а три главных приключения: поймать первые 100 испанских слов, собрать свою маленькую игру и принести полевую запись с реки и водопадов. Любое можно сразу открыть, узнать подробности и отметить готовым."
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.add_theme_font_size_override("font_size", 11)
+	intro.add_theme_color_override("font_color", Color(0.78, 0.76, 0.70))
+	vbox.add_child(intro)
+
+	for goal in ContentRepositoryScript.featured_goal_templates():
+		var qid := str(goal.get("quest_id", ""))
+		var published := _latest_published_quest(state, qid)
+		var instance := _latest_instance_for_quest(state, qid)
+		var card := PanelContainer.new()
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.18, 0.15, 0.20, 0.94)
+		style.border_color = Color(0.76, 0.58, 0.26, 0.84)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(8)
+		style.set_content_margin_all(12)
+		card.add_theme_stylebox_override("panel", style)
+		vbox.add_child(card)
+
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		card.add_child(row)
+		var text_box := VBoxContainer.new()
+		text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(text_box)
+		var reward: Dictionary = goal.get("reward_policy", {})
+		var weights: Dictionary = reward.get("skill_weights_percent", {})
+		var skill_id := str(weights.keys()[0]) if not weights.is_empty() else ""
+		var title := Label.new()
+		title.text = "%s  •  %s" % [ContentRepositoryScript.get_skill_title(skill_id), str(goal.get("title", ""))]
+		title.add_theme_font_size_override("font_size", 14)
+		title.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62))
+		text_box.add_child(title)
+		var summary := Label.new()
+		summary.text = str(goal.get("summary", ""))
+		summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		summary.add_theme_font_size_override("font_size", 11)
+		text_box.add_child(summary)
+		var steps: Array = goal.get("goal_steps", [])
+		if not steps.is_empty():
+			var steps_label := Label.new()
+			var step_titles: Array[String] = []
+			for step in steps:
+				step_titles.append(str(step))
+			steps_label.text = "Маршрут: " + "  →  ".join(step_titles)
+			steps_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			steps_label.add_theme_font_size_override("font_size", 10)
+			steps_label.add_theme_color_override("font_color", Color(0.70, 0.76, 0.82))
+			text_box.add_child(steps_label)
+
+		var status := Label.new()
+		if instance.is_empty():
+			status.text = "Можно выполнять"
+			status.add_theme_color_override("font_color", Color(0.60, 0.88, 0.66))
+		elif str(instance.get("status", "")) == "COMPLETED":
+			status.text = "✓ Выполнено"
+			status.add_theme_color_override("font_color", Color(0.45, 0.95, 0.55))
+		else:
+			status.text = _instance_status_title(str(instance.get("status", "")))
+			status.add_theme_color_override("font_color", Color(0.86, 0.74, 0.50))
+		text_box.add_child(status)
+
+		var open_btn := Button.new()
+		open_btn.text = "Открыть"
+		var exact_quest: Dictionary = published.duplicate(true) if not published.is_empty() else goal.duplicate(true)
+		var exact_instance: Dictionary = instance.duplicate(true)
+		open_btn.pressed.connect(func(): quest_open_requested.emit(exact_quest, exact_instance))
+		row.add_child(open_btn)
+
+	var ritual := RitualServiceScript.get_state(state)
+	var days: Array = ritual.get("days", [])
+	var target_days := int(ritual.get("target_days", 5))
+	var ritual_card := PanelContainer.new()
+	var ritual_style := StyleBoxFlat.new()
+	ritual_style.bg_color = Color(0.10, 0.16, 0.17, 0.94)
+	ritual_style.border_color = Color(0.35, 0.66, 0.61, 0.76)
+	ritual_style.set_border_width_all(1)
+	ritual_style.set_corner_radius_all(8)
+	ritual_style.set_content_margin_all(12)
+	ritual_card.add_theme_stylebox_override("panel", ritual_style)
+	vbox.add_child(ritual_card)
+	var ritual_row := HBoxContainer.new()
+	ritual_row.add_theme_constant_override("separation", 14)
+	ritual_card.add_child(ritual_row)
+	var ritual_text := VBoxContainer.new()
+	ritual_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ritual_row.add_child(ritual_text)
+	var ritual_title := Label.new()
+	ritual_title.text = "РИТУАЛ ДВИЖЕНИЯ  •  5 спокойных дней"
+	ritual_title.add_theme_font_size_override("font_size", 13)
+	ritual_title.add_theme_color_override("font_color", Color(0.72, 0.94, 0.82))
+	ritual_text.add_child(ritual_title)
+	var marks: Array[String] = []
+	for i in range(target_days):
+		marks.append("✦" if i < days.size() else "○")
+	var mark_label := Label.new()
+	mark_label.text = "  ".join(marks) + "    %d/%d" % [min(days.size(), target_days), target_days]
+	mark_label.add_theme_font_size_override("font_size", 18)
+	mark_label.add_theme_color_override("font_color", Color(0.88, 0.82, 0.56))
+	ritual_text.add_child(mark_label)
+	var ritual_hint := Label.new()
+	ritual_hint.text = "5–10 минут лёгкой разминки. Дни не обязаны идти подряд: пропуск ничего не сбрасывает. На пятой отметке на станции навсегда загорается маленький огонь."
+	ritual_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ritual_hint.add_theme_font_size_override("font_size", 10)
+	ritual_hint.add_theme_color_override("font_color", Color(0.68, 0.76, 0.72))
+	ritual_text.add_child(ritual_hint)
+	var ritual_btn := Button.new()
+	var today := Time.get_date_string_from_system()
+	var today_marked := days.has(today)
+	var unlocked := bool(ritual.get("unlocked", false))
+	ritual_btn.text = "Огонь открыт ✦" if unlocked else ("Сегодня сделано ✓" if today_marked else "Отметить сегодня")
+	ritual_btn.disabled = today_marked or unlocked
+	ritual_btn.pressed.connect(func(): ritual_day_requested.emit())
+	ritual_row.add_child(ritual_btn)
+
+	return scroll
+
+func _build_first_goals_tab(state: Dictionary) -> Control:
+	var scroll := ScrollContainer.new()
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 10)
+	scroll.add_child(vbox)
+
+	var intro := Label.new()
+	intro.text = "Это первый выбранный маршрут Майи. Любую цель можно открыть, узнать что нужно сделать и отметить выполненной."
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.add_theme_font_size_override("font_size", 11)
+	intro.add_theme_color_override("font_color", Color(0.76, 0.74, 0.68))
+	vbox.add_child(intro)
+
+	for goal in ContentRepositoryScript.first_goal_templates():
+		var qid := str(goal.get("quest_id", ""))
+		var published := _latest_published_quest(state, qid)
+		var instance := _latest_instance_for_quest(state, qid)
+		var status_text := "Можно выполнять"
+		var status_color := Color(0.58, 0.86, 0.64)
+		if not instance.is_empty():
+			if str(instance.get("status", "")) == "COMPLETED":
+				status_text = "✓ Выполнено"
+				status_color = Color(0.45, 0.95, 0.55)
+			else:
+				status_text = _instance_status_title(str(instance.get("status", "")))
+				status_color = Color(0.84, 0.74, 0.50)
+
+		var card := PanelContainer.new()
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.17, 0.15, 0.19, 0.92)
+		style.border_color = Color(0.58, 0.48, 0.30, 0.72)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(7)
+		style.set_content_margin_all(11)
+		card.add_theme_stylebox_override("panel", style)
+		vbox.add_child(card)
+
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		card.add_child(row)
+		var text_box := VBoxContainer.new()
+		text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(text_box)
+
+		var title := Label.new()
+		title.text = "%02d  •  %s" % [int(goal.get("goal_order", 0)), str(goal.get("title", ""))]
+		title.add_theme_font_size_override("font_size", 14)
+		title.add_theme_color_override("font_color", Color(1.0, 0.88, 0.58))
+		text_box.add_child(title)
+
+		var reward: Dictionary = goal.get("reward_policy", {})
+		var weights: Dictionary = reward.get("skill_weights_percent", {})
+		var skill_id := str(weights.keys()[0]) if not weights.is_empty() else ""
+		var skill := Label.new()
+		skill.text = ContentRepositoryScript.get_skill_title(skill_id) if not skill_id.is_empty() else "Семейная цель"
+		skill.add_theme_font_size_override("font_size", 10)
+		skill.add_theme_color_override("font_color", Color(0.68, 0.72, 0.72))
+		text_box.add_child(skill)
+
+		var summary := Label.new()
+		summary.text = str(goal.get("summary", ""))
+		summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		summary.add_theme_font_size_override("font_size", 11)
+		text_box.add_child(summary)
+
+		var steps: Array = goal.get("goal_steps", [])
+		if not steps.is_empty():
+			var steps_label := Label.new()
+			var step_titles: Array[String] = []
+			for step in steps:
+				step_titles.append(str(step))
+			steps_label.text = "Маршрут: " + "  →  ".join(step_titles)
+			steps_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			steps_label.add_theme_font_size_override("font_size", 10)
+			steps_label.add_theme_color_override("font_color", Color(0.70, 0.76, 0.82))
+			text_box.add_child(steps_label)
+
+		var status := Label.new()
+		status.text = status_text
+		status.add_theme_font_size_override("font_size", 10)
+		status.add_theme_color_override("font_color", status_color)
+		text_box.add_child(status)
+
+		var open_btn := Button.new()
+		open_btn.text = "Открыть"
+		var exact_quest: Dictionary = published.duplicate(true) if not published.is_empty() else goal.duplicate(true)
 		var exact_instance: Dictionary = instance.duplicate(true)
 		open_btn.pressed.connect(func(): quest_open_requested.emit(exact_quest, exact_instance))
 		row.add_child(open_btn)
@@ -360,6 +600,18 @@ func _latest_instance_for_quest(state: Dictionary, quest_id: String) -> Dictiona
 		if score >= best_score:
 			best_score = score
 			best = instance.duplicate(true)
+	return best
+
+func _latest_published_quest(state: Dictionary, quest_id: String) -> Dictionary:
+	var best: Dictionary = {}
+	var best_revision := -1
+	for quest in QuestServiceScript.list_player_quests(state):
+		if str(quest.get("quest_id", "")) != quest_id:
+			continue
+		var revision := int(quest.get("revision", 0))
+		if revision > best_revision:
+			best_revision = revision
+			best = quest.duplicate(true)
 	return best
 
 func _instance_status_title(status: String) -> String:

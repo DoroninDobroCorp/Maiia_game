@@ -1,6 +1,6 @@
 ; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
-; but for the current Phase C build we provide standard well-tested configuration.
+; but for the current adventure build we provide standard well-tested configuration.
 
 config_version=5
 
@@ -8,7 +8,7 @@ config_version=5
 
 config/name="SUR"
 config/description="SUR — мир, который ты создаёшь"
-config/version="0.3.0-alpha.phase-c"
+config/version="0.4.0-alpha.living-archive"
 run/main_scene="res://scenes/app/app_root.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 

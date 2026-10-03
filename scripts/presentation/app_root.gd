@@ -15,6 +15,7 @@ const ArtifactServiceScript = preload("res://scripts/services/artifact_service.g
 const AuthorPatchServiceScript = preload("res://scripts/services/author_patch_service.gd")
 const ProgressServiceScript = preload("res://scripts/services/progress_service.gd")
 const RadioWeatherServiceScript = preload("res://scripts/services/radio_weather_service.gd")
+const RitualServiceScript = preload("res://scripts/services/ritual_service.gd")
 
 const StationRoomScene = preload("res://scenes/world/station_room.tscn")
 const SymbolDialsScene = preload("res://scenes/minigames/symbol_dials.tscn")
@@ -30,6 +31,7 @@ var game_state: Dictionary = {}
 var audio_service: Node
 var radio_weather_service: Node
 var station_room: Node3D
+var adventure_controller: Node
 
 # UI слои
 var ui_layer: CanvasLayer
@@ -64,6 +66,9 @@ func _ready() -> void:
 	
 	# 4. Создание интерфейса HUD и контейнера модальных окон
 	_setup_hud()
+	adventure_controller = preload("res://scripts/presentation/adventure_controller.gd").new()
+	add_child(adventure_controller)
+	adventure_controller.setup(self)
 	
 	# 5. Применение загруженного состояния к миру и настройкам
 	_apply_state_to_world(false)
@@ -72,33 +77,46 @@ func _ready() -> void:
 	
 	# Приветственное сообщение при первом входе
 	var s00: Dictionary = game_state.get("s00_progress", {})
-	if not bool(s00.get("station_awakened", false)):
+	if bool(game_state.get("read_only", false)):
+		show_toast(str(game_state.get("recovery_notice", {}).get("message", "Этот профиль открыт только для чтения. Восстановление копии доступно в семейной панели.")))
+	elif not bool(s00.get("station_awakened", false)):
 		show_toast("Добро пожаловать на станцию! Осмотри комнату, оформи вывеску и разгадай первую тайну в шкатулке на верстаке.")
 	else:
 		show_toast("С возвращением на станцию «" + str(game_state.get("station_name", "Лесная станция")) + "»!")
 
-func _unhandled_key_input(event: InputEvent) -> void:
-	_unhandled_input(event)
-
 func _unhandled_input(event: InputEvent) -> void:
+	# Godot also calls _unhandled_input after _unhandled_key_input. Handle global
+	# shortcuts only here, after focused controls and episode editors had a turn.
 	if event is InputEventKey:
 		var k := event as InputEventKey
 		if k.pressed and not k.echo:
 			if k.keycode == KEY_ESCAPE:
 				if modal_container.get_child_count() > 0:
+					if adventure_controller != null and adventure_controller.request_close():
+						get_viewport().set_input_as_handled()
+						return
 					_close_modals()
 				else:
 					open_settings()
 			elif k.keycode == KEY_J:
 				if modal_container.get_child_count() > 0:
+					if adventure_controller != null and adventure_controller.request_close():
+						get_viewport().set_input_as_handled()
+						return
 					_close_modals()
 				else:
 					open_journal()
 			elif k.keycode == KEY_P:
 				if modal_container.get_child_count() > 0:
+					if adventure_controller != null and adventure_controller.request_close():
+						get_viewport().set_input_as_handled()
+						return
 					_close_modals()
 				else:
-					open_parent_console()
+					if adventure_controller != null and bool(game_state.get("puzzle_solved", false)):
+						adventure_controller.open_family_tools()
+					else:
+						open_parent_console()
 			elif k.keycode == KEY_F12:
 				take_screenshot("screenshots/manual_capture.png")
 
@@ -223,7 +241,7 @@ func _setup_hud() -> void:
 	hint_card.add_theme_stylebox_override("panel", hint_style)
 	hud_root.add_child(hint_card)
 	var hint_lbl := Label.new()
-	hint_lbl.text = "Осматривай предметы • клик — действие   |   J — журнал   Esc — настройки"
+	hint_lbl.text = "W/S — идти • A/D или ←/→ — поворот • Q/E — шаг вбок • клик — действие • J — журнал"
 	hint_lbl.add_theme_font_size_override("font_size", 11)
 	hint_lbl.add_theme_color_override("font_color", Color(0.78, 0.76, 0.70, 0.90))
 	hint_card.add_child(hint_lbl)
@@ -232,6 +250,15 @@ func _setup_hud() -> void:
 	modal_container = Control.new()
 	modal_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	modal_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	modal_container.child_entered_tree.connect(func(_child: Node):
+		if station_room != null and station_room.has_method("set_navigation_enabled"):
+			station_room.set_navigation_enabled(false)
+		if adventure_controller != null:
+			adventure_controller.refresh_navigation()
+	)
+	modal_container.child_exiting_tree.connect(func(_child: Node):
+		call_deferred("_refresh_navigation_lock")
+	)
 	ui_layer.add_child(modal_container)
 
 func _add_nav_btn(parent: Control, text: String, callback: Callable) -> void:
@@ -254,7 +281,9 @@ func _apply_state_to_world(animate_transition: bool = false) -> void:
 	station_room.update_desk_prop(prop_id)
 	station_room.update_dials_visual(dials)
 	station_room.set_world_stage(solved, animate_transition)
-	station_room.apply_phase_b_world_effects(ProgressServiceScript.get_profile_world_effects(game_state, "player_01"))
+	station_room.apply_phase_b_world_effects(ProgressServiceScript.get_profile_world_effects(game_state.duplicate(true), "player_01"))
+	if adventure_controller != null:
+		adventure_controller.refresh_world()
 	
 	_update_hud_labels()
 
@@ -296,7 +325,12 @@ func _on_prop_unhovered(_prop_id: String) -> void:
 func _on_prop_clicked(prop_id: String) -> void:
 	if modal_container.get_child_count() > 0:
 		return
+	if bool(game_state.get("read_only", false)):
+		adventure_controller.open_family_tools()
+		return
 	hover_tooltip_panel.visible = false
+	if adventure_controller != null and adventure_controller.handle_prop(prop_id):
+		return
 	
 	match prop_id:
 		"station_sign":
@@ -313,11 +347,19 @@ func _on_prop_clicked(prop_id: String) -> void:
 			open_journal()
 		"door_observatory":
 			audio_service.play_sfx("wood_thump")
+			if station_room.enter_room("observatory_annex"):
+				show_toast("Ты вошла в переход к обсерватории. Здесь две двери: назад на станцию и дальше — в башню.")
+		"door_station_return":
+			audio_service.play_sfx("wood_thump")
+			station_room.enter_room("station_main")
+			show_toast("Снова главная комната станции.")
+		"observatory_inner_door":
+			audio_service.play_sfx("wood_thump")
 			var effects: Array = ProgressServiceScript.get_profile_world_effects(game_state, "player_01")
 			if effects.has("observatory_view_01"):
-				show_toast("Обсерватория открыта. За стеклом снова видны огни долины — станция получила твой ответ и оставляет следующую главу своему автору.")
+				show_toast("Замок дальней двери уже отозвался. Обсерватория готова стать следующей полноценной комнатой станции.")
 			else:
-				show_toast("Дверь в башню обсерватории пока заперта. Ключ от неё откроется в следующих главах.")
+				show_toast("Дальняя дверь пока заперта. Сам переход открыт, а башня обсерватории появится как награда следующих глав.")
 
 func _interact_desk_prop() -> void:
 	audio_service.play_sfx("click_dial")
@@ -350,10 +392,21 @@ func _interact_map() -> void:
 
 func _close_modals() -> void:
 	for child in modal_container.get_children():
+		modal_container.remove_child(child)
 		child.queue_free()
 	modal_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	call_deferred("_refresh_navigation_lock")
+
+func _refresh_navigation_lock() -> void:
+	if station_room != null and station_room.has_method("set_navigation_enabled"):
+		station_room.set_navigation_enabled((modal_container == null or modal_container.get_child_count() == 0) and (adventure_controller == null or not adventure_controller.is_in_gallery()))
+	if adventure_controller != null:
+		adventure_controller.refresh_navigation()
 
 func open_author_terminal() -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
 	_close_modals()
 	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
 	audio_service.play_sfx("paper_flip")
@@ -378,6 +431,9 @@ func open_author_terminal() -> void:
 	term.closed.connect(_close_modals)
 
 func apply_author_customization(new_name: String, new_emblem: String, new_prop_id: String) -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
 	game_state["station_name"] = new_name
 	game_state["station_emblem"] = new_emblem
 	game_state["desk_prop_id"] = new_prop_id
@@ -395,6 +451,9 @@ func apply_author_customization(new_name: String, new_emblem: String, new_prop_i
 	show_toast("✓ Оформление сохранено! Вывеска «" + new_name + "» и экспонат обновлены в комнате.")
 
 func open_puzzle_box() -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
 	_close_modals()
 	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
 	audio_service.play_sfx("wood_thump")
@@ -422,6 +481,9 @@ func open_puzzle_box() -> void:
 	puzzle.closed.connect(_close_modals)
 
 func complete_puzzle() -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
 	game_state["puzzle_state"] = [0, 0, 0]
 	game_state["puzzle_solved"] = true
 	game_state["radio_powered"] = true
@@ -443,6 +505,15 @@ func complete_puzzle() -> void:
 		show_toast("✨ Механизм шкатулки открыт, станция озарена тёплым светом!")
 
 func open_journal() -> void:
+	if adventure_controller != null and bool(game_state.get("puzzle_solved", false)):
+		adventure_controller.open_hub()
+		return
+	open_legacy_journal()
+
+func open_legacy_journal() -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
 	_close_modals()
 	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
 	audio_service.play_sfx("paper_flip")
@@ -460,15 +531,33 @@ func open_journal() -> void:
 			open_journal()
 			show_toast("Вложение удалено; запись результата и сюжетный прогресс сохранены.")
 	)
+	j.ritual_day_requested.connect(func():
+		var result := RitualServiceScript.mark_today(game_state)
+		if bool(result.get("ok", false)):
+			SaveServiceScript.save_game(game_state)
+			_apply_state_to_world(false)
+			open_journal()
+			if bool(result.get("already_marked", false)):
+				show_toast("Сегодняшняя отметка разминки уже стоит. Завтра можно добавить следующую.")
+			elif bool(result.get("newly_unlocked", false)):
+				show_toast("✦ Пять дней отмечены. На станции навсегда зажёгся новый маленький огонь.")
+			else:
+				show_toast("Разминка отмечена: %d/%d. Пропуск дня ничего не сбрасывает." % [int(result.get("days", 0)), int(result.get("target_days", 5))])
+	)
 	j.closed.connect(_close_modals)
 
 func open_parent_console() -> void:
+	if bool(game_state.get("read_only", false)):
+		adventure_controller.open_family_tools()
+		return
 	_close_modals()
 	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
 	audio_service.play_sfx("paper_flip")
 	var console: Control = ParentConsoleScene.instantiate()
 	modal_container.add_child(console)
 	console.setup(game_state, audio_service)
+	console.adventure_editor_requested.connect(func(): adventure_controller.open_editor())
+	console.adventure_setup_requested.connect(func(): adventure_controller.open_family_tools())
 	console.publish_requested.connect(func(quest: Dictionary):
 		var result := QuestServiceScript.approve_and_publish(game_state, quest)
 		if bool(result.get("ok", false)):
@@ -522,22 +611,41 @@ func open_world_explorer() -> void:
 		open_quest_detail(quest, {})
 	)
 	explorer.closed.connect(_close_modals)
+	if adventure_controller != null:
+		explorer.secret_requested.connect(adventure_controller.open_secret)
 
 func open_quest_detail(quest: Dictionary, instance: Dictionary = {}) -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Продолжить задания можно в совместимой версии игры.")
+		return
+	if quest.has("adventure") and adventure_controller != null:
+		adventure_controller.open_quest(str(quest.get("quest_id", "")), str(instance.get("instance_id", "")))
+		return
 	_close_modals()
 	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
 	var detail: Control = QuestDetailScene.instantiate()
 	modal_container.add_child(detail)
 	detail.setup(quest, instance, audio_service)
 	detail.accept_requested.connect(func(quest_id: String, revision: int, variant_id: String):
+		var key := QuestServiceScript.version_key(quest_id, revision)
+		var phase_b: Dictionary = game_state.get("phase_b", {})
+		var published: Dictionary = phase_b.get("published_versions", {})
+		if not published.has(key):
+			show_toast("Сначала взрослый открывает эту версию в семейной панели [P].")
+			return
 		var result := QuestServiceScript.create_instance(game_state, quest_id, revision, variant_id, "player_01")
 		if bool(result.get("ok", false)):
 			SaveServiceScript.save_game(game_state)
 			var fresh_quest := _published_quest(quest_id, revision)
+			if fresh_quest.is_empty():
+				fresh_quest = ContentRepositoryScript.get_template(quest_id)
 			open_quest_detail(fresh_quest, result.get("instance", {}))
-			show_toast("Экспедиция принята: её точная версия теперь зафиксирована.")
+			show_toast("Цель принята в работу: шаги зафиксированы в журнале.")
 		else:
-			show_toast("Не удалось принять экспедицию: " + str(result.get("reason", "ошибка")))
+			show_toast("Не удалось принять цель: " + str(result.get("reason", "ошибка")))
+	)
+	detail.complete_requested.connect(func(quest_id: String, revision: int, variant_id: String, instance_id: String, note: String):
+		_complete_quest_directly(quest_id, revision, variant_id, instance_id, note)
 	)
 	detail.submit_requested.connect(func(instance_id: String, note: String):
 		var phase_b: Dictionary = game_state.get("phase_b", {})
@@ -570,7 +678,69 @@ func open_quest_detail(quest: Dictionary, instance: Dictionary = {}) -> void:
 	)
 	detail.closed.connect(open_journal)
 
+func _complete_quest_directly(quest_id: String, revision: int, variant_id: String, instance_id: String, note: String) -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
+	var previous := game_state.duplicate(true)
+	# Content publication is a separate family decision, never a side effect of Done.
+	var key := QuestServiceScript.version_key(quest_id, revision)
+	var phase_b: Dictionary = game_state.get("phase_b", {})
+	var published: Dictionary = phase_b.get("published_versions", {})
+	if not published.has(key):
+		show_toast("Эта версия ещё не открыта взрослым. Семейная панель — [P].")
+		return
+
+	# 2. Если инстанс ещё не создан — создаём
+	if instance_id.is_empty():
+		var inst_res := QuestServiceScript.create_instance(game_state, quest_id, revision, variant_id, "player_01")
+		if not bool(inst_res.get("ok", false)):
+			show_toast("Не удалось начать цель: " + str(inst_res.get("reason", "ошибка")))
+			return
+		var inst_data: Dictionary = inst_res.get("instance", {})
+		instance_id = str(inst_data.get("instance_id", ""))
+
+	# 3. Фиксируем активность, если ещё не была подана
+	phase_b = game_state.get("phase_b", {})
+	var instances: Dictionary = phase_b.get("quest_instances", {})
+	var current: Dictionary = instances.get(instance_id, {})
+	var artifact_id := str(current.get("draft_artifact_id", ""))
+	var cur_status := str(current.get("status", ""))
+	var activity_id := str(current.get("activity_id", ""))
+
+	if cur_status == "ACTIVE" or cur_status == "PAUSED":
+		if cur_status == "PAUSED":
+			QuestServiceScript.resume_instance(game_state, instance_id)
+		activity_id = "activity:%s:%d" % [instance_id, Time.get_ticks_usec()]
+		var submit_res := QuestServiceScript.submit_result(game_state, instance_id, activity_id, note, artifact_id)
+		if not bool(submit_res.get("ok", false)):
+			game_state = previous
+			show_toast("Не удалось записать результат: " + str(submit_res.get("reason", "ошибка")))
+			return
+
+	# Legacy real tasks use their existing shared review instead of silent approval.
+	if not SaveServiceScript.save_game(game_state):
+		game_state = previous
+		show_toast("Не удалось сохранить результат. Попробуем ещё раз.")
+		return
+
+	# 6. Обновление мира
+	_apply_state_to_world(true)
+
+	if audio_service != null and audio_service.has_method("play_sfx"):
+		audio_service.play_sfx("chime_solve")
+
+	var live_instance := _instance_by_id(instance_id)
+	var live_quest := _published_quest(quest_id, revision)
+	if live_quest.is_empty():
+		live_quest = ContentRepositoryScript.get_template(quest_id)
+	show_toast("Результат сохранён. Посмотрим вместе в семейной панели [P].")
+	open_quest_detail(live_quest, live_instance)
+
 func open_author_dialogue_editor() -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
 	_close_modals()
 	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
 	var editor: Control = AuthorDialogueEditorScene.instantiate()
@@ -596,6 +766,9 @@ func open_author_dialogue_editor() -> void:
 	editor.closed.connect(open_author_terminal)
 
 func _confirm_activity_transaction(activity_id: String) -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
 	var before := game_state.duplicate(true)
 	var result := QuestServiceScript.confirm_result(game_state, activity_id)
 	if not bool(result.get("ok", false)):
@@ -610,6 +783,9 @@ func _confirm_activity_transaction(activity_id: String) -> void:
 	show_toast("✓ Результат подтверждён: XP и изменение мира сохранены одним снимком.")
 
 func _import_artifact_for_instance(source_path: String, instance_id: String) -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
 	var instance := _instance_by_id(instance_id)
 	if instance.is_empty():
 		show_toast("Не найдено прохождение для вложения.")
@@ -641,6 +817,9 @@ func _published_quest(quest_id: String, revision: int) -> Dictionary:
 	return ContentLibraryServiceScript.get_template(game_state, quest_id, revision)
 
 func _import_content_package(path: String) -> void:
+	if bool(game_state.get("read_only", false)):
+		show_toast("Этот профиль доступен только для чтения. Копии и восстановление — в семейной панели.")
+		return
 	if path.is_empty() or not FileAccess.file_exists(path):
 		show_toast("Не найден локальный JSON-пакет по указанному пути.")
 		return
@@ -680,11 +859,20 @@ func open_settings() -> void:
 	s.setup(game_state.get("settings", {}), audio_service)
 	
 	s.settings_changed.connect(func(new_settings: Dictionary):
+		if bool(game_state.get("read_only", false)):
+			_apply_settings(new_settings)
+			show_toast("Настройки применены только для этого сеанса. Сохранение остаётся доступно только для чтения.")
+			return
 		game_state["settings"] = new_settings
 		_apply_settings(new_settings)
 		SaveServiceScript.save_game(game_state)
 	)
 	s.reset_save_requested.connect(func():
+		if SaveServiceScript.is_write_blocked():
+			show_toast("Этот профиль доступен только для чтения. Выберите восстановление в семейной панели.")
+			return
+		if adventure_controller != null and adventure_controller.is_in_gallery():
+			adventure_controller.leave_gallery()
 		game_state = SaveServiceScript.reset_save()
 		_apply_state_to_world(false)
 		_apply_settings(game_state.get("settings", {}))
@@ -714,7 +902,8 @@ func _apply_settings(settings: Dictionary) -> void:
 func show_toast(msg: String) -> void:
 	toast_lbl.text = msg
 	toast_panel.visible = true
-	toast_timer.start(5.5)
+	var duration := 8.5 if msg.length() > 80 else 5.5
+	toast_timer.start(duration)
 
 func take_screenshot(path: String) -> bool:
 	DirAccess.make_dir_absolute("screenshots")

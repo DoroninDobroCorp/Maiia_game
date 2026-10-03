@@ -9,19 +9,22 @@ const ContentLibraryServiceScript = preload("res://scripts/services/content_libr
 const QuestServiceScript = preload("res://scripts/services/quest_service.gd")
 const AtlasServiceScript = preload("res://scripts/services/atlas_service.gd")
 const RadioWeatherServiceScript = preload("res://scripts/services/radio_weather_service.gd")
+const RitualServiceScript = preload("res://scripts/services/ritual_service.gd")
+const ProgressServiceScript = preload("res://scripts/services/progress_service.gd")
 
 var failed_count := 0
 var passed_count := 0
 
 func _init() -> void:
 	print("\n==================================================")
-	print("  SUR — Phase C acceptance C01-C16")
+	print("  SUR — Phase C acceptance C01-C20")
 	print("==================================================\n")
 	_run_c01_c03()
 	_run_c04_c05()
 	_run_c06_c09()
 	_run_c10_c12()
 	_run_c13_c16()
+	_run_c17_c20()
 	print("\n==================================================")
 	if failed_count == 0:
 		print("  PHASE C: ALL PASS (", passed_count, " checks)")
@@ -126,7 +129,7 @@ func _run_c01_c03() -> void:
 
 	var parent_catalog := ContentLibraryServiceScript.list_parent_templates(state)
 	var player_catalog := QuestServiceScript.list_player_quests(state)
-	_assert_true(parent_catalog.size() == 35 and _contains_quest(parent_catalog, "ES01") and _contains_quest(parent_catalog, "RL01") and player_catalog.is_empty(), "C03 Phase C виден взрослому как черновики и невидим игроку до публикации")
+	_assert_true(parent_catalog.size() == 38 and _contains_quest(parent_catalog, "ES01") and _contains_quest(parent_catalog, "RL01") and player_catalog.is_empty(), "C03 Phase C виден взрослому как черновики и невидим игроку до публикации")
 
 func _run_c04_c05() -> void:
 	print("\n--- C04-C05: local editing and immutable built-ins ---")
@@ -245,7 +248,7 @@ func _run_c13_c16() -> void:
 	legacy.erase("phase_c")
 	var migrated := SaveServiceScript._merge_with_defaults(legacy)
 	var migrated_c: Dictionary = migrated.get("phase_c", {})
-	_assert_true(str(migrated.get("schema_version", "")) == "1.2.0" and str(migrated.get("station_name", "")) == "Старая станция" and migrated_c.has("custom_quests") and (migrated_c.get("locations_unlocked", []) as Array).size() == 3, "C13 Схема 1.1 мигрирует в 1.2 с Phase C без потери старых полей")
+	_assert_true(str(migrated.get("schema_version", "")) == "1.3.0" and str(migrated.get("station_name", "")) == "Старая станция" and migrated_c.has("custom_quests") and (migrated_c.get("locations_unlocked", []) as Array).size() == 3, "C13 Схема 1.1 мигрирует в 1.3 с Phase C без потери старых полей")
 
 	var state := _fresh()
 	ContentLibraryServiceScript.save_draft(state, _custom_quest("EXPORT01"))
@@ -273,12 +276,72 @@ func _run_c13_c16() -> void:
 	})
 	_assert_true(weather_text.contains("Эль-Больсон") and weather_text.contains("Сегодня") and weather_text.contains("Завтра"), "C15a Радио форматирует прогноз Эль-Больсона на сегодня и завтра без зависимости от AI")
 
+	var weather_light_rain := RadioWeatherServiceScript.format_weather_daily({
+		"time": ["2026-09-26", "2026-09-27"],
+		"weather_code": [0, 51],
+		"temperature_2m_max": [16.0, 13.0],
+		"temperature_2m_min": [4.0, 6.0],
+		"precipitation_sum": [0.0, 0.8],
+		"precipitation_probability_max": [5, 45],
+		"wind_speed_10m_max": [10.0, 15.0]
+	})
+	_assert_true(weather_light_rain.contains("без осадков, 0 мм в день") and weather_light_rain.contains("совсем немного дождя, 0.8 мм в день"), "C15b Радио различает сухую погоду и совсем небольшой дождь словами и мм в день")
+
+	var weather_heavy_rain := RadioWeatherServiceScript.format_weather_daily({
+		"time": ["2026-09-26", "2026-09-27"],
+		"weather_code": [61, 65],
+		"temperature_2m_max": [12.0, 10.0],
+		"temperature_2m_min": [5.0, 7.0],
+		"precipitation_sum": [8.0, 18.0],
+		"precipitation_probability_max": [70, 95],
+		"wind_speed_10m_max": [14.0, 22.0]
+	})
+	_assert_true(weather_heavy_rain.contains("умеренный дождь, 8 мм в день") and weather_heavy_rain.contains("много дождя, 18 мм в день"), "C15c Радио различает умеренный дождь и много дождя")
+
+	var weather_deluge_snow := RadioWeatherServiceScript.format_weather_daily({
+		"time": ["2026-09-26", "2026-09-27"],
+		"weather_code": [82, 73],
+		"temperature_2m_max": [9.0, 1.0],
+		"temperature_2m_min": [4.0, -3.0],
+		"precipitation_sum": [35.0, 12.0],
+		"precipitation_probability_max": [100, 80],
+		"wind_speed_10m_max": [25.0, 18.0]
+	})
+	_assert_true(weather_deluge_snow.contains("очень много дождя, 35 мм в день") and weather_deluge_snow.contains("умеренный снегопад, 12 мм в день"), "C15d Радио различает сильный ливень и снегопад")
+
 	state = _fresh()
 	var legacy_catalog_ok := ContentRepositoryScript.all_templates().size() == 12 and ContentRepositoryScript.real_quest_templates().size() == 11
-	var parent_catalog_ok := ContentLibraryServiceScript.list_parent_templates(state).size() == 35
+	var parent_catalog_ok := ContentLibraryServiceScript.list_parent_templates(state).size() == 38
 	var published := QuestServiceScript.approve_and_publish(state, ContentRepositoryScript.get_template("S02"))
 	var created := QuestServiceScript.create_instance(state, "S02", 1, "approved_dialogue")
 	var instance_id := str((created.get("instance", {}) as Dictionary).get("instance_id", ""))
 	var submitted := QuestServiceScript.submit_result(state, instance_id, "activity:c16", "Обычный Phase B цикл")
 	var confirmed := QuestServiceScript.confirm_result(state, "activity:c16")
 	_assert_true(legacy_catalog_ok and parent_catalog_ok and bool(published.get("ok", false)) and bool(created.get("ok", false)) and bool(submitted.get("ok", false)) and bool(confirmed.get("ok", false)), "C16 Phase B lifecycle и его исторический каталог не ломаются от Phase C")
+
+func _run_c17_c20() -> void:
+	print("\n--- C17-C20: featured adventures and movement ritual ---")
+	var featured := ContentRepositoryScript.featured_goal_templates()
+	var featured_ids: Array[String] = []
+	for goal in featured:
+		featured_ids.append(str(goal.get("quest_id", "")))
+	_assert_true(featured_ids == ["FG01", "FG11", "FG08"], "C17 В центре старта ровно три приключения: 100 слов, первая игра, река и водопады", JSON.stringify(featured_ids))
+
+	var first_goals := ContentRepositoryScript.first_goal_templates()
+	_assert_true(not _contains_quest(first_goals, "FG10") and _contains_quest(first_goals, "FG01") and _contains_quest(first_goals, "FG08") and _contains_quest(first_goals, "FG11"), "C17a Разминка больше не оформлена как основная цель")
+	var river_goal := ContentRepositoryScript.get_template("FG08")
+	_assert_true((river_goal.get("goal_steps", []) as Array) == ["подготовка", "выход", "запись в полевой журнал"], "C18 У приключения к воде есть три понятных этапа")
+
+	var state := _fresh()
+	var day_one := RitualServiceScript.mark_day(state, "2026-09-01")
+	var duplicate := RitualServiceScript.mark_day(state, "2026-09-01")
+	_assert_true(bool(day_one.get("ok", false)) and bool(duplicate.get("already_marked", false)) and int(duplicate.get("days", 0)) == 1, "C19 Одна дата даёт только одну отметку ритуала")
+
+	RitualServiceScript.mark_day(state, "2026-09-03")
+	var gap_result := RitualServiceScript.mark_day(state, "2026-09-10")
+	_assert_true(int(gap_result.get("days", 0)) == 3 and not bool(gap_result.get("unlocked", true)), "C19a Пропуски дней не сбрасывают ритуал и не требуют серии подряд")
+
+	RitualServiceScript.mark_day(state, "2026-09-21")
+	var unlock := RitualServiceScript.mark_day(state, "2026-09-28")
+	var effects := ProgressServiceScript.get_profile_world_effects(state, "player_01")
+	_assert_true(bool(unlock.get("newly_unlocked", false)) and bool(unlock.get("unlocked", false)) and int(unlock.get("days", 0)) == 5 and effects.has("movement_ritual_light"), "C20 Пятая отдельная дата навсегда открывает огонь станции", JSON.stringify(effects))

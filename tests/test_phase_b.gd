@@ -14,6 +14,7 @@ var failed_count := 0
 var passed_count := 0
 
 func _init() -> void:
+	SaveServiceScript.use_test_storage("user://test_phase_b_")
 	print("\n==================================================")
 	print("  SUR — Phase B acceptance B01-B24")
 	print("==================================================\n")
@@ -27,7 +28,7 @@ func _init() -> void:
 	_run_b19_b20()
 	_run_b21_b22()
 	_run_b23_b24()
-	SaveServiceScript.reset_save()
+	SaveServiceScript.cleanup_test_storage()
 	print("\n==================================================")
 	if failed_count == 0:
 		print("  PHASE B: ALL PASS (", passed_count, " checks)")

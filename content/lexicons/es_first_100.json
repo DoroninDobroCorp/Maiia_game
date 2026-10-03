@@ -1,0 +1,2244 @@
+{
+  "schema_version": 2,
+  "lexicon_id": "es_first_100_r1",
+  "language": "es-AR",
+  "counting_rule": "unique_lexeme_id",
+  "lexemes": [
+    {
+      "lexeme_id": "es_001",
+      "channel_id": "es_channel_01",
+      "base_form": "hola",
+      "lemma": "hola",
+      "translation": "привет",
+      "accepted_variants": [
+        "hola"
+      ],
+      "example": "Hola, Nora.",
+      "example_translation": "Привет, Нора.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "привет"
+    },
+    {
+      "lexeme_id": "es_002",
+      "channel_id": "es_channel_01",
+      "base_form": "gracias",
+      "lemma": "gracias",
+      "translation": "спасибо",
+      "accepted_variants": [
+        "gracias"
+      ],
+      "example": "Gracias, Nora.",
+      "example_translation": "Спасибо, Нора.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "спасибо"
+    },
+    {
+      "lexeme_id": "es_003",
+      "channel_id": "es_channel_01",
+      "base_form": "sí",
+      "lemma": "sí",
+      "translation": "да",
+      "accepted_variants": [
+        "sí"
+      ],
+      "example": "Sí, gracias.",
+      "example_translation": "Да, спасибо.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "да"
+    },
+    {
+      "lexeme_id": "es_004",
+      "channel_id": "es_channel_01",
+      "base_form": "no",
+      "lemma": "no",
+      "translation": "нет",
+      "accepted_variants": [
+        "no"
+      ],
+      "example": "No, gracias.",
+      "example_translation": "Нет, спасибо.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "нет"
+    },
+    {
+      "lexeme_id": "es_005",
+      "channel_id": "es_channel_01",
+      "base_form": "nombre",
+      "lemma": "nombre",
+      "translation": "имя",
+      "accepted_variants": [
+        "nombre"
+      ],
+      "example": "Mi nombre es Maya.",
+      "example_translation": "Меня зовут Майя.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "имя"
+    },
+    {
+      "lexeme_id": "es_006",
+      "channel_id": "es_channel_01",
+      "base_form": "yo",
+      "lemma": "yo",
+      "translation": "я",
+      "accepted_variants": [
+        "yo"
+      ],
+      "example": "Yo soy Nora.",
+      "example_translation": "Я Нора.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "я"
+    },
+    {
+      "lexeme_id": "es_007",
+      "channel_id": "es_channel_01",
+      "base_form": "tú",
+      "lemma": "tú",
+      "translation": "ты",
+      "accepted_variants": [
+        "tú"
+      ],
+      "example": "Tú eres Maya.",
+      "example_translation": "Ты Майя.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "ты"
+    },
+    {
+      "lexeme_id": "es_008",
+      "channel_id": "es_channel_01",
+      "base_form": "amiga",
+      "lemma": "amiga",
+      "translation": "подруга",
+      "accepted_variants": [
+        "amiga",
+        "amigo",
+        "amigas",
+        "amigos"
+      ],
+      "example": "Mi amiga es Nora.",
+      "example_translation": "Моя подруга — Нора.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "подруга"
+    },
+    {
+      "lexeme_id": "es_009",
+      "channel_id": "es_channel_01",
+      "base_form": "casa",
+      "lemma": "casa",
+      "translation": "дом",
+      "accepted_variants": [
+        "casa"
+      ],
+      "example": "Mi casa.",
+      "example_translation": "Мой дом.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "дом"
+    },
+    {
+      "lexeme_id": "es_010",
+      "channel_id": "es_channel_01",
+      "base_form": "carta",
+      "lemma": "carta",
+      "translation": "письмо",
+      "accepted_variants": [
+        "carta"
+      ],
+      "example": "Una carta para mi amiga.",
+      "example_translation": "Письмо моей подруге.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "письмо"
+    },
+    {
+      "lexeme_id": "es_011",
+      "channel_id": "es_channel_01",
+      "base_form": "agua",
+      "lemma": "agua",
+      "translation": "вода",
+      "accepted_variants": [
+        "agua"
+      ],
+      "example": "Agua, gracias.",
+      "example_translation": "Воду, спасибо.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "вода"
+    },
+    {
+      "lexeme_id": "es_012",
+      "channel_id": "es_channel_01",
+      "base_form": "pan",
+      "lemma": "pan",
+      "translation": "хлеб",
+      "accepted_variants": [
+        "pan"
+      ],
+      "example": "Pan, gracias.",
+      "example_translation": "Хлеб, спасибо.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "хлеб"
+    },
+    {
+      "lexeme_id": "es_013",
+      "channel_id": "es_channel_01",
+      "base_form": "leche",
+      "lemma": "leche",
+      "translation": "молоко",
+      "accepted_variants": [
+        "leche"
+      ],
+      "example": "Pan y leche.",
+      "example_translation": "Хлеб и молоко.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "молоко"
+    },
+    {
+      "lexeme_id": "es_014",
+      "channel_id": "es_channel_01",
+      "base_form": "té",
+      "lemma": "té",
+      "translation": "чай",
+      "accepted_variants": [
+        "té"
+      ],
+      "example": "Té, gracias.",
+      "example_translation": "Чай, спасибо.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "чай"
+    },
+    {
+      "lexeme_id": "es_015",
+      "channel_id": "es_channel_01",
+      "base_form": "queso",
+      "lemma": "queso",
+      "translation": "сыр",
+      "accepted_variants": [
+        "queso"
+      ],
+      "example": "Pan y queso.",
+      "example_translation": "Хлеб и сыр.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "сыр"
+    },
+    {
+      "lexeme_id": "es_016",
+      "channel_id": "es_channel_01",
+      "base_form": "repetir",
+      "lemma": "repetir",
+      "translation": "повторить",
+      "accepted_variants": [
+        "repetir",
+        "repite",
+        "repetís"
+      ],
+      "example": "¿Puedes repetir?",
+      "example_translation": "Можешь повторить?",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "повторить"
+    },
+    {
+      "lexeme_id": "es_017",
+      "channel_id": "es_channel_01",
+      "base_form": "escuchar",
+      "lemma": "escuchar",
+      "translation": "слушать",
+      "accepted_variants": [
+        "escuchar"
+      ],
+      "example": "Quiero escuchar.",
+      "example_translation": "Хочу послушать.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "слушать"
+    },
+    {
+      "lexeme_id": "es_018",
+      "channel_id": "es_channel_01",
+      "base_form": "despacio",
+      "lemma": "despacio",
+      "translation": "медленно",
+      "accepted_variants": [
+        "despacio"
+      ],
+      "example": "Más despacio, gracias.",
+      "example_translation": "Помедленнее, спасибо.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "медленно"
+    },
+    {
+      "lexeme_id": "es_019",
+      "channel_id": "es_channel_01",
+      "base_form": "perdón",
+      "lemma": "perdón",
+      "translation": "извини; простите",
+      "accepted_variants": [
+        "perdón"
+      ],
+      "example": "Perdón, ¿puedes repetir?",
+      "example_translation": "Прости, можешь повторить?",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "извини; простите"
+    },
+    {
+      "lexeme_id": "es_020",
+      "channel_id": "es_channel_01",
+      "base_form": "entender",
+      "lemma": "entender",
+      "translation": "понимать",
+      "accepted_variants": [
+        "entender",
+        "entiendo",
+        "entendés"
+      ],
+      "example": "No entiendo.",
+      "example_translation": "Я не понимаю.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "понимать"
+    },
+    {
+      "lexeme_id": "es_021",
+      "channel_id": "es_channel_01",
+      "base_form": "café",
+      "lemma": "café",
+      "translation": "кофе; кафе",
+      "accepted_variants": [
+        "café"
+      ],
+      "example": "Un café, gracias.",
+      "example_translation": "Кофе, спасибо.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "кофе; кафе"
+    },
+    {
+      "lexeme_id": "es_022",
+      "channel_id": "es_channel_01",
+      "base_form": "jugo",
+      "lemma": "jugo",
+      "translation": "сок",
+      "accepted_variants": [
+        "jugo"
+      ],
+      "example": "Quiero jugo.",
+      "example_translation": "Хочу сок.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "сок"
+    },
+    {
+      "lexeme_id": "es_023",
+      "channel_id": "es_channel_01",
+      "base_form": "sopa",
+      "lemma": "sopa",
+      "translation": "суп",
+      "accepted_variants": [
+        "sopa"
+      ],
+      "example": "Quiero sopa.",
+      "example_translation": "Хочу суп.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "суп"
+    },
+    {
+      "lexeme_id": "es_024",
+      "channel_id": "es_channel_01",
+      "base_form": "dulce",
+      "lemma": "dulce",
+      "translation": "сладкий",
+      "accepted_variants": [
+        "dulce"
+      ],
+      "example": "El jugo es dulce.",
+      "example_translation": "Сок сладкий.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "сладкий"
+    },
+    {
+      "lexeme_id": "es_025",
+      "channel_id": "es_channel_01",
+      "base_form": "querer",
+      "lemma": "querer",
+      "translation": "хотеть",
+      "accepted_variants": [
+        "querer",
+        "quiero",
+        "querés",
+        "quiere"
+      ],
+      "example": "Quiero pan.",
+      "example_translation": "Хочу хлеб.",
+      "topics": [
+        "Знакомство и радиокафе"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "хотеть"
+    },
+    {
+      "lexeme_id": "es_026",
+      "channel_id": "es_channel_02",
+      "base_form": "mesa",
+      "lemma": "mesa",
+      "translation": "стол",
+      "accepted_variants": [
+        "mesa"
+      ],
+      "example": "La carta está en la mesa.",
+      "example_translation": "Письмо на столе.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "стол"
+    },
+    {
+      "lexeme_id": "es_027",
+      "channel_id": "es_channel_02",
+      "base_form": "silla",
+      "lemma": "silla",
+      "translation": "стул",
+      "accepted_variants": [
+        "silla"
+      ],
+      "example": "Una silla para mi amiga.",
+      "example_translation": "Стул для моей подруги.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "стул"
+    },
+    {
+      "lexeme_id": "es_028",
+      "channel_id": "es_channel_02",
+      "base_form": "caja",
+      "lemma": "caja",
+      "translation": "коробка",
+      "accepted_variants": [
+        "caja"
+      ],
+      "example": "La caja está en la mesa.",
+      "example_translation": "Коробка на столе.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "коробка"
+    },
+    {
+      "lexeme_id": "es_029",
+      "channel_id": "es_channel_02",
+      "base_form": "llave",
+      "lemma": "llave",
+      "translation": "ключ",
+      "accepted_variants": [
+        "llave"
+      ],
+      "example": "La llave está en la caja.",
+      "example_translation": "Ключ в коробке.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "ключ"
+    },
+    {
+      "lexeme_id": "es_030",
+      "channel_id": "es_channel_02",
+      "base_form": "puerta",
+      "lemma": "puerta",
+      "translation": "дверь",
+      "accepted_variants": [
+        "puerta"
+      ],
+      "example": "La llave de la puerta.",
+      "example_translation": "Ключ от двери.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "дверь"
+    },
+    {
+      "lexeme_id": "es_031",
+      "channel_id": "es_channel_02",
+      "base_form": "papel",
+      "lemma": "papel",
+      "translation": "бумага",
+      "accepted_variants": [
+        "papel"
+      ],
+      "example": "Papel para una carta.",
+      "example_translation": "Бумага для письма.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "бумага"
+    },
+    {
+      "lexeme_id": "es_032",
+      "channel_id": "es_channel_02",
+      "base_form": "lápiz",
+      "lemma": "lápiz",
+      "translation": "карандаш",
+      "accepted_variants": [
+        "lápiz"
+      ],
+      "example": "Un lápiz en la mesa.",
+      "example_translation": "Карандаш на столе.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "карандаш"
+    },
+    {
+      "lexeme_id": "es_033",
+      "channel_id": "es_channel_02",
+      "base_form": "libro",
+      "lemma": "libro",
+      "translation": "книга",
+      "accepted_variants": [
+        "libro"
+      ],
+      "example": "El libro está en la caja.",
+      "example_translation": "Книга в коробке.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "книга"
+    },
+    {
+      "lexeme_id": "es_034",
+      "channel_id": "es_channel_02",
+      "base_form": "bolsa",
+      "lemma": "bolsa",
+      "translation": "сумка; пакет",
+      "accepted_variants": [
+        "bolsa"
+      ],
+      "example": "Una bolsa de papel.",
+      "example_translation": "Бумажный пакет.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "сумка; пакет"
+    },
+    {
+      "lexeme_id": "es_035",
+      "channel_id": "es_channel_02",
+      "base_form": "cinta",
+      "lemma": "cinta",
+      "translation": "лента; скотч",
+      "accepted_variants": [
+        "cinta"
+      ],
+      "example": "La cinta está en la caja.",
+      "example_translation": "Лента в коробке.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "лента; скотч"
+    },
+    {
+      "lexeme_id": "es_036",
+      "channel_id": "es_channel_02",
+      "base_form": "rojo",
+      "lemma": "rojo",
+      "translation": "красный",
+      "accepted_variants": [
+        "rojo",
+        "roja",
+        "rojos",
+        "rojas"
+      ],
+      "example": "Una caja roja.",
+      "example_translation": "Красная коробка.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "красный"
+    },
+    {
+      "lexeme_id": "es_037",
+      "channel_id": "es_channel_02",
+      "base_form": "azul",
+      "lemma": "azul",
+      "translation": "синий",
+      "accepted_variants": [
+        "azul"
+      ],
+      "example": "Un lápiz azul.",
+      "example_translation": "Синий карандаш.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "синий"
+    },
+    {
+      "lexeme_id": "es_038",
+      "channel_id": "es_channel_02",
+      "base_form": "verde",
+      "lemma": "verde",
+      "translation": "зелёный",
+      "accepted_variants": [
+        "verde"
+      ],
+      "example": "Una puerta verde.",
+      "example_translation": "Зелёная дверь.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "зелёный"
+    },
+    {
+      "lexeme_id": "es_039",
+      "channel_id": "es_channel_02",
+      "base_form": "grande",
+      "lemma": "grande",
+      "translation": "большой",
+      "accepted_variants": [
+        "grande"
+      ],
+      "example": "Una mesa grande.",
+      "example_translation": "Большой стол.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "большой"
+    },
+    {
+      "lexeme_id": "es_040",
+      "channel_id": "es_channel_02",
+      "base_form": "pequeño",
+      "lemma": "pequeño",
+      "translation": "маленький",
+      "accepted_variants": [
+        "pequeño",
+        "pequeña"
+      ],
+      "example": "Una caja pequeña.",
+      "example_translation": "Маленькая коробка.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "маленький"
+    },
+    {
+      "lexeme_id": "es_041",
+      "channel_id": "es_channel_02",
+      "base_form": "abrir",
+      "lemma": "abrir",
+      "translation": "открыть",
+      "accepted_variants": [
+        "abrir"
+      ],
+      "example": "Abrir la caja.",
+      "example_translation": "Открыть коробку.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "открыть"
+    },
+    {
+      "lexeme_id": "es_042",
+      "channel_id": "es_channel_02",
+      "base_form": "cerrar",
+      "lemma": "cerrar",
+      "translation": "закрыть",
+      "accepted_variants": [
+        "cerrar"
+      ],
+      "example": "Cerrar la puerta.",
+      "example_translation": "Закрыть дверь.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "закрыть"
+    },
+    {
+      "lexeme_id": "es_043",
+      "channel_id": "es_channel_02",
+      "base_form": "poner",
+      "lemma": "poner",
+      "translation": "положить; поставить",
+      "accepted_variants": [
+        "poner"
+      ],
+      "example": "Poner el libro en la mesa.",
+      "example_translation": "Положить книгу на стол.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "положить; поставить"
+    },
+    {
+      "lexeme_id": "es_044",
+      "channel_id": "es_channel_02",
+      "base_form": "sacar",
+      "lemma": "sacar",
+      "translation": "достать; вынуть",
+      "accepted_variants": [
+        "sacar"
+      ],
+      "example": "Sacar el lápiz de la caja.",
+      "example_translation": "Достать карандаш из коробки.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "достать; вынуть"
+    },
+    {
+      "lexeme_id": "es_045",
+      "channel_id": "es_channel_02",
+      "base_form": "ayudar",
+      "lemma": "ayudar",
+      "translation": "помочь",
+      "accepted_variants": [
+        "ayudar"
+      ],
+      "example": "Quiero ayudar.",
+      "example_translation": "Хочу помочь.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "помочь"
+    },
+    {
+      "lexeme_id": "es_046",
+      "channel_id": "es_channel_02",
+      "base_form": "mi",
+      "lemma": "mi",
+      "translation": "мой; моя",
+      "accepted_variants": [
+        "mi"
+      ],
+      "example": "Mi libro.",
+      "example_translation": "Моя книга.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "мой; моя"
+    },
+    {
+      "lexeme_id": "es_047",
+      "channel_id": "es_channel_02",
+      "base_form": "favorito",
+      "lemma": "favorito",
+      "translation": "любимый",
+      "accepted_variants": [
+        "favorito",
+        "favorita"
+      ],
+      "example": "Mi libro favorito.",
+      "example_translation": "Моя любимая книга.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "любимый"
+    },
+    {
+      "lexeme_id": "es_048",
+      "channel_id": "es_channel_02",
+      "base_form": "nuevo",
+      "lemma": "nuevo",
+      "translation": "новый",
+      "accepted_variants": [
+        "nuevo",
+        "nueva"
+      ],
+      "example": "Un lápiz nuevo.",
+      "example_translation": "Новый карандаш.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "новый"
+    },
+    {
+      "lexeme_id": "es_049",
+      "channel_id": "es_channel_02",
+      "base_form": "viejo",
+      "lemma": "viejo",
+      "translation": "старый",
+      "accepted_variants": [
+        "viejo",
+        "vieja"
+      ],
+      "example": "Un libro viejo.",
+      "example_translation": "Старая книга.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "старый"
+    },
+    {
+      "lexeme_id": "es_050",
+      "channel_id": "es_channel_02",
+      "base_form": "suave",
+      "lemma": "suave",
+      "translation": "мягкий; нежный",
+      "accepted_variants": [
+        "suave"
+      ],
+      "example": "Papel suave.",
+      "example_translation": "Мягкая бумага.",
+      "topics": [
+        "Дом и мастерская"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "мягкий; нежный"
+    },
+    {
+      "lexeme_id": "es_051",
+      "channel_id": "es_channel_03",
+      "base_form": "río",
+      "lemma": "río",
+      "translation": "река",
+      "accepted_variants": [
+        "río"
+      ],
+      "example": "El río es azul.",
+      "example_translation": "Река синяя.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "река"
+    },
+    {
+      "lexeme_id": "es_052",
+      "channel_id": "es_channel_03",
+      "base_form": "cascada",
+      "lemma": "cascada",
+      "translation": "водопад",
+      "accepted_variants": [
+        "cascada"
+      ],
+      "example": "Una cascada grande.",
+      "example_translation": "Большой водопад.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "водопад"
+    },
+    {
+      "lexeme_id": "es_053",
+      "channel_id": "es_channel_03",
+      "base_form": "montaña",
+      "lemma": "montaña",
+      "translation": "гора",
+      "accepted_variants": [
+        "montaña"
+      ],
+      "example": "Una montaña grande.",
+      "example_translation": "Большая гора.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "гора"
+    },
+    {
+      "lexeme_id": "es_054",
+      "channel_id": "es_channel_03",
+      "base_form": "árbol",
+      "lemma": "árbol",
+      "translation": "дерево",
+      "accepted_variants": [
+        "árbol"
+      ],
+      "example": "Un árbol verde.",
+      "example_translation": "Зелёное дерево.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "дерево"
+    },
+    {
+      "lexeme_id": "es_055",
+      "channel_id": "es_channel_03",
+      "base_form": "piedra",
+      "lemma": "piedra",
+      "translation": "камень",
+      "accepted_variants": [
+        "piedra"
+      ],
+      "example": "Una piedra pequeña.",
+      "example_translation": "Маленький камень.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "камень"
+    },
+    {
+      "lexeme_id": "es_056",
+      "channel_id": "es_channel_03",
+      "base_form": "largo",
+      "lemma": "largo",
+      "translation": "длинный",
+      "accepted_variants": [
+        "largo",
+        "larga"
+      ],
+      "example": "Un río largo.",
+      "example_translation": "Длинная река.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "длинный"
+    },
+    {
+      "lexeme_id": "es_057",
+      "channel_id": "es_channel_03",
+      "base_form": "corto",
+      "lemma": "corto",
+      "translation": "короткий",
+      "accepted_variants": [
+        "corto",
+        "corta"
+      ],
+      "example": "Un lápiz corto.",
+      "example_translation": "Короткий карандаш.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "короткий"
+    },
+    {
+      "lexeme_id": "es_058",
+      "channel_id": "es_channel_03",
+      "base_form": "alto",
+      "lemma": "alto",
+      "translation": "высокий",
+      "accepted_variants": [
+        "alto",
+        "alta"
+      ],
+      "example": "Un árbol alto.",
+      "example_translation": "Высокое дерево.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "высокий"
+    },
+    {
+      "lexeme_id": "es_059",
+      "channel_id": "es_channel_03",
+      "base_form": "bajo",
+      "lemma": "bajo",
+      "translation": "низкий",
+      "accepted_variants": [
+        "bajo",
+        "baja"
+      ],
+      "example": "Una mesa baja.",
+      "example_translation": "Низкий стол.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "низкий"
+    },
+    {
+      "lexeme_id": "es_060",
+      "channel_id": "es_channel_03",
+      "base_form": "lejos",
+      "lemma": "lejos",
+      "translation": "далеко",
+      "accepted_variants": [
+        "lejos"
+      ],
+      "example": "La montaña está lejos.",
+      "example_translation": "Гора далеко.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "далеко"
+    },
+    {
+      "lexeme_id": "es_061",
+      "channel_id": "es_channel_03",
+      "base_form": "luz",
+      "lemma": "luz",
+      "translation": "свет",
+      "accepted_variants": [
+        "luz"
+      ],
+      "example": "La luz de mi casa.",
+      "example_translation": "Свет моего дома.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "свет"
+    },
+    {
+      "lexeme_id": "es_062",
+      "channel_id": "es_channel_03",
+      "base_form": "sombra",
+      "lemma": "sombra",
+      "translation": "тень",
+      "accepted_variants": [
+        "sombra"
+      ],
+      "example": "La sombra del árbol.",
+      "example_translation": "Тень дерева.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "тень"
+    },
+    {
+      "lexeme_id": "es_063",
+      "channel_id": "es_channel_03",
+      "base_form": "línea",
+      "lemma": "línea",
+      "translation": "линия",
+      "accepted_variants": [
+        "línea"
+      ],
+      "example": "Una línea azul.",
+      "example_translation": "Синяя линия.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "линия"
+    },
+    {
+      "lexeme_id": "es_064",
+      "channel_id": "es_channel_03",
+      "base_form": "color",
+      "lemma": "color",
+      "translation": "цвет",
+      "accepted_variants": [
+        "color"
+      ],
+      "example": "Mi color favorito.",
+      "example_translation": "Мой любимый цвет.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "цвет"
+    },
+    {
+      "lexeme_id": "es_065",
+      "channel_id": "es_channel_03",
+      "base_form": "dibujo",
+      "lemma": "dibujo",
+      "translation": "рисунок",
+      "accepted_variants": [
+        "dibujo"
+      ],
+      "example": "Un dibujo del río.",
+      "example_translation": "Рисунок реки.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "рисунок"
+    },
+    {
+      "lexeme_id": "es_066",
+      "channel_id": "es_channel_03",
+      "base_form": "hoy",
+      "lemma": "hoy",
+      "translation": "сегодня",
+      "accepted_variants": [
+        "hoy"
+      ],
+      "example": "Hoy hay sol.",
+      "example_translation": "Сегодня солнечно.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "сегодня"
+    },
+    {
+      "lexeme_id": "es_067",
+      "channel_id": "es_channel_03",
+      "base_form": "mañana",
+      "lemma": "mañana",
+      "translation": "завтра; утро",
+      "accepted_variants": [
+        "mañana"
+      ],
+      "example": "Mañana hay lluvia en la historia.",
+      "example_translation": "В истории завтра дождь.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "завтра; утро"
+    },
+    {
+      "lexeme_id": "es_068",
+      "channel_id": "es_channel_03",
+      "base_form": "sol",
+      "lemma": "sol",
+      "translation": "солнце",
+      "accepted_variants": [
+        "sol"
+      ],
+      "example": "El sol y la montaña.",
+      "example_translation": "Солнце и гора.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "солнце"
+    },
+    {
+      "lexeme_id": "es_069",
+      "channel_id": "es_channel_03",
+      "base_form": "lluvia",
+      "lemma": "lluvia",
+      "translation": "дождь",
+      "accepted_variants": [
+        "lluvia"
+      ],
+      "example": "Hoy hay lluvia.",
+      "example_translation": "Сегодня дождь.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "дождь"
+    },
+    {
+      "lexeme_id": "es_070",
+      "channel_id": "es_channel_03",
+      "base_form": "viento",
+      "lemma": "viento",
+      "translation": "ветер",
+      "accepted_variants": [
+        "viento"
+      ],
+      "example": "Hay viento.",
+      "example_translation": "Ветрено.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "ветер"
+    },
+    {
+      "lexeme_id": "es_071",
+      "channel_id": "es_channel_03",
+      "base_form": "aquí",
+      "lemma": "aquí",
+      "translation": "здесь",
+      "accepted_variants": [
+        "aquí"
+      ],
+      "example": "Aquí está mi dibujo.",
+      "example_translation": "Вот мой рисунок.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "здесь"
+    },
+    {
+      "lexeme_id": "es_072",
+      "channel_id": "es_channel_03",
+      "base_form": "allí",
+      "lemma": "allí",
+      "translation": "там",
+      "accepted_variants": [
+        "allí"
+      ],
+      "example": "Allí está el río.",
+      "example_translation": "Там река.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "там"
+    },
+    {
+      "lexeme_id": "es_073",
+      "channel_id": "es_channel_03",
+      "base_form": "cielo",
+      "lemma": "cielo",
+      "translation": "небо",
+      "accepted_variants": [
+        "cielo"
+      ],
+      "example": "El cielo es azul.",
+      "example_translation": "Небо синее.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "небо"
+    },
+    {
+      "lexeme_id": "es_074",
+      "channel_id": "es_channel_03",
+      "base_form": "nube",
+      "lemma": "nube",
+      "translation": "облако",
+      "accepted_variants": [
+        "nube"
+      ],
+      "example": "Una nube grande.",
+      "example_translation": "Большое облако.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "облако"
+    },
+    {
+      "lexeme_id": "es_075",
+      "channel_id": "es_channel_03",
+      "base_form": "valle",
+      "lemma": "valle",
+      "translation": "долина",
+      "accepted_variants": [
+        "valle"
+      ],
+      "example": "Un dibujo del valle.",
+      "example_translation": "Рисунок долины.",
+      "topics": [
+        "Долина и вода"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "долина"
+    },
+    {
+      "lexeme_id": "es_076",
+      "channel_id": "es_channel_04",
+      "base_form": "llegar",
+      "lemma": "llegar",
+      "translation": "приходить; прибывать",
+      "accepted_variants": [
+        "llegar",
+        "llega"
+      ],
+      "example": "Nora llega a casa.",
+      "example_translation": "Нора приходит домой.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "приходить; прибывать"
+    },
+    {
+      "lexeme_id": "es_077",
+      "channel_id": "es_channel_04",
+      "base_form": "buscar",
+      "lemma": "buscar",
+      "translation": "искать",
+      "accepted_variants": [
+        "buscar",
+        "busca"
+      ],
+      "example": "Nora busca la llave.",
+      "example_translation": "Нора ищет ключ.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "искать"
+    },
+    {
+      "lexeme_id": "es_078",
+      "channel_id": "es_channel_04",
+      "base_form": "encontrar",
+      "lemma": "encontrar",
+      "translation": "находить",
+      "accepted_variants": [
+        "encontrar",
+        "encuentra"
+      ],
+      "example": "Nora encuentra la llave.",
+      "example_translation": "Нора находит ключ.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "находить"
+    },
+    {
+      "lexeme_id": "es_079",
+      "channel_id": "es_channel_04",
+      "base_form": "llevar",
+      "lemma": "llevar",
+      "translation": "нести; брать с собой",
+      "accepted_variants": [
+        "llevar",
+        "lleva"
+      ],
+      "example": "Nora lleva la carta.",
+      "example_translation": "Нора несёт письмо.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "нести; брать с собой"
+    },
+    {
+      "lexeme_id": "es_080",
+      "channel_id": "es_channel_04",
+      "base_form": "volver",
+      "lemma": "volver",
+      "translation": "возвращаться",
+      "accepted_variants": [
+        "volver",
+        "vuelve"
+      ],
+      "example": "Nora vuelve a casa.",
+      "example_translation": "Нора возвращается домой.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "возвращаться"
+    },
+    {
+      "lexeme_id": "es_081",
+      "channel_id": "es_channel_04",
+      "base_form": "izquierda",
+      "lemma": "izquierda",
+      "translation": "лево; левая сторона",
+      "accepted_variants": [
+        "izquierda"
+      ],
+      "example": "A la izquierda.",
+      "example_translation": "Налево.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "лево; левая сторона"
+    },
+    {
+      "lexeme_id": "es_082",
+      "channel_id": "es_channel_04",
+      "base_form": "derecha",
+      "lemma": "derecha",
+      "translation": "право; правая сторона",
+      "accepted_variants": [
+        "derecha"
+      ],
+      "example": "A la derecha.",
+      "example_translation": "Направо.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "право; правая сторона"
+    },
+    {
+      "lexeme_id": "es_083",
+      "channel_id": "es_channel_04",
+      "base_form": "delante",
+      "lemma": "delante",
+      "translation": "впереди",
+      "accepted_variants": [
+        "delante"
+      ],
+      "example": "Delante de la mesa.",
+      "example_translation": "Перед столом.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "впереди"
+    },
+    {
+      "lexeme_id": "es_084",
+      "channel_id": "es_channel_04",
+      "base_form": "detrás",
+      "lemma": "detrás",
+      "translation": "позади",
+      "accepted_variants": [
+        "detrás"
+      ],
+      "example": "Detrás de la caja.",
+      "example_translation": "За коробкой.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "позади"
+    },
+    {
+      "lexeme_id": "es_085",
+      "channel_id": "es_channel_04",
+      "base_form": "caminar",
+      "lemma": "caminar",
+      "translation": "идти пешком",
+      "accepted_variants": [
+        "caminar"
+      ],
+      "example": "Caminar a la derecha.",
+      "example_translation": "Идти направо.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "идти пешком"
+    },
+    {
+      "lexeme_id": "es_086",
+      "channel_id": "es_channel_04",
+      "base_form": "uno",
+      "lemma": "uno",
+      "translation": "один",
+      "accepted_variants": [
+        "uno",
+        "un",
+        "una"
+      ],
+      "example": "Un lápiz.",
+      "example_translation": "Один карандаш.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "один"
+    },
+    {
+      "lexeme_id": "es_087",
+      "channel_id": "es_channel_04",
+      "base_form": "dos",
+      "lemma": "dos",
+      "translation": "два",
+      "accepted_variants": [
+        "dos"
+      ],
+      "example": "Dos cartas.",
+      "example_translation": "Два письма.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "два"
+    },
+    {
+      "lexeme_id": "es_088",
+      "channel_id": "es_channel_04",
+      "base_form": "tres",
+      "lemma": "tres",
+      "translation": "три",
+      "accepted_variants": [
+        "tres"
+      ],
+      "example": "Tres piedras.",
+      "example_translation": "Три камня.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "три"
+    },
+    {
+      "lexeme_id": "es_089",
+      "channel_id": "es_channel_04",
+      "base_form": "más",
+      "lemma": "más",
+      "translation": "больше; ещё",
+      "accepted_variants": [
+        "más"
+      ],
+      "example": "Más luz.",
+      "example_translation": "Больше света.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "больше; ещё"
+    },
+    {
+      "lexeme_id": "es_090",
+      "channel_id": "es_channel_04",
+      "base_form": "menos",
+      "lemma": "menos",
+      "translation": "меньше",
+      "accepted_variants": [
+        "menos"
+      ],
+      "example": "Menos viento.",
+      "example_translation": "Меньше ветра.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "меньше"
+    },
+    {
+      "lexeme_id": "es_091",
+      "channel_id": "es_channel_04",
+      "base_form": "ver",
+      "lemma": "ver",
+      "translation": "видеть",
+      "accepted_variants": [
+        "ver",
+        "veo"
+      ],
+      "example": "Veo el río.",
+      "example_translation": "Я вижу реку.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "видеть"
+    },
+    {
+      "lexeme_id": "es_092",
+      "channel_id": "es_channel_04",
+      "base_form": "oír",
+      "lemma": "oír",
+      "translation": "слышать",
+      "accepted_variants": [
+        "oír",
+        "oigo"
+      ],
+      "example": "Oigo la lluvia.",
+      "example_translation": "Я слышу дождь.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "слышать"
+    },
+    {
+      "lexeme_id": "es_093",
+      "channel_id": "es_channel_04",
+      "base_form": "sentir",
+      "lemma": "sentir",
+      "translation": "чувствовать",
+      "accepted_variants": [
+        "sentir",
+        "siento"
+      ],
+      "example": "Siento el viento.",
+      "example_translation": "Я чувствую ветер.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "чувствовать"
+    },
+    {
+      "lexeme_id": "es_094",
+      "channel_id": "es_channel_04",
+      "base_form": "elegir",
+      "lemma": "elegir",
+      "translation": "выбирать",
+      "accepted_variants": [
+        "elegir",
+        "elijo"
+      ],
+      "example": "Elijo mi dibujo favorito.",
+      "example_translation": "Я выбираю любимый рисунок.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "выбирать"
+    },
+    {
+      "lexeme_id": "es_095",
+      "channel_id": "es_channel_04",
+      "base_form": "contar",
+      "lemma": "contar",
+      "translation": "рассказывать; считать",
+      "accepted_variants": [
+        "contar",
+        "cuento"
+      ],
+      "example": "Quiero contar una historia.",
+      "example_translation": "Хочу рассказать историю.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "рассказывать; считать"
+    },
+    {
+      "lexeme_id": "es_096",
+      "channel_id": "es_channel_04",
+      "base_form": "voz",
+      "lemma": "voz",
+      "translation": "голос",
+      "accepted_variants": [
+        "voz"
+      ],
+      "example": "La voz de Nora.",
+      "example_translation": "Голос Норы.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "голос"
+    },
+    {
+      "lexeme_id": "es_097",
+      "channel_id": "es_channel_04",
+      "base_form": "mensaje",
+      "lemma": "mensaje",
+      "translation": "сообщение",
+      "accepted_variants": [
+        "mensaje"
+      ],
+      "example": "Un mensaje para mi amiga.",
+      "example_translation": "Сообщение моей подруге.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "сообщение"
+    },
+    {
+      "lexeme_id": "es_098",
+      "channel_id": "es_channel_04",
+      "base_form": "historia",
+      "lemma": "historia",
+      "translation": "история",
+      "accepted_variants": [
+        "historia"
+      ],
+      "example": "Mi historia del valle.",
+      "example_translation": "Моя история долины.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "история"
+    },
+    {
+      "lexeme_id": "es_099",
+      "channel_id": "es_channel_04",
+      "base_form": "junto",
+      "lemma": "junto",
+      "translation": "вместе; рядом",
+      "accepted_variants": [
+        "junto",
+        "juntos",
+        "juntas",
+        "junta"
+      ],
+      "example": "Juntos en la estación.",
+      "example_translation": "Вместе на станции.",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "вместе; рядом"
+    },
+    {
+      "lexeme_id": "es_100",
+      "channel_id": "es_channel_04",
+      "base_form": "hasta",
+      "lemma": "hasta",
+      "translation": "до",
+      "accepted_variants": [
+        "hasta"
+      ],
+      "example": "¡Hasta mañana!",
+      "example_translation": "До завтра!",
+      "topics": [
+        "Действия и маленькие истории"
+      ],
+      "status": "not_met",
+      "normalization": {
+        "casefold": true,
+        "trim_spaces": true,
+        "preserve_diacritics": true
+      },
+      "support_text": "до"
+    }
+  ]
+}

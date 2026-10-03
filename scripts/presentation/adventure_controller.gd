@@ -1,0 +1,837 @@
+class_name AdventureController
+extends Node
+
+## Application adapter: presentation commands become one persisted candidate.
+## Content and stage decisions belong to services, not to 3D anchors or buttons.
+const Save = preload("res://scripts/services/save_service.gd")
+const Content = preload("res://scripts/services/adventure_content.gd")
+const Library = preload("res://scripts/services/content_library_service.gd")
+const Quest = preload("res://scripts/services/quest_service.gd")
+const Artifacts = preload("res://scripts/services/artifact_service.gd")
+const Collections = preload("res://scripts/services/collection_service.gd")
+const UI = preload("res://scripts/presentation/adventure_ui.gd")
+
+var app: Node
+var screen: Control
+var gallery: Node3D
+var route := "hub"
+var route_context: Dictionary = {}
+var navigation_bar: HBoxContainer
+var preview_state: Dictionary = {}
+var preview_active := false
+var preview_return_route := "editor"
+var preview_return_context: Dictionary = {}
+var _read_only := false
+var launch_service: RefCounted
+var _initialised := false
+var launched_processes: Array[int] = []
+var file_job: RefCounted
+var file_job_mode := ""
+var file_job_label: Label
+var file_job_progress: ProgressBar
+
+func setup(root: Node) -> void:
+	app = root
+	_read_only = bool(app.game_state.get("read_only", false)) or bool(app.game_state.get("save_read_only", false))
+	_initialise()
+	navigation_bar = HBoxContainer.new()
+	navigation_bar.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	navigation_bar.position = Vector2(-452, -48)
+	navigation_bar.add_theme_constant_override("separation", 8)
+	app.hud_root.add_child(navigation_bar)
+	UI.button("Истории · J", navigation_bar, open_hub)
+	UI.button("Галерея", navigation_bar, func(): open_gallery(""))
+	UI.button("Вместе · P", navigation_bar, open_family_tools)
+	var launch_poll := Timer.new()
+	launch_poll.wait_time = 1.0
+	launch_poll.timeout.connect(_poll_launches)
+	add_child(launch_poll)
+	launch_poll.start()
+	var file_poll := Timer.new()
+	file_poll.wait_time = 0.1
+	file_poll.timeout.connect(_poll_file_job)
+	add_child(file_poll)
+	file_poll.start()
+	call_deferred("_present_pending")
+
+func _initialise() -> void:
+	if _read_only:
+		return
+	var core := load("res://scripts/services/adventure_service.gd")
+	if core != null and core.has_method("ensure_adventures"):
+		core.ensure_adventures(app.game_state)
+		if not _initialised:
+			core.migrate_legacy(app.game_state)
+	Collections.ensure_collections(app.game_state)
+	if bool(app.game_state.get("puzzle_solved", false)):
+		Collections.ensure_gallery(app.game_state)
+	_initialised = true
+
+func _state() -> Dictionary:
+	return preview_state if preview_active else app.game_state
+
+func _view(extra: Dictionary = {}) -> Dictionary:
+	var value := _state().duplicate(true)
+	var context := extra.duplicate(true)
+	var catalog: Array[Dictionary] = []
+	var seen: Dictionary = {}
+	for item in Quest.list_player_quests(value):
+		var qid := str(item.get("quest_id", ""))
+		if item.has("adventure") and int(item.get("revision", 0)) > int(seen.get(qid, {}).get("revision", 0)):
+			seen[qid] = item
+	for instance in value.get("phase_b", {}).get("quest_instances", {}).values():
+		if str(instance.get("profile_id", "")) == "player_01" and instance.get("quest_snapshot", {}).has("adventure") and not instance.has("superseded_by_instance_id"):
+			seen[str(instance.get("quest_id", ""))] = instance.quest_snapshot
+	for q in seen.values():
+		catalog.append(q)
+	catalog.sort_custom(func(a, b): return int(a.get("goal_order", 99)) < int(b.get("goal_order", 99)))
+	context["catalog"] = catalog
+	context["chapter_templates"] = _chapter_templates(value)
+	context["migration_targets"] = _migration_targets(value)
+	context["launch_entries"] = _launcher().list_entries()
+	context["recovery_snapshots"] = Save.list_recovery_snapshots()
+	context["preview"] = preview_active
+	value["_adventure_ui"] = context
+	return value
+
+func _chapter_templates(value: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for builtin in Content.quests():
+		var q: Dictionary = builtin.duplicate(true)
+		var qid := str(q.quest_id)
+		var rev := int(q.revision)
+		while true:
+			var existing := Library.get_template(value, qid, rev)
+			if existing.is_empty() or preload("res://scripts/domain/content_validation.gd").content_hash(existing) == preload("res://scripts/domain/content_validation.gd").content_hash(q):
+				break
+			rev += 1
+			q["revision"] = rev
+		result.append(q)
+	return result
+
+func _migration_targets(value: Dictionary) -> Dictionary:
+	var targets: Dictionary = {}
+	var definitions := Library.list_parent_templates(value)
+	definitions.append_array(_chapter_templates(value))
+	for q in definitions:
+		var qid := str(q.get("quest_id", ""))
+		if q.has("adventure") and int(q.get("revision", 0)) > int(targets.get(qid, {}).get("revision", 0)):
+			targets[qid] = q
+	return targets
+
+func _show(kind: String, extra: Dictionary = {}) -> void:
+	app._close_modals()
+	route = kind
+	route_context = extra.duplicate(true)
+	var paths := {
+		"hub": "res://scripts/presentation/adventure_hub.gd",
+		"episode": "res://scripts/presentation/adventure_episode.gd",
+		"collection": "res://scripts/presentation/collection_browser.gd",
+		"editor": "res://scripts/presentation/adventure_editor.gd",
+		"family": "res://scripts/presentation/family_adventure_tools.gd"
+	}
+	var script: Script = load(str(paths[kind]))
+	screen = script.new()
+	app.modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	app.modal_container.add_child(screen)
+	_connect_screen(screen)
+	screen.setup(_view(extra), app.audio_service)
+	refresh_navigation()
+
+func _connect_screen(node: Node) -> void:
+	if node.has_signal("closed"):
+		node.connect("closed", leave_gallery if node is Node3D else _close_screen)
+	if node.has_signal("command_requested"):
+		node.connect("command_requested", _on_command)
+	if node.has_signal("quest_requested"):
+		node.connect("quest_requested", func(qid: String): open_quest(qid))
+	if node.has_signal("episode_requested"):
+		node.connect("episode_requested", open_episode)
+	if node.has_signal("collection_requested"):
+		node.connect("collection_requested", func(): open_collection())
+	if node.has_signal("work_requested"):
+		node.connect("work_requested", func(work_id: String): open_collection({"work_id":work_id}))
+	if node.has_signal("gallery_requested"):
+		node.connect("gallery_requested", open_gallery)
+	if node.has_signal("map_requested"):
+		node.connect("map_requested", app.open_world_explorer)
+	if node.has_signal("editor_requested"):
+		node.connect("editor_requested", open_editor)
+	if node.has_signal("family_requested"):
+		node.connect("family_requested", open_family_tools)
+	if node.has_signal("legacy_console_requested"):
+		node.connect("legacy_console_requested", app.open_parent_console)
+	if node.has_signal("legacy_journal_requested"):
+		node.connect("legacy_journal_requested", app.open_legacy_journal)
+	if node.has_signal("prop_clicked"):
+		node.connect("prop_clicked", handle_prop)
+
+func _close_screen() -> void:
+	if file_job != null:
+		file_job.cancel()
+		return
+	if preview_active:
+		preview_active = false
+		preview_state = {}
+		var target := preview_return_route
+		var context := preview_return_context.duplicate(true)
+		preview_return_context = {}
+		_show(target, context)
+	elif route == "episode":
+		open_hub()
+	else:
+		app._close_modals()
+		screen = null
+		if is_in_gallery():
+			if Collections.list_rooms(_state()).any(func(r): return str(r.get("template_id", "")) == "gallery_v1"):
+				gallery.setup(_view({"room_id": gallery.room_id}), app.audio_service)
+			else:
+				leave_gallery()
+	refresh_navigation()
+
+func request_close() -> bool:
+	if not is_instance_valid(screen) or screen.get_parent() != app.modal_container:
+		return false
+	if screen.has_method("_close"):
+		screen._close()
+	elif screen.has_method("_save_close"):
+		screen._save_close()
+	else:
+		_close_screen()
+	return true
+
+func open_hub() -> void:
+	if not bool(_state().get("puzzle_solved", false)):
+		app.open_legacy_journal()
+		return
+	_show("hub")
+
+func open_collection(extra: Dictionary = {}) -> void:
+	_show("collection", extra)
+
+func open_editor() -> void:
+	_show("editor")
+
+func open_family_tools() -> void:
+	_show("family")
+
+func open_episode(instance_id: String, stage_id: String) -> void:
+	var inst: Dictionary = _state().get("phase_b", {}).get("quest_instances", {}).get(instance_id, {})
+	if inst.is_empty():
+		app.show_toast("Это прохождение не найдено.")
+		return
+	_show("episode", {"instance_id": instance_id, "stage_id": stage_id, "quest": inst.get("quest_snapshot", {})})
+
+func open_quest(qid: String, instance_id: String = "") -> void:
+	var inst: Dictionary = {}
+	for existing in _state().get("phase_b", {}).get("quest_instances", {}).values():
+		if str(existing.get("profile_id", "")) != "player_01" or existing.has("superseded_by_instance_id"):
+			continue
+		if (not instance_id.is_empty() and str(existing.get("instance_id", "")) == instance_id) or (instance_id.is_empty() and str(existing.get("quest_id", "")) == qid):
+			inst = existing
+	if inst.is_empty():
+		var result := _run_command("start_adventure", {"quest_id": qid})
+		if not bool(result.get("ok", false)):
+			open_family_tools()
+			_result(result)
+			return
+		inst = result.get("instance", {})
+		if inst.is_empty():
+			for existing in _state().get("phase_b", {}).get("quest_instances", {}).values():
+				if str(existing.get("quest_id", "")) == qid and str(existing.get("profile_id", "")) == "player_01":
+					inst = existing
+	if not inst.get("quest_snapshot", {}).has("adventure"):
+		app.open_quest_detail(inst.get("quest_snapshot", {}), inst)
+		return
+	var iid := str(inst.get("instance_id", ""))
+	var chosen := ""
+	for stage in inst.get("quest_snapshot", {}).get("adventure", {}).get("stages", []):
+		var sid := str(stage.get("stage_id", ""))
+		var status := str(UI.stage_progress(_state(), iid, sid).get("status", "AVAILABLE"))
+		if status in ["AVAILABLE", "IN_PROGRESS", "AWAITING_REVIEW"]:
+			chosen = sid
+			break
+	if chosen.is_empty():
+		_show("hub", {"quest": inst.quest_snapshot, "history_quest_id": qid})
+	else:
+		open_episode(iid, chosen)
+
+func open_gallery(room_id: String = "") -> void:
+	if not bool(_state().get("puzzle_solved", false)):
+		app.show_toast("Галерея откроется, когда станция проснётся.")
+		return
+	if preview_active:
+		open_collection()
+		return
+	var ensured := _run_command("ensure_gallery", {})
+	if not bool(ensured.get("ok", false)):
+		_result(ensured)
+		return
+	if str(ensured.get("room_id", "")).is_empty():
+		if is_in_gallery(): leave_gallery()
+		open_collection({"tab": 1})
+		return
+	app._close_modals()
+	screen = null
+	app.hud_root.visible = false
+	if gallery != null:
+		gallery.get_parent().remove_child(gallery)
+		gallery.queue_free()
+	gallery = load("res://scripts/presentation/gallery_room.gd").new()
+	app.station_room.visible = false
+	app.station_room.process_mode = Node.PROCESS_MODE_DISABLED
+	if app.station_room.get_parent() == app:
+		app.remove_child(app.station_room)
+	app.add_child(gallery)
+	_connect_screen(gallery)
+	if gallery.has_signal("return_requested"):
+		gallery.connect("return_requested", leave_gallery)
+	if gallery.has_signal("slot_selected"):
+		gallery.connect("slot_selected", func(rid: String, sid: String): open_collection({"room_id": rid, "slot_id": sid}))
+	if gallery.has_signal("slot_requested"):
+		gallery.connect("slot_requested", func(rid: String, sid: String): open_collection({"room_id": rid, "slot_id": sid}))
+	gallery.setup(_view({"room_id": room_id}), app.audio_service)
+	navigation_bar.visible = false
+	refresh_navigation()
+
+func leave_gallery() -> void:
+	app._close_modals()
+	screen = null
+	app.hud_root.visible = true
+	if is_instance_valid(gallery):
+		gallery.get_parent().remove_child(gallery)
+		gallery.queue_free()
+	gallery = null
+	if app.station_room.get_parent() == null:
+		app.add_child(app.station_room)
+	app.station_room.visible = true
+	app.station_room.process_mode = Node.PROCESS_MODE_INHERIT
+	app.station_room.camera.make_current()
+	refresh_world()
+	refresh_navigation()
+
+func is_in_gallery() -> bool:
+	return is_instance_valid(gallery)
+
+func refresh_navigation() -> void:
+	if not is_instance_valid(app):
+		return
+	var free: bool = app.modal_container.get_child_count() == 0
+	if is_instance_valid(gallery) and gallery.has_method("set_navigation_enabled"):
+		gallery.set_navigation_enabled(free)
+	app.station_room.set_navigation_enabled(free and not is_in_gallery())
+
+func refresh_world() -> void:
+	if app == null:
+		return
+	_initialise()
+	var view := {"awakened": bool(app.game_state.get("puzzle_solved", false)), "favourites": []}
+	view["chapter_complete"] = bool(app.game_state.get("adventures", {}).get("chapters_by_profile", {}).get("player_01", {}).get("completed", false))
+	for inst in app.game_state.get("phase_b", {}).get("quest_instances", {}).values():
+		if str(inst.get("profile_id", "")) != "player_01":
+			continue
+		var qid := str(inst.get("quest_id", ""))
+		var iid := str(inst.get("instance_id", ""))
+		var completed := 0
+		for stage in inst.get("quest_snapshot", {}).get("adventure", {}).get("stages", []):
+			var sid := str(stage.get("stage_id", ""))
+			if str(UI.stage_progress(app.game_state, iid, sid).get("status", "")) == "COMPLETED":
+				completed += 1
+				if sid == "water_river": view["river_done"] = true
+				if sid == "water_fall": view["fall_done"] = true
+		if qid == "FG11": view["game_steps"] = completed
+		if qid == "FG01" and completed > 0: view["radio_label"] = "МОЙ ЭФИР · %d / 6" % completed
+	for room in Collections.list_rooms(app.game_state):
+		if str(room.get("template_id", "")) != "station_favorites":
+			continue
+		for slot in Collections.list_slots("station_favorites"):
+			var item: Dictionary = {}
+			for placement in Collections.list_placements(app.game_state, str(room.room_id)):
+				if str(placement.slot_id) == str(slot.slot_id):
+					var info := Collections.inspect_placement(app.game_state, placement)
+					item = {"title": info.get("work", {}).get("title", "Моя работа"), "media_path": info.get("media_path", "")}
+			view.favourites.append(item)
+	app.station_room.apply_adventure_view(view)
+	if is_instance_valid(navigation_bar):
+		navigation_bar.visible = bool(view.awakened) and not is_in_gallery()
+
+func handle_prop(id: String) -> bool:
+	if not bool(app.game_state.get("puzzle_solved", false)):
+		return false
+	match id:
+		"adventure_radio": open_quest("FG01")
+		"radio": open_radio()
+		"adventure_workshop": open_quest("FG11")
+		"adventure_water": open_quest("FG08")
+		"gallery_door": open_gallery("")
+		_:
+			if id.begins_with("station_favourite_"):
+				for room in Collections.list_rooms(app.game_state):
+					if str(room.get("template_id", "")) == "station_favorites":
+						open_collection({"room_id": room.room_id, "slot_id": "favorite_%02d" % int(id.get_slice("_", 2))})
+			elif id.begins_with("secret_"):
+				var aliases := {"secret_station_star": "brass_stars", "secret_station_postcard": "postcard_back"}
+				open_secret(str(aliases.get(id, id.trim_prefix("secret_"))))
+			else:
+				return false
+	return true
+
+func _result(result: Dictionary) -> void:
+	if is_instance_valid(screen) and screen.has_method("show_result"):
+		screen.show_result(result)
+	elif is_in_gallery():
+		gallery.show_result(result)
+	else:
+		app.show_toast(UI.result_text(result))
+
+func _on_command(operation: String, payload: Dictionary) -> void:
+	if operation == "preview_adventure":
+		_preview_quest(payload.get("quest", {}))
+		return
+	if operation in ["prepare_learning_project", "open_learning_project", "open_starter_project", "register_game", "launch_work", "backup_export", "backup_import", "restore_local_snapshot", "attach_stage_media", "import_image", "migration_preview"]:
+		_external_command(operation, payload)
+		return
+	var result := _run_command(operation, payload)
+	_result(result)
+	if bool(result.get("ok", false)):
+		# The browser can navigate within its snapshot. Refresh its current view,
+		# not the work/version that originally opened the screen.
+		if route == "collection" and is_instance_valid(screen) and screen.has_method("navigation_context"):
+			route_context.merge(screen.navigation_context(), true)
+		if route == "collection" and operation in ["create_room", "restore_snapshot"]:
+			route_context["room_id"] = str(result.get("room_id", ""))
+			route_context["slot_id"] = ""
+			route_context["tab"] = 1
+		refresh_world()
+		if operation == "stage_attempt" and bool(result.get("success", false)):
+			app.audio_service.play_sfx("click_dial")
+		if operation in ["stage_submit", "stage_review"] and bool(result.get("applied", false)) and not bool(result.get("awaiting_review", false)) and not bool(result.get("needs_revision", false)):
+			app.audio_service.play_sfx("chime_solve")
+			call_deferred("_present_pending")
+		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale"]:
+			if is_instance_valid(screen):
+				screen.setup(_view(route_context), app.audio_service)
+				_result(result)
+
+func _run_command(operation: String, payload: Dictionary) -> Dictionary:
+	# Filled by the service dispatcher; only this adapter persists UI operations.
+	return _dispatch_command(operation, payload)
+
+func _dispatch_command(operation: String, payload: Dictionary) -> Dictionary:
+	if _read_only and not preview_active:
+		return {"ok": false, "reason": "read_only_save", "message": "Сохранение создано более новой версией. Оно открыто только для чтения."}
+	var candidate := _state().duplicate(true)
+	var result := _mutate(candidate, operation, payload)
+	if not bool(result.get("ok", false)):
+		return result
+	if preview_active:
+		preview_state = candidate
+	elif not Save.save_game(candidate):
+		return {"ok": false, "reason": "save_failed", "message": "Не удалось сохранить. Результат не зачислен, черновик можно повторить."}
+	else:
+		app.game_state = candidate
+	return result
+
+func _mutate(candidate: Dictionary, operation: String, payload: Dictionary) -> Dictionary:
+	match operation:
+		"ensure_gallery":
+			return Collections.ensure_gallery(candidate)
+		"publish_chapter":
+			for q in _chapter_templates(candidate):
+				var result := Quest.approve_and_publish(candidate, q, "parent_local")
+				if not bool(result.get("ok", false)):
+					return result
+			return {"ok": true, "message": "Три приключения открыты. Выберите любую историю на станции."}
+		"create_work":
+			var result := Collections.create_work(candidate, payload)
+			if bool(result.get("ok", false)):
+				Collections.create_exhibit(candidate, str(result.work_id), "frame")
+			return result
+		"add_work_version":
+			return Collections.add_version(candidate, str(payload.get("work_id", "")), payload.get("content", {}), str(payload.get("note", "")))
+		"create_exhibit":
+			return Collections.create_exhibit(candidate, str(payload.get("work_id", "")), str(payload.get("recipe_id", "frame")), str(payload.get("caption", "")))
+		"create_room":
+			return Collections.create_room(candidate, str(payload.get("name", "Мои открытия")), str(payload.get("theme", "warm")))
+		"update_room":
+			return Collections.update_room(candidate, str(payload.get("room_id", "")), payload)
+		"delete_room":
+			return Collections.delete_room(candidate, str(payload.get("room_id", "")), bool(payload.get("save_snapshot", true)))
+		"place_exhibit":
+			return Collections.place_exhibit(candidate, str(payload.get("room_id", "")), str(payload.get("slot_id", "")), str(payload.get("exhibit_id", "")), str(payload.get("version_id", "")), "player_01", {"caption": str(payload.get("caption", ""))})
+		"remove_placement":
+			return Collections.remove_placement(candidate, str(payload.get("room_id", "")), str(payload.get("slot_id", "")))
+		"snapshot_room":
+			return Collections.save_exhibition(candidate, str(payload.get("room_id", "")), str(payload.get("name", "")))
+		"restore_snapshot":
+			return Collections.restore_exhibition(candidate, str(payload.get("snapshot_id", "")), str(payload.get("room_id", "")))
+		"save_adventure_draft":
+			return Library.save_draft(candidate, payload.get("quest", {}))
+		"validate_adventure":
+			var checked := preload("res://scripts/domain/content_validation.gd").validate_quest(payload.get("quest", {}))
+			return {"ok": bool(checked.get("valid", false)), "errors": checked.get("errors", []), "message": "Содержание проверено." if bool(checked.get("valid", false)) else "Исправьте отмеченные поля."}
+		"publish_adventure":
+			return Quest.approve_and_publish(candidate, payload.get("quest", {}))
+		"import_adventure_package":
+			return Library.import_package(candidate, payload.get("package", {}))
+	var core := load("res://scripts/services/adventure_service.gd")
+	return core.dispatch(candidate, operation, payload, "player_01", _launcher().inspect_entry)
+
+func open_radio() -> void:
+	app._close_modals()
+	screen = Control.new()
+	app.modal_container.add_child(screen)
+	app.modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	var shell := UI.shell(screen, app.game_state, "Южный Маяк", "Истории станции и реальная погода — на разных волнах.", func(): app._close_modals())
+	var body := UI.scroll(shell.content)
+	var card := UI.card(body)
+	UI.label("Письмо Норы", card, 24, UI.BRASS)
+	UI.label("У радиокафе есть новое сообщение для твоей станции. Можно продолжить эфир или открыть уже собранные письма.", card)
+	UI.button("Продолжить эфир", card, func(): open_quest("FG01"), true)
+	UI.button("Мой альбом", card, func(): open_collection({"quest_id": "FG01"}))
+	UI.button("Погода Эль-Больсона", body, func():
+		app._close_modals()
+		app._interact_radio())
+	UI.button("Осмотреть отметки на шкале", body, func(): open_secret("radio_reply"))
+	refresh_navigation()
+
+func open_secret(secret_id: String) -> void:
+	var secret: Dictionary = {}
+	for definition in Content.secrets():
+		if str(definition.get("secret_id", "")) == secret_id:
+			secret = definition
+	if secret.is_empty():
+		return
+	app._close_modals()
+	screen = Control.new()
+	app.modal_container.add_child(screen)
+	app.modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	var shell := UI.shell(screen, app.game_state, str(secret.title), "Маленькая находка станции", func(): app._close_modals())
+	var card := UI.card(UI.scroll(shell.content), true)
+	UI.label(str(secret.get("interaction", {}).get("prompt", "")), card, 24, UI.INK)
+	var reveal := UI.column(card)
+	reveal.visible = false
+	for detail in secret.get("interaction", {}).get("config", {}).get("details", []):
+		UI.label(str(detail.get("text", "")), reveal, 22, UI.INK)
+	UI.button("Рассмотреть", card, func():
+		var result := _run_command("discover_secret", {"secret_id": secret_id})
+		if bool(result.get("ok", false)):
+			reveal.visible = true
+			shell.feedback.text = "Находка осталась в твоём архиве."
+			shell.feedback.visible = true
+		else:
+			shell.feedback.text = UI.result_text(result)
+			shell.feedback.visible = true, true)
+	refresh_navigation()
+
+func _preview_quest(quest: Dictionary) -> void:
+	if quest.is_empty():
+		_result({"ok": false, "message": "Выберите приключение для просмотра."})
+		return
+	preview_state = Save.get_default_state()
+	preview_state.puzzle_solved = true
+	preview_state.s00_progress.station_awakened = true
+	# Isolated in-memory profile: no disk, no reference to the player's dictionaries.
+	var published := Quest.approve_and_publish(preview_state, quest, "parent_preview")
+	if not bool(published.get("ok", false)):
+		_result(published)
+		preview_state = {}
+		return
+	preview_return_route = "family" if route == "family" else "editor"
+	preview_return_context = {}
+	if route == "editor" and is_instance_valid(screen) and screen.has_method("session_context"):
+		preview_return_context = screen.session_context()
+	elif preview_return_route == "editor":
+		preview_return_context = {"editor_quest":quest.duplicate(true)}
+	preview_active = true
+	_initialise_preview()
+	open_quest(str(quest.quest_id))
+
+func _initialise_preview() -> void:
+	var core := load("res://scripts/services/adventure_service.gd")
+	core.ensure_adventures(preview_state)
+	Collections.ensure_gallery(preview_state)
+
+func _launcher() -> RefCounted:
+	if launch_service == null:
+		launch_service = load("res://scripts/services/launch_service.gd").new()
+	return launch_service
+
+func _external_command(operation: String, payload: Dictionary) -> void:
+	if preview_active:
+		_result({"ok": false, "message": "В предпросмотре файлы и приложения не изменяются. Вернитесь к обычному прохождению."})
+		return
+	if _read_only and operation not in ["backup_import", "restore_local_snapshot", "backup_export"]:
+		_result({"ok": false, "message": "Сохранение доступно только для чтения."})
+		return
+	match operation:
+		"prepare_learning_project":
+			_result(_launcher().prepare_starter_project())
+		"open_learning_project", "open_starter_project":
+			var result: Dictionary = _launcher().prepare_starter_project()
+			if bool(result.get("ok", false)):
+				var directory := str(result.get("project_dir", ""))
+				if not directory.is_empty():
+					OS.shell_open(directory)
+			_result(result)
+		"register_game":
+			var source := str(payload.get("source_path", ""))
+			var result: Dictionary
+			if str(payload.get("kind", "godot_project")) == "application":
+				result = _launcher().register_app(source, str(payload.get("title", "Моя игра")))
+			else:
+				result = _launcher().register_project(source.get_base_dir() if source.get_file() == "project.godot" else source, str(payload.get("title", "Моя игра")))
+			if bool(result.get("ok", false)):
+				var candidate: Dictionary = app.game_state.duplicate(true)
+				var version_content := {"launch_entry_id": str(result.get("launch_entry_id", "")), "source_archive_file": str(result.get("source_archive_file", "")), "source_archive_kind": str(result.get("source_archive_kind", result.get("entry", {}).get("source_archive_kind", "project_source"))), "demonstration_only": bool(result.get("entry", {}).get("demonstration_only", false)), "note": "Сохранённая версия игры"}
+				var created: Dictionary
+				if not str(payload.get("work_id", "")).is_empty():
+					created = Collections.add_version(candidate, str(payload.work_id), version_content, str(payload.get("title", "Новая сборка")))
+					created["work_id"] = str(payload.work_id)
+				else:
+					created = Collections.create_work(candidate, {"title": str(payload.get("title", "Моя игра")), "kind": "game", "quest_ids": ["FG11"], "authorship": {"category": "family", "contribution": "Проверенная семейная версия. Свой вклад описан в приключении."}, "content": version_content})
+				if bool(created.get("ok", false)):
+					Collections.create_exhibit(candidate, str(created.work_id), "terminal")
+					if Save.save_game(candidate):
+						app.game_state = candidate
+						result["work_id"] = created.work_id
+					else:
+						result = {"ok": false, "message": "Сборка сохранена, но карточка работы не записалась. Её можно привязать позже из мастерской."}
+				else:
+					result = created
+			if bool(result.get("ok", false)):
+				_show("family")
+			_result(result)
+		"launch_work":
+			var launch_id := str(payload.get("launch_entry_id", ""))
+			if launch_id.is_empty():
+				var version := Collections.get_version(app.game_state, str(payload.get("work_id", "")), str(payload.get("version_id", "")))
+				launch_id = str(version.get("content", {}).get("launch_entry_id", ""))
+			var launched: Dictionary = _launcher().launch(launch_id)
+			if bool(launched.get("ok", false)):
+				launched_processes.append(int(launched.pid))
+			_result(launched)
+		"backup_export":
+			var path := str(payload.get("directory", "")).path_join("SUR-family-" + Time.get_datetime_string_from_system().replace(":", "-"))
+			_start_file_job("export", path)
+		"backup_import":
+			_preview_backup(str(payload.get("directory", "")))
+		"restore_local_snapshot":
+			_preview_local_restore(str(payload.get("path", "")))
+		"attach_stage_media", "import_image":
+			_attach_media(payload)
+		"migration_preview":
+			_migration_preview(str(payload.get("instance_id", "")))
+
+func _poll_launches() -> void:
+	for pid in launched_processes.duplicate():
+		var status: Dictionary = _launcher().process_status(pid)
+		if not bool(status.get("running", false)):
+			launched_processes.erase(pid)
+			if not bool(status.get("ok", false)):
+				_result(status)
+
+func _present_pending() -> void:
+	if _read_only or preview_active:
+		return
+	var candidate: Dictionary = app.game_state.duplicate(true)
+	var pending: Array = load("res://scripts/services/activity_commit_service.gd").pending_presentations(candidate)
+	if pending.is_empty():
+		return
+	var titles: Array[String] = []
+	for event in pending:
+		var work := Collections.get_work(candidate, str(event.get("work_id", "")))
+		if not work.is_empty():
+			titles.append(str(work.title))
+		candidate.adventures.pending_presentations[str(event.event_id)].shown = true
+	_result({"ok": true, "message": "В твоём архиве: " + ", ".join(titles) + ". Можно выбрать место в галерее."})
+	# Presentation acknowledgement never grants XP. A failed acknowledgement can
+	# repeat this quiet reminder, while the completed result remains committed.
+	if Save.save_game(candidate):
+		app.game_state = candidate
+
+func _attach_media(payload: Dictionary) -> void:
+	var dialog := FileDialog.new()
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Изображения"])
+	app.add_child(dialog)
+	dialog.file_selected.connect(func(path: String):
+		var candidate: Dictionary = app.game_state.duplicate(true)
+		var imported := Artifacts.import_local_image(candidate, path, "Моя работа")
+		if bool(imported.get("ok", false)):
+			var result: Dictionary
+			if payload.has("work_id"):
+				var previous := Collections.get_version(candidate, str(payload.work_id), str(payload.get("version_id", "")))
+				var content: Dictionary = payload.get("content", previous.get("content", {})).duplicate(true)
+				content["artifact_id"] = imported.artifact.artifact_id
+				var change_note := str(payload.get("note", "")).strip_edges()
+				result = Collections.add_version(candidate, str(payload.work_id), content, change_note if not change_note.is_empty() else "Прикреплено изображение")
+			else:
+				var draft: Dictionary = payload.get("draft", {}).duplicate(true)
+				draft["artifact_id"] = imported.artifact.artifact_id
+				result = _mutate(candidate, "stage_draft", {"instance_id": payload.get("instance_id", ""), "stage_id": payload.get("stage_id", ""), "draft": draft})
+			if bool(result.get("ok", false)) and Save.save_game(candidate):
+				app.game_state = candidate
+				var context := route_context.duplicate(true)
+				if payload.has("work_id"):
+					context["work_id"] = str(payload.work_id)
+					context["version_id"] = str(result.version_id)
+				_show(route, context)
+				_result({"ok": true, "message": "Изображение сохранено вместе с черновиком."})
+			else:
+				_result({"ok": false, "message": "Не удалось сохранить вложение. Исходный файл остался на месте."})
+		else:
+			_result(imported)
+		dialog.queue_free())
+	dialog.canceled.connect(func(): dialog.queue_free())
+	dialog.popup_centered_ratio(0.8)
+
+func _preview_backup(directory: String) -> void:
+	# Apply the same bounded JSON read as the worker before using preview fields.
+	var manifest := preload("res://scripts/services/backup_service.gd")._read_json(directory.path_join("manifest.json"))
+	if manifest.get("format", "") != "sur_family_backup" or manifest.get("version", 0) != 1 or not manifest.get("media") is Array or not manifest.get("launch_media", []) is Array:
+		_result({"ok": false, "message": "В выбранной папке нет полной семейной копии SUR."})
+		return
+	_restore_confirmation("Копия от %s. Изображений: %d. Файлов проектов: %d." % [manifest.get("created_at", ""), manifest.get("media", []).size(), manifest.get("launch_media", []).size()], func():
+		_start_file_job("import", directory))
+
+func _start_file_job(mode: String, directory: String) -> void:
+	if file_job != null: return
+	file_job = load("res://scripts/services/local_file_job.gd").new()
+	file_job_mode = mode
+	app._close_modals()
+	screen = Control.new()
+	app.modal_container.add_child(screen)
+	app.modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	var shell := UI.shell(screen, app.game_state, "Семейная копия", "Файлы проверяются и копируются. Прогресс игры изменится только после успешного восстановления.", func(): file_job.cancel())
+	file_job_label = UI.label("Подготавливаем файлы…", shell.content)
+	file_job_progress = ProgressBar.new()
+	file_job_progress.custom_minimum_size.y = 24
+	shell.content.add_child(file_job_progress)
+	UI.button("Отменить", shell.content, func(): file_job.cancel())
+	var error: Error = file_job.start_export(app.game_state, directory) if mode == "export" else file_job.start_import(directory)
+	if error != OK:
+		file_job = null
+		open_family_tools()
+		_result({"ok": false, "message": "Не удалось начать копирование файлов."})
+
+func _poll_file_job() -> void:
+	if file_job == null: return
+	var status: Dictionary = file_job.snapshot()
+	if is_instance_valid(file_job_label):
+		file_job_label.text = "Отменяем, текущий прогресс сохранён…" if bool(status.cancelled) else "Файлы: %d / %d" % [int(status.done), int(status.total)]
+		file_job_progress.value = 100.0 * float(status.done) / maxi(1, int(status.total))
+	if not file_job.poll(): return
+	var result: Dictionary = file_job.result
+	var mode := file_job_mode
+	file_job = null
+	if mode == "import" and bool(result.get("ok", false)) and not bool(status.cancelled):
+		_finish_restore(Save.restore_snapshot(result.state))
+		return
+	open_family_tools()
+	if bool(status.cancelled) or str(result.get("reason", "")) == "cancelled":
+		_result({"ok": true, "message": "Копирование отменено. Текущий прогресс не изменён."})
+	else:
+		if bool(result.get("ok", false)):
+			result.message = "Полная копия сохранена: " + str(result.get("backup_path", ""))
+		_result(result)
+
+func _preview_local_restore(path: String) -> void:
+	var found := false
+	for entry in Save.list_recovery_snapshots():
+		if str(entry.path) == path and bool(entry.get("supported", false)):
+			found = true
+	if not found:
+		_result({"ok": false, "message": "Эта резервная копия недоступна для восстановления."})
+		return
+	_restore_confirmation("Локальный снимок: " + path.get_file(), func(): _finish_restore(Save.restore_from_backup(path)))
+
+func _restore_confirmation(description: String, restore: Callable) -> void:
+	app._close_modals()
+	screen = Control.new()
+	app.modal_container.add_child(screen)
+	app.modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	var shell := UI.shell(screen, app.game_state, "Восстановить семейную копию", description, open_family_tools)
+	var body := UI.scroll(shell.content)
+	UI.label("Выбранная копия заменит текущий прогресс. Перед восстановлением SUR отдельно сохранит нынешний файл. Работы и исходники восстановятся; запуск игры на этом компьютере нужно зарегистрировать заново.", body)
+	UI.button("Восстановить выбранную копию", body, restore, true)
+	UI.button("Оставить текущий прогресс", body, open_family_tools)
+
+func _finish_restore(result: Dictionary) -> void:
+	if not bool(result.get("ok", false)):
+		_result(result)
+		return
+	if is_in_gallery():
+		leave_gallery()
+	app.game_state = result.state
+	_read_only = false
+	_initialised = false
+	app._apply_state_to_world()
+	app._apply_settings(app.game_state.get("settings", {}))
+	open_family_tools()
+	_result({"ok": true, "message": "Копия восстановлена. Предыдущий файл сохранён отдельно."})
+
+func _migration_preview(instance_id: String) -> void:
+	var old: Dictionary = app.game_state.get("phase_b", {}).get("quest_instances", {}).get(instance_id, {})
+	var replacement: Dictionary = _migration_targets(app.game_state).get(str(old.get("quest_id", "")), {})
+	if old.is_empty() or replacement.is_empty() or int(replacement.get("revision", 0)) <= int(old.get("revision", 0)):
+		_result({"ok": false, "message": "Более новой версии для переноса пока нет."})
+		return
+	app._close_modals()
+	screen = Control.new()
+	app.modal_container.add_child(screen)
+	app.modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	var shell := UI.shell(screen, app.game_state, "Перенос в новую историю", "Прежняя запись и уже полученный опыт останутся в архиве.", open_family_tools)
+	var body := UI.scroll(shell.content)
+	var budget := int(old.get("quest_snapshot", {}).get("reward_policy", {}).get("activity_budget", 0))
+	var awarded := int(old.get("awarded_budget", 0))
+	UI.label("Версия %d → %d. Уже получено %d XP; на продолжение остаётся не более %d XP." % [int(old.revision), int(replacement.revision), awarded, maxi(0, budget-awarded)], body, 20, UI.BRASS)
+	UI.label("Сопоставьте конкретные подтверждённые действия. Незаполненные шаги останутся доступными. Общий статус начатой миссии не означает, что её новые этапы уже выполнены.", body)
+	var source_ids: Array = [""]
+	var source_labels: Array = ["Пройти этот шаг в новой истории"]
+	var sources: Dictionary = {}
+	var source_progress: Dictionary = app.game_state.get("adventures", {}).get("progress", {}).get(instance_id, {}).get("stages", {})
+	for stage in old.get("quest_snapshot", {}).get("adventure", {}).get("stages", []):
+		var sid := str(stage.get("stage_id", ""))
+		if str(source_progress.get(sid, {}).get("status", "")) == "COMPLETED":
+			source_ids.append(sid)
+			source_labels.append("Зачтённый шаг: " + str(stage.title))
+			sources[sid] = sid
+	if not old.get("quest_snapshot", {}).has("adventure"):
+		for activity in app.game_state.get("phase_b", {}).get("activities", {}).values():
+			if str(activity.get("instance_id", "")) == instance_id and str(activity.get("status", "")) == "CONFIRMED":
+				var aid := str(activity.activity_id)
+				source_ids.append(aid)
+				source_labels.append("Подтверждённая запись: " + str(activity.get("note", "Веха %d" % (int(activity.get("milestone_index", 0))+1))).substr(0,100))
+				sources[aid] = {"source_activity_id": aid, "note": "Сопоставлено вместе при переносе"}
+	var pickers: Dictionary = {}
+	for stage in replacement.get("adventure", {}).get("stages", []):
+		UI.label(str(stage.get("title", "")), body, 18, UI.BRASS)
+		for criterion in stage.get("criteria", []):
+			UI.label("• " + str(criterion), body, 14, UI.MUTED)
+		pickers[str(stage.stage_id)] = UI.option(body, source_labels)
+	if sources.is_empty():
+		UI.label("Отдельных подтверждённых действий пока нет. Сохраним прежние материалы и начнём новые шаги без предположений о выполненной работе.", body)
+	UI.button("Подтвердить перенос и открыть эту версию", body, func():
+		var mapping: Dictionary = {}
+		for sid in pickers:
+			var selected := str(source_ids[pickers[sid].selected])
+			if not selected.is_empty(): mapping[sid] = sources[selected]
+		var candidate: Dictionary = app.game_state.duplicate(true)
+		var result := Quest.approve_and_publish(candidate, replacement)
+		if bool(result.get("ok", false)):
+			result = load("res://scripts/services/adventure_service.gd").migrate_instance(candidate, instance_id, int(replacement.revision), mapping)
+		if bool(result.get("ok", false)) and Save.save_game(candidate):
+			app.game_state = candidate
+			open_quest(str(replacement.quest_id), str(result.instance.instance_id))
+		else:
+			_result(result if not bool(result.get("ok", false)) else {"ok": false, "reason": "save_failed"}), true)
+	UI.button("Остаться в прежней истории", body, open_family_tools)
+
+func _exit_tree() -> void:
+	if file_job != null:
+		file_job.stop()
+		file_job = null
+	if is_instance_valid(app) and is_instance_valid(app.station_room) and app.station_room.get_parent() == null:
+		app.station_room.free()

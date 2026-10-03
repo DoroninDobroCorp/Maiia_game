@@ -1,0 +1,26 @@
+; Standalone teaching project. Open this file in Godot, then press F6/F5.
+config_version=5
+
+[application]
+config/name="Собери свет для станции"
+config/description="Учебная основа SUR • три огонька и одна тёплая станция"
+config/version="0.4"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+
+[display]
+window/size/viewport_width=1100
+window/size/viewport_height=760
+window/size/window_width_override=1100
+window/size/window_height_override=760
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.965, 0.949, 0.914, 1)
+
+[debug]
+file_logging/enable_file_logging=false
+

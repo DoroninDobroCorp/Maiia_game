@@ -3,6 +3,7 @@ extends Control
 
 signal closed()
 signal quest_open_requested(quest: Dictionary)
+signal secret_requested(secret_id: String)
 
 const AtlasMapScript = preload("res://scripts/presentation/atlas_map.gd")
 const ContentLibraryServiceScript = preload("res://scripts/services/content_library_service.gd")
@@ -13,7 +14,9 @@ var detail_label: Label
 
 func setup(state: Dictionary, audio_svc: Node) -> void:
 	audio_service = audio_svc
-	_build_ui(state)
+	# Legacy catalog getters initialise missing fields. Keep that compatibility
+	# work inside the view, especially when a future save is read-only.
+	_build_ui(state.duplicate(true))
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
@@ -64,6 +67,10 @@ func _build_ui(state: Dictionary) -> void:
 	close_btn.text = "Закрыть"
 	close_btn.pressed.connect(func(): closed.emit())
 	header.add_child(close_btn)
+	var margin_note := Button.new()
+	margin_note.text = "Заметка на полях"
+	margin_note.pressed.connect(func(): secret_requested.emit("atlas_margin"))
+	header.add_child(margin_note)
 
 	var tabs := TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -116,7 +123,7 @@ func _build_expeditions_tab(state: Dictionary) -> Control:
 	scroll.add_child(list)
 
 	var intro := Label.new()
-	intro.text = "Опубликованные взрослым экспедиции сохранены отдельно от тумана войны. Здесь можно открыть их карточки, поэтому прежний цикл Phase C остаётся доступен."
+	intro.text = "Доступные экспедиции сохранены отдельно от тумана войны. Здесь можно открыть их карточки и исследовать задачи."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", 12)
 	intro.add_theme_color_override("font_color", Color(0.76, 0.78, 0.74))

@@ -153,6 +153,10 @@ static func submit_result(
 	if not instances.has(instance_id):
 		return {"ok": false, "reason": "unknown_instance"}
 	var instance: Dictionary = instances[instance_id]
+	if not str(instance.get("superseded_by_instance_id", "")).is_empty():
+		return {"ok": false, "reason": "instance_migrated"}
+	if (instance.get("quest_snapshot", {}) as Dictionary).has("adventure") and not _adventure_final_ready(state, instance):
+		return {"ok": false, "reason": "adventure_stage_required"}
 	if bool(instance.get("safety_hold", false)):
 		return {"ok": false, "reason": "safety_hold"}
 	if str(instance.get("status", "")) != "ACTIVE":
@@ -220,6 +224,10 @@ static func confirm_result(state: Dictionary, activity_id: String, reviewer_id: 
 		return {"ok": false, "reason": "unknown_instance"}
 	var instance: Dictionary = instances[instance_id]
 	var quest: Dictionary = instance.get("quest_snapshot", {})
+	if not str(instance.get("superseded_by_instance_id", "")).is_empty():
+		return {"ok": false, "reason": "instance_migrated"}
+	if quest.has("adventure") and not _adventure_final_ready(state, instance):
+		return {"ok": false, "reason": "adventure_stage_required"}
 	var reward: Dictionary = quest.get("reward_policy", {})
 	var total_budget := int(reward.get("activity_budget", 0))
 	var already_awarded := int(instance.get("awarded_budget", 0))
@@ -253,15 +261,30 @@ static func confirm_result(state: Dictionary, activity_id: String, reviewer_id: 
 	state["phase_b"] = phase_b
 	return {"ok": true, "applied": true, "award": award, "world_effects": reward.get("world_effect_ids", []).duplicate(true)}
 
+static func _adventure_final_ready(state: Dictionary, instance: Dictionary) -> bool:
+	var quest: Dictionary = instance.get("quest_snapshot", {})
+	var stages: Array = quest.get("adventure", {}).get("stages", [])
+	if stages.is_empty() or int(instance.get("awarded_budget", -1)) != int(quest.get("reward_policy", {}).get("activity_budget", 0)):
+		return false
+	var progress: Dictionary = state.get("adventures", {}).get("progress", {}).get(str(instance.get("instance_id", "")), {}).get("stages", {})
+	for stage in stages:
+		if bool(stage.get("required", true)) and str(progress.get(str(stage.get("stage_id", "")), {}).get("status", "")) != "COMPLETED":
+			return false
+	return true
+
 static func record_milestone(state: Dictionary, instance_id: String, milestone_index: int) -> Dictionary:
 	var phase_b := ensure_phase_b(state)
 	var instances: Dictionary = phase_b.get("quest_instances", {})
 	if not instances.has(instance_id):
 		return {"ok": false, "reason": "unknown_instance"}
 	var instance: Dictionary = instances[instance_id]
+	if not str(instance.get("superseded_by_instance_id", "")).is_empty():
+		return {"ok": false, "reason": "instance_migrated"}
 	if str(instance.get("status", "")) != "ACTIVE":
 		return {"ok": false, "reason": "instance_not_active"}
 	var quest: Dictionary = instance.get("quest_snapshot", {})
+	if quest.has("adventure"):
+		return {"ok": false, "reason": "adventure_stage_required"}
 	var reward: Dictionary = quest.get("reward_policy", {})
 	var milestones: Array = reward.get("milestones_percent", [])
 	if milestone_index < 0 or milestone_index >= milestones.size():
@@ -329,6 +352,8 @@ static func resume_instance(state: Dictionary, instance_id: String) -> bool:
 	if not instances.has(instance_id):
 		return false
 	var instance: Dictionary = instances[instance_id]
+	if not str(instance.get("superseded_by_instance_id", "")).is_empty():
+		return false
 	if str(instance.get("status", "")) != "PAUSED" or bool(instance.get("safety_hold", false)):
 		return false
 	instance["status"] = str(instance.get("status_before_pause", "ACTIVE"))
@@ -392,6 +417,8 @@ static func _check_repeat_policy(phase_b: Dictionary, quest: Dictionary, profile
 		if typeof(instance_value) != TYPE_DICTIONARY:
 			continue
 		var instance: Dictionary = instance_value
+		if not str(instance.get("superseded_by_instance_id", "")).is_empty():
+			continue
 		if str(instance.get("profile_id", "")) != profile_id or str(instance.get("quest_id", "")) != qid:
 			continue
 		var status := str(instance.get("status", ""))

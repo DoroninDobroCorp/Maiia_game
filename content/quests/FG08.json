@@ -1,0 +1,717 @@
+{
+  "schema_version": 2,
+  "quest_id": "FG08",
+  "revision": 2,
+  "content_status": "DRAFT",
+  "kind": "project",
+  "title": "Два голоса воды",
+  "story_title": "Два голоса воды",
+  "summary": "Сохранить два семейных наблюдения, сравнить их и оживить диораму своим ответом.",
+  "is_main_quest": true,
+  "chapter_id": "chapter_02",
+  "chapter_key": "station_on_air",
+  "location_id": "field_archive",
+  "entry_anchor_id": "station_map",
+  "goal_group": "maya_first_goals",
+  "goal_order": 3,
+  "estimated_minutes": {
+    "min": 5,
+    "max": 240
+  },
+  "completion_criteria": [
+    "Выбран или сформулирован исследовательский вопрос.",
+    "Семья выбрала реальный вариант; подготовлен способ записи.",
+    "Состоялся выбранный семейный выход.",
+    "Сохранено своё наблюдение для соответствующей страницы.",
+    "Состоялся выбранный семейный выход.",
+    "Сохранено своё наблюдение для соответствующей страницы.",
+    "Есть конкретное различие, связанное с двумя собственными наблюдениями.",
+    "Две страницы и сравнение объединены; выбрано оформление и название."
+  ],
+  "variants": [
+    {
+      "id": "home",
+      "title": "Дом и семейные шаги",
+      "home_available": true
+    }
+  ],
+  "context": {
+    "adult_presence": "for_review",
+    "requires_purchase": false,
+    "requires_network": false,
+    "risk_tags": []
+  },
+  "evidence_policy": {
+    "allowed": [
+      "game_event",
+      "parent_observation",
+      "note",
+      "local_image"
+    ],
+    "required_media": false,
+    "reviewer": "parent"
+  },
+  "reward_policy": {
+    "activity_budget": 40,
+    "lane": "project",
+    "skill_weights_percent": {
+      "outdoors": 100
+    },
+    "world_effect_ids": []
+  },
+  "repeat_policy": {
+    "mode": "once",
+    "max_completions": 1
+  },
+  "provenance": {
+    "origin": "sur_first_chapter"
+  },
+  "required_capabilities": [
+    "adventure_v1",
+    "exhibits_v1"
+  ],
+  "content_dependencies": [],
+  "exhibit_ids": [
+    "field_plan",
+    "water_comparison",
+    "water_diptych",
+    "water_observation_page",
+    "water_question_card"
+  ],
+  "adventure": {
+    "stages": [
+      {
+        "stage_id": "water_intro",
+        "title": "Вопрос старого архива",
+        "summary": "Два пустых окна ждут твоего вопроса.",
+        "prerequisite_stage_ids": [],
+        "completion_policy": "automatic",
+        "budget_share": 0,
+        "grant_ids": [
+          "water_question_card"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "water_question_card",
+        "interaction_ids": [
+          "water_old_note",
+          "water_question"
+        ],
+        "criteria": [
+          "Выбран или сформулирован исследовательский вопрос."
+        ],
+        "next_hint": "Можно поиграть с учебными картинками и подготовить страницу.",
+        "required": true
+      },
+      {
+        "stage_id": "water_plan",
+        "title": "Полевая страница",
+        "summary": "Согласовать семейный вариант наблюдений и способ записи.",
+        "prerequisite_stage_ids": [
+          "water_intro"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 0,
+        "grant_ids": [
+          "field_album"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "field_plan",
+        "interaction_ids": [
+          "water_home_examples",
+          "water_family_plan"
+        ],
+        "criteria": [
+          "Семья выбрала реальный вариант; подготовлен способ записи."
+        ],
+        "next_hint": "Реку и водопад можно наблюдать в любом порядке и в разные дни.",
+        "required": true
+      },
+      {
+        "stage_id": "water_river",
+        "title": "Первый голос: река",
+        "summary": "Эта страница появляется после реального наблюдения.",
+        "prerequisite_stage_ids": [
+          "water_plan"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 10,
+        "grant_ids": [
+          "river_diagram_panel"
+        ],
+        "atlas_unlock_ids": [
+          "rio_azul"
+        ],
+        "work_recipe_id": "water_observation_page",
+        "interaction_ids": [
+          "water_river_return"
+        ],
+        "criteria": [
+          "Состоялся выбранный семейный выход.",
+          "Сохранено своё наблюдение для соответствующей страницы."
+        ],
+        "next_hint": "Можно оформить страницу или подготовить второе наблюдение.",
+        "required": true,
+        "real_visit_required": true
+      },
+      {
+        "stage_id": "water_fall",
+        "title": "Второй голос: водопад",
+        "summary": "Эта страница появляется после реального наблюдения.",
+        "prerequisite_stage_ids": [
+          "water_plan"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 10,
+        "grant_ids": [
+          "fall_diagram_panel"
+        ],
+        "atlas_unlock_ids": [
+          "waterfalls"
+        ],
+        "work_recipe_id": "water_observation_page",
+        "interaction_ids": [
+          "water_fall_return"
+        ],
+        "criteria": [
+          "Состоялся выбранный семейный выход.",
+          "Сохранено своё наблюдение для соответствующей страницы."
+        ],
+        "next_hint": "Можно оформить страницу или подготовить второе наблюдение.",
+        "required": true,
+        "real_visit_required": true
+      },
+      {
+        "stage_id": "water_compare",
+        "title": "Мой ответ архиву",
+        "summary": "Два наблюдения можно сравнить по выбранному вопросу.",
+        "prerequisite_stage_ids": [
+          "water_river",
+          "water_fall"
+        ],
+        "completion_policy": "joint_review",
+        "budget_share": 10,
+        "grant_ids": [
+          "water_compare_switch"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "water_comparison",
+        "interaction_ids": [
+          "water_compare_pages"
+        ],
+        "criteria": [
+          "Есть конкретное различие, связанное с двумя собственными наблюдениями."
+        ],
+        "next_hint": "Можно оставить оба ответа — старый и свой — рядом.",
+        "required": true
+      },
+      {
+        "stage_id": "water_exhibit",
+        "title": "Два голоса в архиве",
+        "summary": "Две страницы и твой ответ становятся одной личной работой.",
+        "prerequisite_stage_ids": [
+          "water_compare"
+        ],
+        "completion_policy": "self_attest",
+        "budget_share": 10,
+        "grant_ids": [
+          "water_diptych"
+        ],
+        "atlas_unlock_ids": [],
+        "work_recipe_id": "water_diptych",
+        "interaction_ids": [
+          "water_make_diptych"
+        ],
+        "criteria": [
+          "Две страницы и сравнение объединены; выбрано оформление и название."
+        ],
+        "next_hint": "Можно поставить диптих на выставку или оставить в архиве.",
+        "required": true
+      }
+    ],
+    "interactions": {
+      "water_old_note": {
+        "interaction_id": "water_old_note",
+        "type": "inspect_reveal",
+        "title": "Старая карточка",
+        "prompt": "В архиве записано: «Вода всегда звучит одинаково?» Открой обе половины заметки.",
+        "hints": [
+          "На карточке есть вопрос, а не готовый вывод.",
+          "Одной записи может не хватать, чтобы сравнивать.",
+          "Открой обе половины и выбери собственный вопрос."
+        ],
+        "config": {
+          "details": [
+            {
+              "id": "claim",
+              "title": "Первое предположение",
+              "text": "Мне казалось, что у воды один голос. Но я записал только один день."
+            },
+            {
+              "id": "invitation",
+              "title": "Поле для другого ответа",
+              "text": "Если твой ответ отличается от моего, оставь оба. Архив растёт, когда кто-то замечает своё."
+            }
+          ],
+          "required_detail_ids": [
+            "claim",
+            "invitation"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "water_question": {
+        "interaction_id": "water_question",
+        "type": "exhibit_composition",
+        "title": "Что исследовать?",
+        "prompt": "Твой вопрос изменит подсказки сравнения. Его можно уточнить позже.",
+        "hints": [
+          "Можно выбрать то, что хочется заметить.",
+          "Для вопроса о звуке запись аудио не нужна: достаточно слов.",
+          "Например: «Как вода огибает камни?»"
+        ],
+        "config": {
+          "choices": [
+            {
+              "id": "movement",
+              "text": "Как движется вода?"
+            },
+            {
+              "id": "sound",
+              "text": "Чем отличаются её голоса?"
+            },
+            {
+              "id": "lines",
+              "text": "Какие линии и цвета замечаешь?"
+            },
+            {
+              "id": "own",
+              "text": "Свой вопрос"
+            }
+          ],
+          "min_selected": 1,
+          "max_selected": 1,
+          "fields": [
+            {
+              "id": "question",
+              "label": "Мой вопрос",
+              "required": false
+            }
+          ],
+          "source_stage_ids": []
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "water_home_examples": {
+        "interaction_id": "water_home_examples",
+        "type": "match_cards",
+        "title": "Две учебные картинки",
+        "prompt": "Здесь условные примеры: они не засчитывают семейный выход и не открывают атлас.",
+        "hints": [
+          "Следи за направлением линий, не за красотой картинки.",
+          "Один рисунок показывает течение вдоль, другой — падение сверху.",
+          "Линии вдоль берега соедини с горизонтальным течением."
+        ],
+        "config": {
+          "cards": [
+            {
+              "id": "card_1",
+              "text": "Линии идут вдоль берега"
+            },
+            {
+              "id": "card_2",
+              "text": "Линии падают с уступа"
+            },
+            {
+              "id": "card_3",
+              "text": "Пустая строка под рисунками"
+            }
+          ],
+          "targets": [
+            {
+              "id": "target_2",
+              "text": "Рисунок падающей воды"
+            },
+            {
+              "id": "target_3",
+              "text": "Место для своего наблюдения"
+            },
+            {
+              "id": "target_1",
+              "text": "Рисунок горизонтального течения"
+            }
+          ],
+          "accepted_pairs": {
+            "card_1": "target_1",
+            "card_2": "target_2",
+            "card_3": "target_3"
+          },
+          "pair_feedback": {
+            "card_1": "Линии идут вдоль берега — Рисунок горизонтального течения",
+            "card_2": "Линии падают с уступа — Рисунок падающей воды",
+            "card_3": "Пустая строка под рисунками — Место для своего наблюдения"
+          }
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "water_family_plan": {
+        "interaction_id": "water_family_plan",
+        "type": "real_world_step",
+        "title": "Подготовить полевую страницу",
+        "prompt": "Взрослые выбирают места и день вне сюжета. В исходном варианте речная страница относится к Río Azul, водопадная — к выбранному водопаду из ближнего каталога.",
+        "hints": [
+          "Не требуется выбирать день немедленно.",
+          "В полевой странице три подсказки, но достаточно одной короткой записи.",
+          "Можно переписать: «Что заметила / На что похоже / Что хочется сравнить»."
+        ],
+        "config": {
+          "criteria": [
+            "Семья выбрала реальный вариант обоих наблюдений.",
+            "Понятно, чем сделать запись.",
+            "Речная точка действительно соответствует выбранной записи атласа."
+          ],
+          "fields": [
+            {
+              "id": "family_plan",
+              "label": "Какие два наблюдения мы планируем?",
+              "required": true
+            },
+            {
+              "id": "recording_method",
+              "label": "Блокнот, рисунок или совместная запись?",
+              "required": true
+            },
+            {
+              "id": "atlas_choice",
+              "label": "Подтверждённая речная точка: Río Azul или заранее изменённый вариант?",
+              "required": true
+            }
+          ],
+          "materials": [
+            "Бумага и карандаш или запись после возвращения",
+            "Сопровождение взрослого"
+          ],
+          "field_page": [
+            "Что заметила",
+            "На что похоже",
+            "Что хочется сравнить"
+          ],
+          "real_visit_required": true
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "water_river_return": {
+        "interaction_id": "water_river_return",
+        "type": "real_world_step",
+        "title": "Первый голос: река",
+        "prompt": "Принеси наблюдение с состоявшегося семейного выхода. Можно написать, нарисовать или вместе записать устный рассказ; файл и координаты не нужны.",
+        "hints": [
+          "Одной конкретной детали достаточно.",
+          "Можно говорить о движении, звуке, линиях, цвете или окружении.",
+          "Пример формы записи: «Я заметила…, это напомнило…». Содержание берётся из твоего наблюдения."
+        ],
+        "config": {
+          "criteria": [
+            "Взрослый подтверждает состоявшийся семейный выход в выбранную точку.",
+            "Сохранено отдельное наблюдение Майи для этой страницы."
+          ],
+          "fields": [
+            {
+              "id": "observation",
+              "label": "Что заметила?",
+              "required": true
+            },
+            {
+              "id": "family_visit",
+              "label": "Совместная отметка состоявшегося выхода",
+              "required": true
+            },
+            {
+              "id": "analogy",
+              "label": "На что похоже?",
+              "required": false
+            },
+            {
+              "id": "compare_later",
+              "label": "Что хочется сравнить?",
+              "required": false
+            }
+          ],
+          "materials": [
+            "Собственное наблюдение",
+            "Совместное подтверждение"
+          ],
+          "real_visit_required": true,
+          "atlas_location_id": "rio_azul",
+          "home_materials_are_visit": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "water_fall_return": {
+        "interaction_id": "water_fall_return",
+        "type": "real_world_step",
+        "title": "Второй голос: водопад",
+        "prompt": "Принеси наблюдение с состоявшегося семейного выхода. Можно написать, нарисовать или вместе записать устный рассказ; файл и координаты не нужны.",
+        "hints": [
+          "Одной конкретной детали достаточно.",
+          "Можно говорить о движении, звуке, линиях, цвете или окружении.",
+          "Пример формы записи: «Я заметила…, это напомнило…». Содержание берётся из твоего наблюдения."
+        ],
+        "config": {
+          "criteria": [
+            "Взрослый подтверждает состоявшийся семейный выход в выбранную точку.",
+            "Сохранено отдельное наблюдение Майи для этой страницы."
+          ],
+          "fields": [
+            {
+              "id": "observation",
+              "label": "Что заметила?",
+              "required": true
+            },
+            {
+              "id": "family_visit",
+              "label": "Совместная отметка состоявшегося выхода",
+              "required": true
+            },
+            {
+              "id": "analogy",
+              "label": "На что похоже?",
+              "required": false
+            },
+            {
+              "id": "compare_later",
+              "label": "Что хочется сравнить?",
+              "required": false
+            }
+          ],
+          "materials": [
+            "Собственное наблюдение",
+            "Совместное подтверждение"
+          ],
+          "real_visit_required": true,
+          "atlas_location_id": "waterfalls",
+          "home_materials_are_visit": false
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "water_compare_pages": {
+        "interaction_id": "water_compare_pages",
+        "type": "compare_observations",
+        "title": "Две страницы рядом",
+        "prompt": "Сравни собственные записи. Пример «вдоль берега / сверху вниз» подходит не всем местам; свой ответ важнее совпадения с ним.",
+        "hints": [
+          "Открой обе свои страницы и выбери один признак.",
+          "Укажи, что именно было у реки и что у водопада.",
+          "Можно написать: «В первой записи я заметила …, а во второй …»."
+        ],
+        "config": {
+          "source_stage_ids": [
+            "water_river",
+            "water_fall"
+          ],
+          "categories": [
+            {
+              "id": "movement",
+              "text": "Движение"
+            },
+            {
+              "id": "sound",
+              "text": "Звук"
+            },
+            {
+              "id": "lines",
+              "text": "Цвет и линии"
+            },
+            {
+              "id": "surroundings",
+              "text": "Окружение"
+            },
+            {
+              "id": "own",
+              "text": "Свой признак"
+            }
+          ],
+          "min_observations": 2,
+          "fields": [
+            {
+              "id": "difference",
+              "label": "Одно конкретное различие по моим наблюдениям",
+              "required": true
+            }
+          ],
+          "question_hints": {
+            "movement": "Сравни направление и непрерывность движения.",
+            "sound": "Вспомни слова, которыми описала каждый голос воды.",
+            "lines": "Сравни замеченные линии и цвета.",
+            "own": "Вернись к своему вопросу; обе записи могут сохранить разные ответы."
+          }
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      },
+      "water_make_diptych": {
+        "interaction_id": "water_make_diptych",
+        "type": "exhibit_composition",
+        "title": "Название находки",
+        "prompt": "Объедини две страницы и сравнение. Художественный звук диорамы — ресурс игры, а не твоя запись места.",
+        "hints": [
+          "Одна работа может иметь разные способы показа.",
+          "Обе страницы и сравнение останутся внутри любого оформления.",
+          "Можно выбрать альбом и назвать его «Два голоса воды»."
+        ],
+        "config": {
+          "choices": [
+            {
+              "id": "wall",
+              "text": "Диптих для стены"
+            },
+            {
+              "id": "table",
+              "text": "Диорама для стола"
+            },
+            {
+              "id": "album",
+              "text": "Альбом двух наблюдений"
+            }
+          ],
+          "min_selected": 1,
+          "max_selected": 1,
+          "fields": [
+            {
+              "id": "title",
+              "label": "Название моего исследования",
+              "required": true
+            }
+          ],
+          "source_stage_ids": [
+            "water_river",
+            "water_fall",
+            "water_compare"
+          ]
+        },
+        "success_text": "Эта часть истории сохранена. Можно продолжить или вернуться позже."
+      }
+    },
+    "work_recipes": {
+      "field_plan": {
+        "recipe_id": "field_plan",
+        "title": "Полевая страница",
+        "work_kind": "note",
+        "presentations": [
+          "frame",
+          "table",
+          "album"
+        ]
+      },
+      "water_comparison": {
+        "recipe_id": "water_comparison",
+        "title": "Сравнение двух записей",
+        "work_kind": "observation",
+        "presentations": [
+          "frame",
+          "table",
+          "album"
+        ]
+      },
+      "water_diptych": {
+        "recipe_id": "water_diptych",
+        "title": "Два голоса воды",
+        "work_kind": "diptych",
+        "presentations": [
+          "frame",
+          "table",
+          "album"
+        ]
+      },
+      "water_observation_page": {
+        "recipe_id": "water_observation_page",
+        "title": "Наблюдение воды",
+        "work_kind": "observation",
+        "presentations": [
+          "frame",
+          "table",
+          "album"
+        ]
+      },
+      "water_question_card": {
+        "recipe_id": "water_question_card",
+        "title": "Мой вопрос о воде",
+        "work_kind": "note",
+        "presentations": [
+          "frame",
+          "table",
+          "album"
+        ]
+      },
+      "home_water_study": {
+        "recipe_id": "home_water_study",
+        "title": "Исследование по материалам",
+        "work_kind": "observation",
+        "presentations": [
+          "frame",
+          "table",
+          "album"
+        ]
+      }
+    },
+    "grant_definitions": {
+      "fall_diagram_panel": {
+        "grant_id": "fall_diagram_panel",
+        "title": "Водопадная половина диорамы",
+        "kind": "known_presentation"
+      },
+      "field_album": {
+        "grant_id": "field_album",
+        "title": "Полевой альбом",
+        "kind": "known_presentation"
+      },
+      "river_diagram_panel": {
+        "grant_id": "river_diagram_panel",
+        "title": "Речная половина диорамы",
+        "kind": "known_presentation"
+      },
+      "water_compare_switch": {
+        "grant_id": "water_compare_switch",
+        "title": "Переключатель сравнения",
+        "kind": "known_presentation"
+      },
+      "water_diptych": {
+        "grant_id": "water_diptych",
+        "title": "Диптих наблюдений",
+        "kind": "known_presentation"
+      },
+      "water_question_card": {
+        "grant_id": "water_question_card",
+        "title": "Вопрос на карте",
+        "kind": "known_presentation"
+      }
+    },
+    "dialogues": {
+      "return": "Продолжим, когда выберем день. Уже принесённые страницы остались в альбоме.",
+      "observation_saved": "В альбоме сохранена твоя запись. Можно дать ей название и выбрать место в диораме.",
+      "final": "Если твой ответ отличается от моего, оставь оба. Архив растёт, когда кто-то замечает своё.",
+      "audio_label": "Художественный звук из ресурсов игры; не запись конкретного места."
+    },
+    "return_text": "Уже сделанное осталось в архиве. Можно продолжить следующий маленький шаг или посмотреть свои работы.",
+    "home_branch": {
+      "title": "Исследование по материалам",
+      "interaction_ids": [
+        "water_home_examples"
+      ],
+      "work_recipe_id": "home_water_study",
+      "completes_original_quest": false,
+      "atlas_unlock_ids": [],
+      "budget_share": 0
+    },
+    "choice_effects": {
+      "question": {
+        "movement": "water_question_card",
+        "sound": "water_question_card",
+        "lines": "water_question_card",
+        "own": "water_question_card"
+      }
+    },
+    "choice_instructions": {
+      "question": "Выбор вопроса определяет question_hints сравнения и предлагаемый признак; свой вопрос разрешён."
+    }
+  },
+  "editorial_priority": 3
+}
