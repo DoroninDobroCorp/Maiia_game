@@ -16,6 +16,7 @@ const AuthorPatchServiceScript = preload("res://scripts/services/author_patch_se
 const ProgressServiceScript = preload("res://scripts/services/progress_service.gd")
 const RadioWeatherServiceScript = preload("res://scripts/services/radio_weather_service.gd")
 const RitualServiceScript = preload("res://scripts/services/ritual_service.gd")
+const DeveloperSessionScript = preload("res://scripts/presentation/developer_session.gd")
 
 const StationRoomScene = preload("res://scenes/world/station_room.tscn")
 const SymbolDialsScene = preload("res://scenes/minigames/symbol_dials.tscn")
@@ -47,6 +48,9 @@ var toast_lbl: Label
 var toast_timer: Timer
 
 func _ready() -> void:
+	if not DeveloperSessionScript.prepare():
+		get_tree().quit(1)
+		return
 	# 1. Инициализация звука
 	audio_service = AudioServiceScript.new()
 	add_child(audio_service)
@@ -74,6 +78,8 @@ func _ready() -> void:
 	_apply_state_to_world(false)
 	_apply_settings(game_state.get("settings", {}))
 	audio_service.start_ambient()
+	if DeveloperSessionScript.enabled():
+		add_child(DeveloperSessionScript.new())
 	
 	# Приветственное сообщение при первом входе
 	var s00: Dictionary = game_state.get("s00_progress", {})

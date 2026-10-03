@@ -65,8 +65,12 @@ func measure_frames(label: String) -> void:
 	print("RENDER ", label, " ", JSON.stringify(render_metrics[label]))
 
 func run() -> void:
-	Save.use_test_storage("user://test_adventure_app_")
+	Save.use_test_storage("user://test_adventure_app_%d_" % OS.get_process_id())
 	Save.cleanup_test_storage()
+	check(Save.SAVE_PATH != Save.DEFAULT_SAVE_PATH, "cleanup keeps isolated storage before any app save")
+	if Save.SAVE_PATH == Save.DEFAULT_SAVE_PATH:
+		quit(1)
+		return
 	var start := Save.get_default_state()
 	start.settings.muted = true
 	check(Save.save_game(start), "isolated initial save")

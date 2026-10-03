@@ -131,62 +131,34 @@ SaveService не подгружает AdventureService. После `load_game()`
 
 `LaunchService.new(storage_root)` по умолчанию использует `user://launch_registry`. `prepare_starter_project()` читает проверенный ZIP из `assets/learning_starter/` через ZIPReader, создаёт редактируемую `working/station_light`, повторно использует помеченную копию без перезаписи. `register_project()`/`register_app()` сохраняют неизменяемые версии в `versions/<launch_id>/{project или Game.app, source.zip}` и локальные контрольные суммы; `launch()` проверяет их заново. Ограничения: 200 МиБ на версию, 4096 файлов, глубина 24, без симлинков. У `.app` поддерживается macOS-адаптер с XML Info.plist, не произвольный launcher или shell-команда.
 
-Проект запускается через текущий редакторный бинарник Godot (`OS.create_instance`); в экспортированной SUR `register_project()` возвращает `godot_editor_required`. Обнаружение отдельно установленного редактора не реализовано. Приложение `.app` регистрируется отдельно. После переноса скопируйте восстановленную версию из managed `versions/` в отдельную рабочую папку и зарегистрируйте заново: прямой выбор из собственного хранилища версий запрещён.
+Проект запускается через текущий редакторный бинарник Godot (`OS.create_process` с проверенным исполняемым файлом и фиксированными аргументами); в экспортированной SUR `register_project()` возвращает `godot_editor_required`. Обнаружение отдельно установленного редактора не реализовано. Приложение `.app` регистрируется отдельно. После переноса скопируйте восстановленную версию из managed `versions/` в отдельную рабочую папку и зарегистрируйте заново: прямой выбор из собственного хранилища версий запрещён.
 
 **`source.zip` для зарегистрированной `.app` — архив бинарной сборки (`application_bundle`), не исходников.** `project_source` сохраняется при регистрации настоящего проекта. Для передачи авторской работы держите отдельно `project.godot`, сцены, `.gd` и ресурсы. Учебные `learning_projects/station_light/archives/station_light_<version>.zip` содержат настоящие проекты 0.1/0.2/0.3/0.4/1.0; `station_light_source.zip` — весь набор с инструментами. [README учебной игры](../learning_projects/station_light/README.md) описывает семь обязательных файлов и авторство подготовленной основы.
 
 ## Проверки без семейного профиля
 
-Ниже команда из корня репозитория для macOS/Linux с Python 3 и Godot 4. Сначала копирует проект, задаёт уникальный `config/name` и отдельный относительный `custom_user_dir`, импортирует ресурсы, затем запускает проверки. Она не открывает и не копирует реальный `user://` SUR. Не подменяйте HOME и не запускайте проверки приложения в семейном профиле. `GODOT_BIN` можно заранее задать абсолютным путём; по умолчанию используется `godot` из PATH.
+Используйте общий проверенный запуск из корня репозитория:
 
 ```sh
-python3 - <<'PY'
-import os, pathlib, re, shutil, subprocess, sys, tempfile, uuid
-
-source = pathlib.Path.cwd()
-assert (source / 'project.godot').is_file(), 'Запустите из корня SUR'
-root = pathlib.Path(tempfile.mkdtemp(prefix='sur-qa-'))
-project = root / 'project'
-shutil.copytree(source, project,
-                ignore=shutil.ignore_patterns('.git', '.godot', '__pycache__'))
-profile = 'SUR-QA-' + uuid.uuid4().hex
-settings = project / 'project.godot'
-text = settings.read_text()
-text = re.sub(r'^config/(name|use_custom_user_dir|custom_user_dir)=.*\n?',
-              '', text, flags=re.M)
-text = text.replace('[application]', '[application]\n'
-                    f'config/name="{profile}"\n'
-                    'config/use_custom_user_dir=true\n'
-                    f'config/custom_user_dir="{profile}"', 1)
-settings.write_text(text)
-scratch = root / 'tmp'
-scratch.mkdir()
-env = dict(os.environ, TMPDIR=str(scratch) + os.sep)
-godot = os.environ.get('GODOT_BIN', 'godot')
-print('Проект/логи:', root, '\nОтдельный профиль:', profile, flush=True)
-
-def run(label, args):
-    log = root / (label + '.log')
-    result = subprocess.run(
-        [godot, '--headless', '--path', str(project), '--log-file', str(log)] + args,
-        env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    (root / (label + '.stdout.log')).write_text(result.stdout)
-    print(result.stdout, flush=True)
-    if result.returncode or re.search(r'SCRIPT ERROR:|ERROR:|\[FAIL\]', result.stdout):
-        raise SystemExit(f'Проверка {label} не пройдена; логи: {root}')
-
-run('import', ['--editor', '--quit'])
-for name in ['phase_a', 'phase_b', 'phase_c', 'adventure_infrastructure',
-             'adventure_content', 'adventures_core', 'adventure_ui',
-             'adventure_app', 'adventure_authoring', 'adventure_experience', 'adventure_journeys', 'adventure_scale']:
-    run(name, ['--script', 'tests/test_' + name + '.gd'])
-subprocess.run([sys.executable,
-                str(project / 'learning_projects/station_light/tools/check.py'),
-                '--godot', shutil.which(godot) or godot],
-               cwd=project, env=env, check=True)
-print('Все проверки прошли. Временная копия и логи оставлены:', root)
-PY
+python3 tools/run_checks.py --logs /tmp/sur-checks
+python3 tools/run_checks.py test_adventure_app test_save_isolation --render --logs /tmp/sur-native-checks
+python3 tests/test_isolated_session.py
+python3 tools/run_checks.py test_developer_session --developer --render --logs /tmp/sur-dev-checks
 ```
+
+`tools/isolated_session.py` создаёт свежую копию проекта и уникальный пользовательский каталог, устанавливает **`application/config/custom_user_dir_name`** и до запуска проверок сверяет фактический `OS.get_user_data_dir()` отдельным процессом Godot. HOME не меняется. После завершения или исключения созданные копии удаляются. `SUR_GODOT_BIN` позволяет выбрать редакторный бинарник. Runner ограничивает время процесса, сохраняет логи по указанному пути и после каждого набора сверяет SHA256 контрольного основного сохранения и всех резервных копий.
+
+`Save.cleanup_test_storage()` только удаляет тестовые файлы и сохраняет выбранные пути. `restore_default_storage()` не снимает защиту тестового процесса: ни сохранение, ни reset/restore, ни загрузка/список резервных копий не могут перейти к стандартным семейным путям. Защита также действует при запуске через `--script`/`-s`; сравниваются нормализованные пути основного, временного и резервных файлов. Прямой запуск `test_save_isolation.gd` вне runner намеренно завершается с кодом 2, поскольку тест создаёт контрольные файлы именно на стандартных путях внутри временного user://.
+
+### Ручная сессия разработчика
+
+```sh
+python3 tools/install_developer_launcher.py  # отдельная .app на рабочем столе macOS
+python3 tools/launch_developer.py             # первая сценка
+python3 tools/launch_developer.py --mode adventures
+```
+
+Каждый запуск создаёт новые проект и user://, без копирования семейных данных. Внутри работают обычные сохранения, вложения, редактор, публикация и реестр сборок. Закрытие удаляет сессию; следующий запуск не продолжает её. Режим помечен заголовком окна и кнопкой «ТЕСТ · прогресс до закрытия · меню F9». В меню можно начать с пролога или подготовленных трёх миссий: последнее только пропускает пролог и публикует определения, не начисляя XP приключений. Самостоятельное включение режима без проверенного каталога и маркера останавливает приложение до загрузки профиля. Запущенные из сессии дочерние процессы завершаются при её закрытии. Это изоляция данных SUR, не системная песочница для произвольных внешних .app: внешнее приложение распоряжается своими файлами самостоятельно.
 
 `test_adventure_infrastructure.gd` проверяет миграции/readonly/ошибки записи/пакеты/медиа/backup; `test_adventures_core.gd` — награды и перенос; `test_adventure_content.gd` — определения и адаптер запуска; `test_adventure_journeys.gd` — полные маршруты трёх историй и AR02. `test_adventure_scale.gd` создаёт 100 миссий, 30 экземпляров, 1000 работ с 3000 версиями, 20 комнат: лимиты открытия метаданных 500 мс, фильтра 200 мс. Печатает `SCALE_REPORT` с машиной, ОС, версией Godot, временем и замерами. Это проверка запросов без декодирования медиа и рендера, не измерение скорости UI.
 

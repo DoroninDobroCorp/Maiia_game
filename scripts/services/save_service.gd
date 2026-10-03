@@ -19,6 +19,7 @@ const SUPPORTED_SCHEMAS := ["1.0.0", "1.1.0", "1.2.0", "1.3.0"]
 
 static var _last_error: Dictionary = {}
 static var _write_blocked := false
+static var _test_storage_used := false
 
 static var SAVE_PATH: String = DEFAULT_SAVE_PATH
 static var TMP_PATH: String = DEFAULT_TMP_PATH
@@ -30,6 +31,7 @@ static var BACKUP_PATHS: Array[String] = [
 ]
 
 static func use_test_storage(prefix: String = "user://test_") -> void:
+	_test_storage_used = true
 	_last_error = {}
 	_write_blocked = false
 	SAVE_PATH = prefix + "savegame.json"
@@ -54,13 +56,28 @@ static func restore_default_storage() -> void:
 	]
 
 static func cleanup_test_storage() -> void:
-	# A forgotten use_test_storage must never delete a family profile.
-	if SAVE_PATH == DEFAULT_SAVE_PATH:
+	# Cleanup must keep the selected storage. Resetting it here used to send the
+	# very next test save into the family's default profile.
+	if SAVE_PATH == DEFAULT_SAVE_PATH or not _storage_is_safe():
 		return
 	for path in [SAVE_PATH, TMP_PATH, premigration_snapshot_path(), premigration_snapshot_path() + ".tmp"] + BACKUP_PATHS:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
-	restore_default_storage()
+	_last_error = {}
+	_write_blocked = false
+
+static func _storage_is_safe() -> bool:
+	var scripted := OS.get_cmdline_args().has("--script") or OS.get_cmdline_args().has("-s")
+	if not _test_storage_used and not scripted:
+		return true
+	var protected_paths: Array = [DEFAULT_SAVE_PATH, DEFAULT_TMP_PATH, LEGACY_BACKUP_PATH, DEFAULT_SAVE_PATH + ".premigration-original.json"] + DEFAULT_BACKUP_PATHS
+	var selected: Array = [SAVE_PATH, TMP_PATH, BACKUP_PATH, premigration_snapshot_path()] + BACKUP_PATHS
+	for path in selected:
+		var absolute := ProjectSettings.globalize_path(path).simplify_path()
+		for protected_path in protected_paths:
+			if absolute == ProjectSettings.globalize_path(protected_path).simplify_path():
+				return _fail("unsafe_test_storage", "Тестовый процесс не может читать или менять семейное сохранение. Выберите отдельное хранилище.")
+	return true
 
 static func get_last_error() -> Dictionary:
 	return _last_error.duplicate(true)
@@ -132,6 +149,8 @@ static func save_game(data: Dictionary) -> bool:
 
 static func _write_game(data: Dictionary, explicit_restore: bool) -> bool:
 	_last_error = {}
+	if not _storage_is_safe():
+		return false
 	if ProjectSettings.globalize_path(TMP_PATH) == ProjectSettings.globalize_path(SAVE_PATH):
 		return _fail("invalid_storage_paths", "Основной и временный файл должны быть разными.")
 	if (_write_blocked and not explicit_restore) or bool(data.get("read_only", false)) or not _is_supported_schema(data):
@@ -185,6 +204,8 @@ static func _write_game(data: Dictionary, explicit_restore: bool) -> bool:
 ## outside the rotating backups before committing the selected candidate.
 static func restore_snapshot(snapshot: Dictionary) -> Dictionary:
 	_last_error = {}
+	if not _storage_is_safe():
+		return get_last_error()
 	if not _is_supported_schema(snapshot) or snapshot.is_empty() or bool(snapshot.get("read_only", false)):
 		_fail("unsupported_restore_schema", "Выбранный снимок требует совместимую версию SUR.")
 		return get_last_error()
@@ -205,6 +226,8 @@ static func restore_snapshot(snapshot: Dictionary) -> Dictionary:
 	return {"ok": true, "state": candidate, "preserved_file": preserved_file}
 
 static func restore_from_backup(path: String) -> Dictionary:
+	if not _storage_is_safe():
+		return get_last_error()
 	var snapshot := _try_read_file(path)
 	if snapshot.is_empty():
 		_fail("invalid_backup", "Выбранная резервная копия не читается.")
@@ -213,6 +236,8 @@ static func restore_from_backup(path: String) -> Dictionary:
 
 static func list_recovery_snapshots() -> Array[Dictionary]:
 	var results: Array[Dictionary] = []
+	if not _storage_is_safe():
+		return results
 	var paths: Array[String] = BACKUP_PATHS.duplicate()
 	paths.append(premigration_snapshot_path())
 	if SAVE_PATH == DEFAULT_SAVE_PATH:
@@ -231,6 +256,11 @@ static func _copy_backup(source: String, destination: String) -> bool:
 
 static func load_game() -> Dictionary:
 	_last_error = {}
+	if not _storage_is_safe():
+		var blocked := get_default_state()
+		blocked["read_only"] = true
+		blocked["recovery_notice"] = get_last_error()
+		return blocked
 	_write_blocked = false
 	var state := _try_read_file(SAVE_PATH)
 	if not state.is_empty():
@@ -289,6 +319,8 @@ static func _preserve_original(source_path: String) -> bool:
 	return true
 
 static func reset_save() -> Dictionary:
+	if not _storage_is_safe():
+		return load_game()
 	# Even reset cannot silently destroy a file from a newer client.
 	var existing := _try_read_file(SAVE_PATH)
 	if _write_blocked or (not existing.is_empty() and not _is_supported_schema(existing)):

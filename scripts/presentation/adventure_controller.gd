@@ -830,6 +830,13 @@ func _migration_preview(instance_id: String) -> void:
 	UI.button("Остаться в прежней истории", body, open_family_tools)
 
 func _exit_tree() -> void:
+	# Temporary developer copies disappear on exit. Stop their registered games
+	# first; Godot's OS.create_process may detach them from the parent's group.
+	if bool(ProjectSettings.get_setting("sur/developer_session", false)):
+		for pid in launched_processes:
+			if OS.is_process_running(pid):
+				OS.kill(pid)
+		launched_processes.clear()
 	if file_job != null:
 		file_job.stop()
 		file_job = null

@@ -134,9 +134,11 @@ func launch(launch_entry_id: String, profile_id: String = "player_01") -> Dictio
 	var payload := _entry_directory(launch_entry_id).path_join("project" if entry.kind == "godot_project" else "Game.app")
 	var pid := -1
 	if entry.kind == "godot_project":
-		# Godot recommends create_instance for the current engine on macOS.
-		# Arguments are constructed here; no argument strings come from JSON.
-		pid = OS.create_instance(PackedStringArray(["--path", payload]))
+		# Launch the checksum-verified executable directly. On macOS,
+		# create_instance can use LaunchServices and return a PID we cannot reap:
+		# an already exited game then appears to be running forever.
+		# Arguments are fixed here; no shell or argument strings from content.
+		pid = OS.create_process(OS.get_executable_path(), PackedStringArray(["--path", payload]), false)
 	else:
 		var executable := _app_executable(payload)
 		if executable.is_empty():

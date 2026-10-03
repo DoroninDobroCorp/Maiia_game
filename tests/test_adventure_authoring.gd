@@ -34,6 +34,10 @@ func select_template(key: String) -> bool:
 func run() -> void:
 	Save.use_test_storage("user://authoring_audit_%d_" % OS.get_process_id())
 	Save.cleanup_test_storage()
+	check(Save.SAVE_PATH != Save.DEFAULT_SAVE_PATH, "cleanup keeps isolated storage before any authoring save")
+	if Save.SAVE_PATH == Save.DEFAULT_SAVE_PATH:
+		quit(1)
+		return
 	var state := Save.get_default_state()
 	state.puzzle_solved = true
 	state.s00_progress.station_awakened = true

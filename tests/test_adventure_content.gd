@@ -238,9 +238,9 @@ func _launcher_checks() -> void:
 		var spawned: Dictionary = restored.launch(fixture.launch_entry_id)
 		check(spawned.ok, "Start controlled failure fixture")
 		if spawned.ok:
-			for _poll in range(30):
+			var exit_deadline := Time.get_ticks_msec() + 15000
+			while OS.is_process_running(spawned.pid) and Time.get_ticks_msec() < exit_deadline:
 				await create_timer(0.1).timeout
-				if not OS.is_process_running(spawned.pid): break
 			var status: Dictionary = restored.process_status(spawned.pid)
 			check(not status.ok and status.reason == "application_exited_with_error" and status.exit_code == 7, "Nonzero child exit is clear error", status)
 			if OS.is_process_running(spawned.pid): OS.kill(spawned.pid)
