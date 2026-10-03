@@ -12,8 +12,10 @@ import subprocess
 import sys
 import tempfile
 import uuid
+from datetime import datetime, timezone
 
 PROJECT = Path(__file__).resolve().parents[1]
+FAMILY_SNAPSHOT = '.developer-family-snapshot'
 
 
 def godot_binary() -> str:
@@ -34,9 +36,61 @@ def user_data_base() -> Path:
     return Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
 
 
+def family_profile_directory() -> Path:
+    godot_dir = 'Godot' if sys.platform in ('darwin', 'win32') else 'godot'
+    return user_data_base() / godot_dir / 'app_userdata/SUR'
+
+
+def _copy_private_tree(source: Path, target: Path) -> None:
+    """Copy bytes, never links into the original profile or its working projects."""
+    if source.is_symlink():
+        raise ValueError('Символические ссылки в семейном хранилище не копируются.')
+    if source.is_dir():
+        target.mkdir()
+        for child in source.iterdir():
+            _copy_private_tree(child, target / child.name)
+    elif source.is_file():
+        shutil.copy2(source, target)
+    else:
+        raise ValueError('В семейном хранилище найден неподдерживаемый файл.')
+
+
+def capture_family_snapshot(source: Path | None, profile: Path) -> dict:
+    """Read the family once; the running game only sees this private snapshot."""
+    snapshot = profile / FAMILY_SNAPSHOT
+    info = {'available': False, 'message': 'Сохранение Майи не найдено.'}
+    try:
+        if source is not None and (source / 'savegame.json').is_file():
+            if source.is_symlink() or (source / 'savegame.json').is_symlink():
+                raise ValueError('Семейное сохранение не должно быть символической ссылкой.')
+            original = (source / 'savegame.json').read_bytes()
+            state = json.loads(original)
+            if not isinstance(state, dict) or not state:
+                raise ValueError('Семейное сохранение не читается.')
+            if str(state.get('schema_version', '1.0.0')) not in ('1.0.0', '1.1.0', '1.2.0', '1.3.0'):
+                raise ValueError('Для этого сохранения нужна совместимая версия SUR.')
+            snapshot.mkdir()
+            (snapshot / 'savegame.json').write_bytes(original)
+            for name in ('artifacts', 'launch_registry'):
+                if (source / name).exists() or (source / name).is_symlink():
+                    _copy_private_tree(source / name, snapshot / name)
+            if (source / 'savegame.json').read_bytes() != original:
+                raise ValueError('Сохранение изменилось во время копирования. Перезапустите тест.')
+            info = {'available': True, 'station_name': str(state.get('station_name', 'Станция Майи')),
+                    'saved_at': state.get('updated_at', ''),
+                    'captured_at': datetime.now(timezone.utc).isoformat()}
+    except (OSError, ValueError) as error:
+        shutil.rmtree(snapshot, ignore_errors=True)
+        info = {'available': False, 'message': 'Копия сохранения недоступна: ' + str(error)}
+    (profile / '.developer-family-info.json').write_text(json.dumps(info, ensure_ascii=False))
+    return info
+
+
 @contextlib.contextmanager
-def isolated_project(*, developer: bool = False, mode: str = "prologue"):
-    """Never reuse another session or copy the family profile into a fixture."""
+def isolated_project(*, developer: bool = False, mode: str = "prologue", family_source: Path | None = None):
+    """Tests start empty; only an explicit developer source can seed a session."""
+    if family_source is not None and not developer:
+        raise ValueError('Family snapshots are only available to developer sessions.')
     token = uuid.uuid4().hex
     relative_user = "SUR Developer/sessions/" + token
     profile = user_data_base() / relative_user
@@ -75,6 +129,8 @@ def isolated_project(*, developer: bool = False, mode: str = "prologue"):
             probe.unlink()
             if checked.returncode or 'SCRIPT ERROR:' in checked.stderr:
                 raise RuntimeError('Изоляция не подтверждена; запуск отменён.\n' + checked.stderr)
+            if developer:
+                capture_family_snapshot(family_source, profile)
             yield project, profile
         finally:
             # Delete only the exact directory created by this invocation.

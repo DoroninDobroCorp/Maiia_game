@@ -1,18 +1,20 @@
 """Process-level developer launcher and cleanup checks; never write a family file."""
 from pathlib import Path
 import hashlib
+import json
 import os
 import subprocess
 import sys
 import time
+import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-from isolated_session import isolated_project, run_godot, user_data_base
+from isolated_session import isolated_project, run_godot, family_profile_directory, FAMILY_SNAPSHOT
 
 
 def family_fingerprint():
-    root = user_data_base() / ('Godot/app_userdata/SUR' if sys.platform == 'darwin' else 'godot/app_userdata/SUR')
+    root = family_profile_directory()
     paths = list(root.glob('savegame*'))
     for child in ['artifacts', 'launch_registry']:
         if (root / child).is_dir():
@@ -59,6 +61,66 @@ class IsolationTests(unittest.TestCase):
             self.assertFalse(profile_b.exists())
             self.assertFalse(project_b.exists())
             self.assertTrue(profile_a.exists())
+
+    def test_family_snapshot_is_private_and_refreshed_each_launch(self):
+        with tempfile.TemporaryDirectory(prefix='sur-family-fixture-') as temporary:
+            source = Path(temporary)
+            state = {'schema_version': '1.3.0', 'station_name': 'Семейный образец',
+                     'station_emblem': 'feather', 'desk_prop_id': 'owl',
+                     'settings': {'muted': True}, 'family_marker': {'progress': 17}}
+            (source / 'savegame.json').write_text(json.dumps(state, ensure_ascii=False))
+            (source / 'artifacts').mkdir()
+            (source / 'artifacts/drawing.png').write_bytes(b'original media')
+            (source / 'launch_registry/working').mkdir(parents=True)
+            (source / 'launch_registry/working/source.gd').write_text('original source')
+            def fingerprint():
+                return {str(p.relative_to(source)): p.read_bytes() for p in source.rglob('*') if p.is_file()}
+            before = fingerprint()
+            with isolated_project(developer=True, mode='family', family_source=source) as (project, profile):
+                self.assertEqual((profile / FAMILY_SNAPSHOT / 'savegame.json').read_bytes(), before['savegame.json'])
+                self.assertEqual(run_godot(project, ['--headless', '--quit-after', '8'], timeout=30), 0)
+                copied = json.loads((profile / 'savegame.json').read_text())
+                self.assertEqual(copied['station_name'], state['station_name'])
+                self.assertEqual(copied['family_marker'], state['family_marker'])
+                self.assertEqual((profile / 'artifacts/drawing.png').read_bytes(), b'original media')
+                self.assertEqual((profile / 'launch_registry/working/source.gd').read_text(), 'original source')
+                (profile / 'savegame.json').write_text('{}')
+                (profile / 'artifacts/drawing.png').write_bytes(b'test changes')
+                (profile / 'launch_registry/working/source.gd').write_text('test changes')
+                self.assertEqual(before, fingerprint())
+                self.assertEqual((profile / FAMILY_SNAPSHOT / 'artifacts/drawing.png').read_bytes(), b'original media')
+            self.assertFalse(profile.exists())
+            state['station_name'] = 'Новый семейный прогресс'
+            (source / 'savegame.json').write_text(json.dumps(state, ensure_ascii=False))
+            with isolated_project(developer=True, mode='auto', family_source=source) as (project, profile):
+                self.assertEqual(run_godot(project, ['--headless', '--quit-after', '8'], timeout=30), 0)
+                self.assertEqual(json.loads((profile / 'savegame.json').read_text())['station_name'], state['station_name'])
+
+    def test_unavailable_family_source_is_explicit_and_safe(self):
+        with tempfile.TemporaryDirectory(prefix='sur-family-fixture-') as temporary:
+            source = Path(temporary)
+            for contents in ('broken json', '{"schema_version":"99.0.0"}'):
+                (source / 'savegame.json').write_text(contents)
+                with isolated_project(developer=True, mode='auto', family_source=source) as (project, profile):
+                    info = json.loads((profile / '.developer-family-info.json').read_text())
+                    self.assertFalse(info['available'])
+                    self.assertTrue(info['message'])
+                    self.assertFalse((profile / FAMILY_SNAPSHOT).exists())
+                    self.assertEqual(run_godot(project, ['--headless', '--quit-after', '8'], timeout=30), 0)
+                self.assertEqual((source / 'savegame.json').read_text(), contents)
+
+    @unittest.skipUnless(os.name == 'posix', 'symlink fixtures')
+    def test_family_media_links_never_become_writable_session_links(self):
+        with tempfile.TemporaryDirectory(prefix='sur-family-fixture-') as temporary:
+            source = Path(temporary)
+            (source / 'savegame.json').write_text('{"schema_version":"1.3.0"}')
+            (source / 'real-media').mkdir()
+            (source / 'real-media/keep').write_text('original')
+            (source / 'artifacts').symlink_to(source / 'real-media', target_is_directory=True)
+            with isolated_project(developer=True, family_source=source) as (_, profile):
+                self.assertFalse(json.loads((profile / '.developer-family-info.json').read_text())['available'])
+                self.assertFalse((profile / FAMILY_SNAPSHOT).exists())
+            self.assertEqual((source / 'real-media/keep').read_text(), 'original')
 
     def test_developer_mode_refuses_unverified_directory(self):
         with isolated_project(developer=True) as (project, profile):
