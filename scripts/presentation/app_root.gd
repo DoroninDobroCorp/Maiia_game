@@ -88,7 +88,11 @@ func _ready() -> void:
 	elif not bool(s00.get("station_awakened", false)):
 		show_toast("Добро пожаловать на станцию! Осмотри комнату, оформи вывеску и разгадай первую тайну в шкатулке на верстаке.")
 	else:
-		show_toast("С возвращением на станцию «" + str(game_state.get("station_name", "Лесная станция")) + "»!")
+		var welcome := "С возвращением на станцию «" + str(game_state.get("station_name", "Лесная станция")) + "»!"
+		var chapter_done := bool(game_state.get("adventures", {}).get("chapters_by_profile", {}).get("player_01", {}).get("completed", false))
+		if bool(game_state.get("puzzle_solved", false)) and not chapter_done:
+			welcome += " На столе три миссии: радио Норы, чертёж Тео и полевой альбом."
+		show_toast(welcome)
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Godot also calls _unhandled_input after _unhandled_key_input. Handle global
@@ -351,6 +355,12 @@ func _on_prop_clicked(prop_id: String) -> void:
 			_interact_map()
 		"journal":
 			open_journal()
+		"history_cabinet":
+			audio_service.play_sfx("wood_thump")
+			show_toast("Здесь теперь лежит старая шкатулка — первая тайна станции. Новые миссии и их записи — в журнале (J).")
+		"challenge_board":
+			audio_service.play_sfx("chime_solve")
+			show_toast("✨ Памятная доска стойкости Майи: 30 дней чемпионского ритма! Каждое усилие оставляет след на станции.")
 		"door_observatory":
 			audio_service.play_sfx("wood_thump")
 			if station_room.enter_room("observatory_annex"):
@@ -506,7 +516,7 @@ func complete_puzzle() -> void:
 	audio_service.play_radio_broadcast()
 	
 	if newly_unlocked:
-		show_toast("✨ Первая тайна разгадана! Лампа зажглась, радио ожило — станция пробуждается ото сна!")
+		show_toast("✨ Первая тайна разгадана! Лампа зажглась, радио ожило. На столе появились три миссии: радио Норы, чертёж Тео и полевой альбом.")
 	else:
 		show_toast("✨ Механизм шкатулки открыт, станция озарена тёплым светом!")
 

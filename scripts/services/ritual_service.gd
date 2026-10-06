@@ -10,6 +10,181 @@ const MOVEMENT_RITUAL_ID := "movement_warmup"
 const TARGET_DAYS := 5
 const UNLOCK_EFFECT_ID := "movement_ritual_light"
 
+const CHALLENGE_ID := "maya_30_streak"
+const CHALLENGE_TARGET_DAYS := 30
+const CHALLENGE_UNLOCK_EFFECT := "challenge_30_board"
+const CHALLENGE_UNLOCK_LIGHT := "challenge_30_light"
+const CHALLENGE_ITEMS: Array[String] = [
+	"morning_run",
+	"evening_stretch",
+	"spanish_1",
+	"spanish_2",
+	"spanish_3",
+	"spanish_4"
+]
+
+static func challenge_item_meta() -> Dictionary:
+	return {
+		"morning_run": {"title": "Утренняя пробежка", "icon": "🏃‍♀️", "desc": "Бег на свежем воздухе"},
+		"evening_stretch": {"title": "Вечерняя растяжка", "icon": "🧘‍♀️", "desc": "Спокойная разминка и растяжка"},
+		"spanish_1": {"title": "Испанский · подход 1", "icon": "🇪🇸", "desc": "Утренний диалог или слова"},
+		"spanish_2": {"title": "Испанский · подход 2", "icon": "🇪🇸", "desc": "Дневной подход к карточкам"},
+		"spanish_3": {"title": "Испанский · подход 3", "icon": "🇪🇸", "desc": "Вечернее чтение или эфир"},
+		"spanish_4": {"title": "Испанский · подход 4", "icon": "🇪🇸", "desc": "Закрепление слов перед сном"}
+	}
+
+static func days_between(date_a: String, date_b: String) -> int:
+	if date_a.is_empty() or date_b.is_empty():
+		return 999999
+	var dt_a: String = date_a if date_a.contains("T") else date_a + "T00:00:00"
+	var dt_b: String = date_b if date_b.contains("T") else date_b + "T00:00:00"
+	var unix_a := Time.get_unix_time_from_datetime_string(dt_a)
+	var unix_b := Time.get_unix_time_from_datetime_string(dt_b)
+	return int(round((unix_b - unix_a) / 86400.0))
+
+static func ensure_challenge(state: Dictionary) -> Dictionary:
+	var phase_c: Dictionary = state.get("phase_c", {})
+	var rituals: Dictionary = phase_c.get("rituals", {})
+	var c: Dictionary = rituals.get(CHALLENGE_ID, {})
+	var today := Time.get_date_string_from_system()
+
+	if not c.has("current_streak"): c["current_streak"] = 0
+	if not c.has("max_streak"): c["max_streak"] = 0
+	if not c.has("target_days"): c["target_days"] = CHALLENGE_TARGET_DAYS
+	if not c.has("unlocked"): c["unlocked"] = false
+	if not c.has("unlocked_at"): c["unlocked_at"] = ""
+	if not c.has("last_completed_date"): c["last_completed_date"] = ""
+	if not c.has("history"): c["history"] = {}
+	if not c.has("today_checklist"):
+		var cl: Dictionary = {}
+		for item in CHALLENGE_ITEMS:
+			cl[item] = false
+		c["today_checklist"] = cl
+
+	var stored_today: String = str(c.get("today_date", ""))
+	if stored_today != today:
+		# Проверка смены дня и стрика
+		var last_date: String = str(c.get("last_completed_date", ""))
+		if not last_date.is_empty():
+			var diff := days_between(last_date, today)
+			if diff > 1:
+				# Был пропущен как минимум один полный день — стрик сбивается
+				c["current_streak"] = 0
+		else:
+			c["current_streak"] = 0
+
+		# Инициализация чек-листа нового дня
+		var history: Dictionary = c.get("history", {})
+		if history.has(today):
+			var rec: Dictionary = history[today]
+			c["today_checklist"] = rec.get("items", {}).duplicate(true)
+		else:
+			var cl: Dictionary = {}
+			for item in CHALLENGE_ITEMS:
+				cl[item] = false
+			c["today_checklist"] = cl
+		c["today_date"] = today
+
+	rituals[CHALLENGE_ID] = c
+	phase_c["rituals"] = rituals
+	state["phase_c"] = phase_c
+	return c
+
+static func get_challenge_state(state: Dictionary) -> Dictionary:
+	return ensure_challenge(state).duplicate(true)
+
+static func toggle_challenge_item(state: Dictionary, item_key: String) -> Dictionary:
+	var c := ensure_challenge(state)
+	if not CHALLENGE_ITEMS.has(item_key):
+		return {"ok": false, "reason": "unknown_item"}
+
+	var today := Time.get_date_string_from_system()
+	var cl: Dictionary = c.get("today_checklist", {})
+	var current_val := bool(cl.get(item_key, false))
+	cl[item_key] = not current_val
+	c["today_checklist"] = cl
+
+	# Проверяем, закрыты ли все 6 пунктов на сегодня
+	var all_done := true
+	for k in CHALLENGE_ITEMS:
+		if not bool(cl.get(k, false)):
+			all_done = false
+			break
+
+	var history: Dictionary = c.get("history", {})
+	var last_date: String = str(c.get("last_completed_date", ""))
+	var newly_unlocked := false
+	var award: Dictionary = {}
+
+	if all_done:
+		if not history.has(today) or not bool(history[today].get("completed", false)):
+			var diff := days_between(last_date, today)
+			if diff == 1:
+				c["current_streak"] = int(c.get("current_streak", 0)) + 1
+			elif diff == 0:
+				pass # уже был завершён сегодня
+			else:
+				c["current_streak"] = 1
+
+			c["last_completed_date"] = today
+			if int(c["current_streak"]) > int(c.get("max_streak", 0)):
+				c["max_streak"] = c["current_streak"]
+
+			history[today] = {
+				"completed": true,
+				"items": cl.duplicate(true),
+				"completed_at": Time.get_datetime_string_from_system()
+			}
+			c["history"] = history
+
+			if int(c["current_streak"]) >= int(c.get("target_days", CHALLENGE_TARGET_DAYS)) and not bool(c.get("unlocked", false)):
+				c["unlocked"] = true
+				c["unlocked_at"] = Time.get_datetime_string_from_system()
+				newly_unlocked = true
+				award = ProgressServiceScript.apply_award(
+					state,
+					"player_01",
+					"ritual:maya_30_streak:unlock",
+					"ritual:maya_30_streak",
+					0,
+					{},
+					[CHALLENGE_UNLOCK_EFFECT, CHALLENGE_UNLOCK_LIGHT]
+				)
+	else:
+		# Если сегодня было завершено, а теперь пункт снят
+		if history.has(today) and bool(history[today].get("completed", false)):
+			history.erase(today)
+			c["history"] = history
+			if last_date == today:
+				c["current_streak"] = maxi(0, int(c.get("current_streak", 1)) - 1)
+				c["last_completed_date"] = _find_previous_completed_date(history, today)
+
+	var phase_c: Dictionary = state.get("phase_c", {})
+	var rituals: Dictionary = phase_c.get("rituals", {})
+	rituals[CHALLENGE_ID] = c
+	phase_c["rituals"] = rituals
+	state["phase_c"] = phase_c
+
+	return {
+		"ok": true,
+		"today_checklist": cl,
+		"current_streak": c.get("current_streak", 0),
+		"max_streak": c.get("max_streak", 0),
+		"unlocked": bool(c.get("unlocked", false)),
+		"newly_unlocked": newly_unlocked,
+		"all_done_today": all_done,
+		"award": award
+	}
+
+static func _find_previous_completed_date(history: Dictionary, before_date: String) -> String:
+	var best := ""
+	for d in history.keys():
+		var ds := str(d)
+		if ds < before_date and bool(history[d].get("completed", false)):
+			if best.is_empty() or ds > best:
+				best = ds
+	return best
+
 static func ensure(state: Dictionary) -> Dictionary:
 	var phase_c: Dictionary = state.get("phase_c", {})
 	var rituals: Dictionary = phase_c.get("rituals", {})

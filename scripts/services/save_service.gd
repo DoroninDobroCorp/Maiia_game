@@ -129,6 +129,23 @@ static func get_default_state() -> Dictionary:
 					"days": [],
 					"target_days": 5,
 					"unlocked": false
+				},
+				"maya_30_streak": {
+					"current_streak": 0,
+					"max_streak": 0,
+					"target_days": 30,
+					"unlocked": false,
+					"unlocked_at": "",
+					"last_completed_date": "",
+					"today_checklist": {
+						"morning_run": false,
+						"evening_stretch": false,
+						"spanish_1": false,
+						"spanish_2": false,
+						"spanish_3": false,
+						"spanish_4": false
+					},
+					"history": {}
 				}
 			}
 		},

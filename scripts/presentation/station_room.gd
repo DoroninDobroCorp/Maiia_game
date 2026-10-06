@@ -29,11 +29,15 @@ var radio_dial_mesh: MeshInstance3D
 var desk_lamp_bulb_mesh: MeshInstance3D
 var power_strip_mesh: MeshInstance3D
 var puzzle_box_dials: Array[MeshInstance3D] = []
+var puzzle_box_root: Node3D
+var history_cabinet: Node3D
 var phase_b_unlock_panel: Node3D
 var phase_b_unlock_label: Label3D
 var observatory_unlock_light: OmniLight3D
 var movement_ritual_marker: Node3D
 var movement_ritual_light: OmniLight3D
+var challenge_board_marker: Node3D
+var challenge_board_light: OmniLight3D
 var adventure_props: StationAdventureProps
 
 # Материалы для фаз
@@ -57,6 +61,8 @@ var player_yaw := 0.0
 const WALK_SPEED := 1.35
 const STRAFE_SPEED := 1.0
 const TURN_SPEED := 72.0
+const PUZZLE_DESK_POS := Vector3(-0.42, 0.98, 0.65)
+const PUZZLE_ARCHIVE_POS := Vector3(7.0, 0.68, -0.24)
 const ROOM_BOUNDS := {
 	"station_main": {"min_x": -1.75, "max_x": 1.75, "min_z": 0.15, "max_z": 2.55},
 	"observatory_annex": {"min_x": 5.55, "max_x": 8.45, "min_z": 0.15, "max_z": 2.75}
@@ -153,6 +159,7 @@ func _clamp_player_to_room() -> void:
 
 func set_world_stage(stage_2_awakened: bool, animate: bool = false) -> void:
 	is_stage_2 = stage_2_awakened
+	_apply_station_object_layout(stage_2_awakened)
 	
 	if stage_2_awakened:
 		desk_lamp_bulb_mesh.material_override = mat_lamp_on
@@ -183,6 +190,13 @@ func set_world_stage(stage_2_awakened: bool, animate: bool = false) -> void:
 		radio_light.light_energy = 0.0
 		ceiling_light.light_energy = 0.28
 		window_glow_light.light_energy = 0.18
+
+func _apply_station_object_layout(awakened: bool) -> void:
+	# Only the solved puzzle box leaves the desk: it moves to the history cabinet
+	# in the observatory passage. The owl (or any other chosen exhibit) is the
+	# player's own symbol and stays on the desk shelf.
+	if puzzle_box_root != null:
+		puzzle_box_root.position = PUZZLE_ARCHIVE_POS if awakened else PUZZLE_DESK_POS
 
 func update_station_sign(station_name: String, emblem_id: String) -> void:
 	var emblem_symbols: Dictionary = {
@@ -233,7 +247,8 @@ func apply_phase_b_world_effects(effect_ids: Array) -> void:
 		"display_room_sign": "SEÑAL",
 		"observatory_view_01": "OBS I",
 		"author_patch_accepted": "PATCH",
-		"movement_ritual_light": "5 DÍAS"
+		"movement_ritual_light": "5 DÍAS",
+		"challenge_30_board": "30 DÍAS"
 	}
 	var visible_tokens: Array[String] = []
 	for effect_id in tokens.keys():
@@ -247,6 +262,10 @@ func apply_phase_b_world_effects(effect_ids: Array) -> void:
 		movement_ritual_marker.visible = effect_ids.has("movement_ritual_light")
 	if movement_ritual_light != null:
 		movement_ritual_light.light_energy = 1.1 if effect_ids.has("movement_ritual_light") else 0.0
+	if challenge_board_marker != null:
+		challenge_board_marker.visible = effect_ids.has("challenge_30_board")
+	if challenge_board_light != null:
+		challenge_board_light.light_energy = 1.3 if effect_ids.has("challenge_30_board") else 0.0
 
 func _setup_phase_b_effects() -> void:
 	phase_b_unlock_panel = Node3D.new()
@@ -291,6 +310,37 @@ func _setup_phase_b_effects() -> void:
 	movement_ritual_light.light_color = Color(1.0, 0.68, 0.32)
 	movement_ritual_light.light_energy = 0.0
 	add_child(movement_ritual_light)
+
+	# Памятная латунная доска челленджа 30 дней
+	challenge_board_marker = Node3D.new()
+	challenge_board_marker.position = Vector3(-1.72, 1.18, 0.55)
+	challenge_board_marker.rotation_degrees.y = 90
+	challenge_board_marker.visible = false
+	add_child(challenge_board_marker)
+	var board_mat := StandardMaterial3D.new()
+	board_mat.albedo_color = Color(0.78, 0.58, 0.22)
+	board_mat.metallic = 0.75
+	board_mat.roughness = 0.28
+	var board_mesh := _create_box(Vector3(0.42, 0.26, 0.03), board_mat)
+	challenge_board_marker.add_child(board_mesh)
+	var board_label := Label3D.new()
+	board_label.position = Vector3(0.0, 0.0, 0.02)
+	board_label.text = "МАЙЯ\n30 ДНЕЙ РИТМА\n✦ ✦ ✦"
+	board_label.font_size = 18
+	board_label.pixel_size = 0.0017
+	board_label.modulate = Color(0.98, 0.92, 0.72)
+	board_label.outline_size = 3
+	board_label.outline_modulate = Color(0.12, 0.08, 0.04)
+	challenge_board_marker.add_child(board_label)
+
+	_make_interactive_area(board_mesh, "challenge_board", "Доска почёта • 30 дней чемпионского ритма", Vector3(0.46, 0.30, 0.12))
+
+	challenge_board_light = OmniLight3D.new()
+	challenge_board_light.position = Vector3(-1.48, 1.25, 0.55)
+	challenge_board_light.omni_range = 1.8
+	challenge_board_light.light_color = Color(1.0, 0.82, 0.42)
+	challenge_board_light.light_energy = 0.0
+	add_child(challenge_board_light)
 	phase_b_unlock_label.outline_modulate = Color(0.05, 0.035, 0.025, 0.95)
 	phase_b_unlock_panel.add_child(phase_b_unlock_label)
 	phase_b_unlock_panel.visible = false
@@ -763,6 +813,9 @@ func _setup_props() -> void:
 	
 	# 4. Настенная карта долины
 	_build_valley_map()
+
+	# Шкаф истории стоит в переходе к обсерватории: туда уходит шкатулка первой тайны.
+	_build_history_cabinet()
 	
 	# 5. Экспонат верстака (реликвия)
 	prop_anchor = Node3D.new()
@@ -828,15 +881,21 @@ func _build_puzzle_box() -> void:
 	mat_brass.metallic = 0.85
 	mat_brass.roughness = 0.35
 	
+	# Вся шкатулка живёт под одним корнем: после S00 этот же объект переезжает
+	# в шкаф истории, а не дублируется и не исчезает.
+	puzzle_box_root = Node3D.new()
+	puzzle_box_root.position = PUZZLE_DESK_POS
+	add_child(puzzle_box_root)
+
 	# Корпус шкатулки
 	var box_base := _create_box(Vector3(0.42, 0.12, 0.26), mat_box)
-	box_base.position = Vector3(-0.42, 0.98, 0.65)
-	add_child(box_base)
+	box_base.position = Vector3.ZERO
+	puzzle_box_root.add_child(box_base)
 	
 	# Латунные уголки
 	var corner := _create_box(Vector3(0.43, 0.02, 0.27), mat_brass)
-	corner.position = Vector3(-0.42, 1.04, 0.65)
-	add_child(corner)
+	corner.position = Vector3(0.0, 0.06, 0.0)
+	puzzle_box_root.add_child(corner)
 	
 	# 3 вращающихся диска с гравировкой
 	puzzle_box_dials.clear()
@@ -855,8 +914,8 @@ func _build_puzzle_box() -> void:
 		dmat.roughness = 0.3
 		dial.material_override = dmat
 		dial.rotation_degrees = Vector3(90, 0, 0)
-		dial.position = Vector3(-0.52 + float(i) * 0.10, 1.05, 0.65)
-		add_child(dial)
+		dial.position = Vector3(-0.10 + float(i) * 0.10, 0.07, 0.0)
+		puzzle_box_root.add_child(dial)
 		puzzle_box_dials.append(dial)
 	
 	_make_interactive_area(box_base, "puzzle_box", "Старинная шкатулка [Первая тайна станции]", Vector3(0.46, 0.18, 0.30))
@@ -915,7 +974,47 @@ func _build_radio_receiver() -> void:
 	antenna.rotation_degrees = Vector3(0, 0, -18)
 	add_child(antenna)
 	
-	_make_interactive_area(radio_body, "radio", "Радиоприёмник «Южный Маяк» [Слушать эфир]", Vector3(0.56, 0.42, 0.32))
+	_make_interactive_area(radio_body, "radio", "Радио Норы · миссия «Голоса Южного Маяка»", Vector3(0.56, 0.42, 0.32))
+	# Погода остаётся функцией того же приёмника, но живёт на отдельной ручке,
+	# поэтому основной клик по радио всегда ведёт в ровно одну миссию.
+	_make_interactive_area(knob2, "radio_weather", "Ручка погоды • прогноз Эль-Больсона", Vector3(0.07, 0.07, 0.07))
+
+func _build_history_cabinet() -> void:
+	history_cabinet = Node3D.new()
+	history_cabinet.position = Vector3(7.0, 0.0, -0.42)
+	add_child(history_cabinet)
+
+	var wood := _textured_material("res://assets/textures/walnut.png", Color(0.28, 0.18, 0.12), 0.68, Vector3(2.4, 2.4, 2.4))
+	var brass := StandardMaterial3D.new()
+	brass.albedo_color = Color(0.72, 0.58, 0.28)
+	brass.metallic = 0.72
+	brass.roughness = 0.34
+
+	for x in [-0.34, 0.34]:
+		var side := _create_box(Vector3(0.06, 1.58, 0.34), wood)
+		side.position = Vector3(x, 0.82, 0.0)
+		history_cabinet.add_child(side)
+	for y in [0.14, 0.62, 1.12, 1.60]:
+		var shelf := _create_box(Vector3(0.74, 0.055, 0.34), wood)
+		shelf.position = Vector3(0.0, y, 0.0)
+		history_cabinet.add_child(shelf)
+	var trim := _create_box(Vector3(0.78, 0.07, 0.38), brass)
+	trim.position = Vector3(0.0, 1.66, 0.0)
+	history_cabinet.add_child(trim)
+
+	var label := Label3D.new()
+	label.text = "ШКАФ ИСТОРИИ\nпервая тайна станции"
+	label.position = Vector3(0.0, 1.82, 0.18)
+	label.font_size = 18
+	label.pixel_size = 0.0017
+	label.modulate = Color(0.92, 0.80, 0.53)
+	label.outline_size = 4
+	history_cabinet.add_child(label)
+
+	var hit_anchor := Node3D.new()
+	hit_anchor.position = Vector3(0.0, 0.86, 0.10)
+	history_cabinet.add_child(hit_anchor)
+	_make_interactive_area(hit_anchor, "history_cabinet", "Шкаф истории • здесь лежит шкатулка первой тайны", Vector3(0.82, 1.72, 0.46))
 
 func _build_valley_map() -> void:
 	var mat_map := _textured_material("res://assets/textures/parchment.png", Color(0.94, 0.87, 0.70), 0.88, Vector3(1.6, 1.6, 1.6))
@@ -1065,19 +1164,19 @@ func _build_workbench_clutter() -> void:
 	
 	# Деревянная чертёжная линейка
 	var ruler := _create_box(Vector3(0.42, 0.008, 0.04), mat_wood_ruler)
-	ruler.position = Vector3(-0.15, 0.93, 1.05)
+	ruler.position = Vector3(-1.18, 0.93, 1.10)
 	ruler.rotation_degrees = Vector3(0, -8, 0)
 	add_child(ruler)
 	
 	# Графитный карандаш
 	var pencil := _create_box(Vector3(0.24, 0.012, 0.012), mat_pencil)
-	pencil.position = Vector3(0.18, 0.93, 1.02)
+	pencil.position = Vector3(1.02, 0.93, 1.08)
 	pencil.rotation_degrees = Vector3(0, 18, 0)
 	add_child(pencil)
 	
 	# Латунная чернильница
 	var inkwell := _create_cylinder(0.045, 0.07, mat_brass)
-	inkwell.position = Vector3(0.45, 0.96, 0.88)
+	inkwell.position = Vector3(1.22, 0.96, 0.92)
 	add_child(inkwell)
 
 # ==================== МОДЕЛИ ЭКСПОНАТОВ ====================

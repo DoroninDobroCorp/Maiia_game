@@ -39,7 +39,9 @@ const WORLD_EFFECT_IDS: Array[String] = [
 	"display_room_sign",
 	"observatory_view_01",
 	"author_patch_accepted",
-	"movement_ritual_light"
+	"movement_ritual_light",
+	"challenge_30_board",
+	"challenge_30_light"
 ]
 
 const PHASE_C_LOCATIONS: Array[Dictionary] = [

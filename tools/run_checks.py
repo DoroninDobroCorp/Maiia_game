@@ -8,9 +8,9 @@ from isolated_session import isolated_project, run_godot
 
 DEFAULTS = ['test_save_isolation', 'test_phase_a', 'test_phase_b', 'test_phase_c',
             'test_adventure_infrastructure', 'test_adventures_core',
-            'test_adventure_content', 'test_adventure_journeys', 'test_adventure_ui',
+            'test_adventure_content', 'test_mission_guide', 'test_adventure_journeys', 'test_adventure_ui',
             'test_adventure_app', 'test_adventure_authoring', 'test_adventure_experience',
-            'test_adventure_scale']
+            'test_adventure_scale', 'test_maya_features']
 
 
 def main() -> int:

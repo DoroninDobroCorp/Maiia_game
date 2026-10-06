@@ -17,6 +17,7 @@ const AuthorPatchServiceScript = preload("res://scripts/services/author_patch_se
 const ProgressServiceScript = preload("res://scripts/services/progress_service.gd")
 const RitualServiceScript = preload("res://scripts/services/ritual_service.gd")
 const AtlasMapScript = preload("res://scripts/presentation/atlas_map.gd")
+const MissionGuideScript = preload("res://scripts/presentation/mission_guide.gd")
 
 var audio_service: Node
 var tab_container: TabContainer
@@ -271,7 +272,7 @@ func _build_featured_goals_tab(state: Dictionary) -> Control:
 	heading.add_theme_color_override("font_color", Color(1.0, 0.86, 0.52))
 	vbox.add_child(heading)
 	var intro := Label.new()
-	intro.text = "Не список уроков, а три главных приключения: поймать первые 100 испанских слов, собрать свою маленькую игру и принести полевую запись с реки и водопадов. Любое можно сразу открыть, узнать подробности и отметить готовым."
+	intro.text = "Три миссии можно проходить в любом порядке. У каждой есть свой предмет на столе станции. Подробный путь с шагами и подсказками — в журнале миссий (J)."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", 11)
 	intro.add_theme_color_override("font_color", Color(0.78, 0.76, 0.70))
@@ -310,6 +311,14 @@ func _build_featured_goals_tab(state: Dictionary) -> Control:
 		summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		summary.add_theme_font_size_override("font_size", 11)
 		text_box.add_child(summary)
+		var clarity: Dictionary = MissionGuideScript.mission(qid)
+		if not clarity.is_empty():
+			var world_note := Label.new()
+			world_note.text = "На столе: %s\nПосле миссии: %s" % [str(clarity.object_hint), str(clarity.remains)]
+			world_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			world_note.add_theme_font_size_override("font_size", 10)
+			world_note.add_theme_color_override("font_color", Color(0.76, 0.82, 0.72))
+			text_box.add_child(world_note)
 		var steps: Array = goal.get("goal_steps", [])
 		if not steps.is_empty():
 			var steps_label := Label.new()

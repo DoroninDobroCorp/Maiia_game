@@ -10,6 +10,8 @@ const Quest = preload("res://scripts/services/quest_service.gd")
 const Artifacts = preload("res://scripts/services/artifact_service.gd")
 const Collections = preload("res://scripts/services/collection_service.gd")
 const UI = preload("res://scripts/presentation/adventure_ui.gd")
+const Guide = preload("res://scripts/presentation/mission_guide.gd")
+const CURRENT_STORY_QUEST_IDS := ["FG01", "FG11", "FG08"]
 
 var app: Node
 var screen: Control
@@ -29,6 +31,10 @@ var file_job: RefCounted
 var file_job_mode := ""
 var file_job_label: Label
 var file_job_progress: ProgressBar
+## Missions whose briefing page was already shown in this session.
+var _briefed: Dictionary = {}
+## True after a mission object in the room opened the flow: closing returns to the room.
+var _opened_from_room := false
 
 func setup(root: Node) -> void:
 	app = root
@@ -39,7 +45,7 @@ func setup(root: Node) -> void:
 	navigation_bar.position = Vector2(-452, -48)
 	navigation_bar.add_theme_constant_override("separation", 8)
 	app.hud_root.add_child(navigation_bar)
-	UI.button("Истории · J", navigation_bar, open_hub)
+	UI.button("Журнал · J", navigation_bar, open_hub)
 	UI.button("Галерея", navigation_bar, func(): open_gallery(""))
 	UI.button("Вместе · P", navigation_bar, open_family_tools)
 	var launch_poll := Timer.new()
@@ -126,6 +132,7 @@ func _show(kind: String, extra: Dictionary = {}) -> void:
 	var paths := {
 		"hub": "res://scripts/presentation/adventure_hub.gd",
 		"episode": "res://scripts/presentation/adventure_episode.gd",
+		"mission": "res://scripts/presentation/mission_page.gd",
 		"collection": "res://scripts/presentation/collection_browser.gd",
 		"editor": "res://scripts/presentation/adventure_editor.gd",
 		"family": "res://scripts/presentation/family_adventure_tools.gd"
@@ -163,6 +170,16 @@ func _connect_screen(node: Node) -> void:
 		node.connect("legacy_console_requested", app.open_parent_console)
 	if node.has_signal("legacy_journal_requested"):
 		node.connect("legacy_journal_requested", app.open_legacy_journal)
+	if node.has_signal("mission_requested"):
+		node.connect("mission_requested", func(qid: String): open_mission(qid))
+	if node.has_signal("hub_requested"):
+		node.connect("hub_requested", open_hub)
+	if node.has_signal("weather_requested"):
+		node.connect("weather_requested", func():
+			app._close_modals()
+			app._interact_radio())
+	if node.has_signal("secret_requested"):
+		node.connect("secret_requested", open_secret)
 	if node.has_signal("prop_clicked"):
 		node.connect("prop_clicked", handle_prop)
 
@@ -177,8 +194,12 @@ func _close_screen() -> void:
 		var context := preview_return_context.duplicate(true)
 		preview_return_context = {}
 		_show(target, context)
-	elif route == "episode":
-		open_hub()
+	elif route in ["episode", "mission"]:
+		if _opened_from_room:
+			app._close_modals()
+			screen = null
+		else:
+			open_hub()
 	else:
 		app._close_modals()
 		screen = null
@@ -204,6 +225,8 @@ func open_hub() -> void:
 	if not bool(_state().get("puzzle_solved", false)):
 		app.open_legacy_journal()
 		return
+	_opened_from_room = false
+	_ensure_current_story_chapter()
 	_show("hub")
 
 func open_collection(extra: Dictionary = {}) -> void:
@@ -223,6 +246,45 @@ func open_episode(instance_id: String, stage_id: String) -> void:
 	_show("episode", {"instance_id": instance_id, "stage_id": stage_id, "quest": inst.get("quest_snapshot", {})})
 
 func open_quest(qid: String, instance_id: String = "") -> void:
+	var inst := _ensure_instance(qid, instance_id)
+	if inst.is_empty():
+		return
+	if not inst.get("quest_snapshot", {}).has("adventure"):
+		app.open_quest_detail(inst.get("quest_snapshot", {}), inst)
+		return
+	var iid := str(inst.get("instance_id", ""))
+	# First visit to a current mission: explain the story, the goal and the path
+	# before the first question. Later visits go straight to the next step.
+	if not preview_active and CURRENT_STORY_QUEST_IDS.has(qid) and not _briefed.has(qid) and _mission_is_fresh(iid):
+		_show_mission(qid, inst)
+		return
+	var chosen := _next_open_stage(inst)
+	if chosen.is_empty():
+		if CURRENT_STORY_QUEST_IDS.has(qid):
+			_show_mission(qid, inst)
+		else:
+			_show("hub", {"quest": inst.quest_snapshot, "history_quest_id": qid})
+	else:
+		open_episode(iid, chosen)
+
+## Mission page: story, goal, path and payoff of one current mission.
+func open_mission(qid: String, instance_id: String = "") -> void:
+	var inst := _ensure_instance(qid, instance_id)
+	if inst.is_empty():
+		return
+	if not inst.get("quest_snapshot", {}).has("adventure"):
+		app.open_quest_detail(inst.get("quest_snapshot", {}), inst)
+		return
+	_show_mission(qid, inst)
+
+func _show_mission(qid: String, inst: Dictionary) -> void:
+	_briefed[qid] = true
+	_show("mission", {"instance_id": str(inst.get("instance_id", "")), "quest": inst.get("quest_snapshot", {})})
+
+func _ensure_instance(qid: String, instance_id: String = "") -> Dictionary:
+	if CURRENT_STORY_QUEST_IDS.has(qid):
+		if not _ensure_current_story_chapter():
+			return {}
 	var inst: Dictionary = {}
 	for existing in _state().get("phase_b", {}).get("quest_instances", {}).values():
 		if str(existing.get("profile_id", "")) != "player_01" or existing.has("superseded_by_instance_id"):
@@ -234,27 +296,40 @@ func open_quest(qid: String, instance_id: String = "") -> void:
 		if not bool(result.get("ok", false)):
 			open_family_tools()
 			_result(result)
-			return
+			return {}
 		inst = result.get("instance", {})
 		if inst.is_empty():
 			for existing in _state().get("phase_b", {}).get("quest_instances", {}).values():
 				if str(existing.get("quest_id", "")) == qid and str(existing.get("profile_id", "")) == "player_01":
 					inst = existing
-	if not inst.get("quest_snapshot", {}).has("adventure"):
-		app.open_quest_detail(inst.get("quest_snapshot", {}), inst)
-		return
+	return inst
+
+func _next_open_stage(inst: Dictionary) -> String:
 	var iid := str(inst.get("instance_id", ""))
-	var chosen := ""
 	for stage in inst.get("quest_snapshot", {}).get("adventure", {}).get("stages", []):
 		var sid := str(stage.get("stage_id", ""))
 		var status := str(UI.stage_progress(_state(), iid, sid).get("status", "AVAILABLE"))
 		if status in ["AVAILABLE", "IN_PROGRESS", "AWAITING_REVIEW"]:
-			chosen = sid
-			break
-	if chosen.is_empty():
-		_show("hub", {"quest": inst.quest_snapshot, "history_quest_id": qid})
-	else:
-		open_episode(iid, chosen)
+			return sid
+	return ""
+
+func _mission_is_fresh(iid: String) -> bool:
+	var progress: Dictionary = _state().get("adventures", {}).get("progress", {}).get(iid, {})
+	for record in progress.get("stages", {}).values():
+		if str(record.get("status", "AVAILABLE")) not in ["AVAILABLE", "LOCKED"]:
+			return false
+		if not record.get("attempts", []).is_empty() or not record.get("draft", {}).is_empty():
+			return false
+	return true
+
+func _ensure_current_story_chapter() -> bool:
+	if preview_active:
+		return true
+	var result := _run_command("ensure_story_chapter", {})
+	if not bool(result.get("ok", false)):
+		_result(result)
+		return false
+	return true
 
 func open_gallery(room_id: String = "") -> void:
 	if not bool(_state().get("puzzle_solved", false)):
@@ -333,14 +408,26 @@ func refresh_world() -> void:
 		var qid := str(inst.get("quest_id", ""))
 		var iid := str(inst.get("instance_id", ""))
 		var completed := 0
-		for stage in inst.get("quest_snapshot", {}).get("adventure", {}).get("stages", []):
+		var stages: Array = inst.get("quest_snapshot", {}).get("adventure", {}).get("stages", [])
+		for stage in stages:
 			var sid := str(stage.get("stage_id", ""))
 			if str(UI.stage_progress(app.game_state, iid, sid).get("status", "")) == "COMPLETED":
 				completed += 1
 				if sid == "water_river": view["river_done"] = true
 				if sid == "water_fall": view["fall_done"] = true
-		if qid == "FG11": view["game_steps"] = completed
-		if qid == "FG01" and completed > 0: view["radio_label"] = "МОЙ ЭФИР · %d / 6" % completed
+		var quest_complete := str(inst.get("status", "")) == "COMPLETED" or (not stages.is_empty() and completed >= stages.size())
+		var mission_progress: Dictionary = view.get("mission_progress", {})
+		mission_progress[qid] = {"done": completed, "total": stages.size()}
+		view["mission_progress"] = mission_progress
+		if qid == "FG11":
+			view["game_steps"] = completed
+			view["workshop_complete"] = quest_complete
+		if qid == "FG08":
+			view["water_complete"] = quest_complete
+			var r_path := _find_stage_image_path(iid, "water_river")
+			var f_path := _find_stage_image_path(iid, "water_fall")
+			if not r_path.is_empty(): view["river_image_path"] = r_path
+			if not f_path.is_empty(): view["fall_image_path"] = f_path
 	for room in Collections.list_rooms(app.game_state):
 		if str(room.get("template_id", "")) != "station_favorites":
 			continue
@@ -352,15 +439,32 @@ func refresh_world() -> void:
 					item = {"title": info.get("work", {}).get("title", "Моя работа"), "media_path": info.get("media_path", "")}
 			view.favourites.append(item)
 	app.station_room.apply_adventure_view(view)
+	app.station_room.apply_phase_b_world_effects(preload("res://scripts/services/progress_service.gd").get_profile_world_effects(app.game_state.duplicate(true), "player_01"))
 	if is_instance_valid(navigation_bar):
 		navigation_bar.visible = bool(view.awakened) and not is_in_gallery()
+
+func _find_stage_image_path(iid: String, sid: String) -> String:
+	var progress: Dictionary = app.game_state.get("adventures", {}).get("progress", {}).get(iid, {})
+	var stage_data: Dictionary = progress.get("stages", {}).get(sid, {})
+	var artifact_id := str(stage_data.get("draft", {}).get("artifact_id", ""))
+	if artifact_id.is_empty():
+		for attempt in stage_data.get("attempts", []):
+			var aid := str(attempt.get("evidence", {}).get("artifact_id", ""))
+			if not aid.is_empty():
+				artifact_id = aid
+				break
+	if not artifact_id.is_empty():
+		return Artifacts.media_path_for(app.game_state, artifact_id)
+	return ""
 
 func handle_prop(id: String) -> bool:
 	if not bool(app.game_state.get("puzzle_solved", false)):
 		return false
+	if id in ["radio", "adventure_workshop", "adventure_water"]:
+		_opened_from_room = true
 	match id:
-		"adventure_radio": open_quest("FG01")
-		"radio": open_radio()
+		"radio": open_quest("FG01")
+		"radio_weather": app._interact_radio()
 		"adventure_workshop": open_quest("FG11")
 		"adventure_water": open_quest("FG08")
 		"gallery_door": open_gallery("")
@@ -408,7 +512,7 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 		if operation in ["stage_submit", "stage_review"] and bool(result.get("applied", false)) and not bool(result.get("awaiting_review", false)) and not bool(result.get("needs_revision", false)):
 			app.audio_service.play_sfx("chime_solve")
 			call_deferred("_present_pending")
-		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale"]:
+		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale", "toggle_challenge_item"]:
 			if is_instance_valid(screen):
 				screen.setup(_view(route_context), app.audio_service)
 				_result(result)
@@ -436,12 +540,10 @@ func _mutate(candidate: Dictionary, operation: String, payload: Dictionary) -> D
 	match operation:
 		"ensure_gallery":
 			return Collections.ensure_gallery(candidate)
+		"ensure_story_chapter":
+			return _ensure_story_templates(candidate, "station_story")
 		"publish_chapter":
-			for q in _chapter_templates(candidate):
-				var result := Quest.approve_and_publish(candidate, q, "parent_local")
-				if not bool(result.get("ok", false)):
-					return result
-			return {"ok": true, "message": "Три приключения открыты. Выберите любую историю на станции."}
+			return _ensure_story_templates(candidate, "parent_local")
 		"create_work":
 			var result := Collections.create_work(candidate, payload)
 			if bool(result.get("ok", false)):
@@ -474,26 +576,27 @@ func _mutate(candidate: Dictionary, operation: String, payload: Dictionary) -> D
 			return Quest.approve_and_publish(candidate, payload.get("quest", {}))
 		"import_adventure_package":
 			return Library.import_package(candidate, payload.get("package", {}))
+		"toggle_challenge_item":
+			var Ritual = preload("res://scripts/services/ritual_service.gd")
+			return Ritual.toggle_challenge_item(candidate, str(payload.get("item_key", "")))
 	var core := load("res://scripts/services/adventure_service.gd")
 	return core.dispatch(candidate, operation, payload, "player_01", _launcher().inspect_entry)
 
-func open_radio() -> void:
-	app._close_modals()
-	screen = Control.new()
-	app.modal_container.add_child(screen)
-	app.modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
-	var shell := UI.shell(screen, app.game_state, "Южный Маяк", "Истории станции и реальная погода — на разных волнах.", func(): app._close_modals())
-	var body := UI.scroll(shell.content)
-	var card := UI.card(body)
-	UI.label("Письмо Норы", card, 24, UI.BRASS)
-	UI.label("У радиокафе есть новое сообщение для твоей станции. Можно продолжить эфир или открыть уже собранные письма.", card)
-	UI.button("Продолжить эфир", card, func(): open_quest("FG01"), true)
-	UI.button("Мой альбом", card, func(): open_collection({"quest_id": "FG01"}))
-	UI.button("Погода Эль-Больсона", body, func():
-		app._close_modals()
-		app._interact_radio())
-	UI.button("Осмотреть отметки на шкале", body, func(): open_secret("radio_reply"))
-	refresh_navigation()
+func _ensure_story_templates(candidate: Dictionary, approved_by: String) -> Dictionary:
+	var published := Quest.list_player_quests(candidate)
+	for q in _chapter_templates(candidate):
+		var qid := str(q.get("quest_id", ""))
+		var revision := int(q.get("revision", 0))
+		var already_available := published.any(func(existing: Dictionary):
+			return str(existing.get("quest_id", "")) == qid and int(existing.get("revision", 0)) == revision
+		)
+		if already_available:
+			continue
+		var ensured := Quest.approve_and_publish(candidate, q, approved_by)
+		if not bool(ensured.get("ok", false)):
+			return ensured
+		published = Quest.list_player_quests(candidate)
+	return {"ok": true, "message": "Три первые истории доступны на станции и в журнале."}
 
 func open_secret(secret_id: String) -> void:
 	var secret: Dictionary = {}

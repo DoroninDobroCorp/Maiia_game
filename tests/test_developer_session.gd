@@ -46,6 +46,11 @@ func run() -> void:
 	check(app.game_state.phase_b.award_events.is_empty(), "skip does not fabricate mission rewards")
 	app.adventure_controller.open_quest("FG01")
 	await settle()
+	check(app.adventure_controller.route == "mission", "first visit to a mission explains it before the first question")
+	var start_button := app.adventure_controller.screen.find_child("MissionPrimaryAction", true, false) as Button
+	check(start_button != null and not start_button.disabled, "mission page offers a start button")
+	start_button.pressed.emit()
+	await settle()
 	check(app.adventure_controller.route == "episode", "real episode can be played in developer session")
 	var route: Dictionary = app.adventure_controller.route_context
 	var result: Dictionary = app.adventure_controller._run_command("stage_draft", {"instance_id":route.instance_id,"stage_id":route.stage_id,"draft":{"note":"temporary developer note"}})

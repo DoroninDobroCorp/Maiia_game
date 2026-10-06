@@ -67,6 +67,12 @@ static func make_theme(state: Dictionary) -> Theme:
 		t.set_stylebox("normal", type_name, style(Color("15232e"), Color("60716f"), 12))
 		t.set_stylebox("focus", type_name, style(Color("15232e"), BRASS, 12))
 		t.set_color("caret_color", type_name, BRASS)
+	var track := style(Color("1a2731"), Color("3c4950"), 0)
+	track.set_corner_radius_all(5)
+	var filled := style(BRASS, BRASS, 0)
+	filled.set_corner_radius_all(5)
+	t.set_stylebox("background", "ProgressBar", track)
+	t.set_stylebox("fill", "ProgressBar", filled)
 	t.set_stylebox("panel", "PanelContainer", style(PANEL, Color("4b5457")))
 	t.set_constant("separation", "VBoxContainer", 12)
 	t.set_constant("separation", "HBoxContainer", 12)
@@ -112,10 +118,10 @@ static func column(parent: Node) -> VBoxContainer:
 	parent.add_child(n)
 	return n
 
-static func card(parent: Node, parchment: bool = false) -> VBoxContainer:
+static func card(parent: Node, parchment: bool = false, padding: int = 18) -> VBoxContainer:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel", style(PAPER if parchment else PANEL, Color("66716a") if parchment else Color("4b5457"), 18))
+	panel.add_theme_stylebox_override("panel", style(PAPER if parchment else PANEL, Color("66716a") if parchment else Color("4b5457"), padding))
 	parent.add_child(panel)
 	return column(panel)
 
@@ -261,7 +267,7 @@ static func pinned(state: Dictionary) -> Array:
 	return state.get("adventures", {}).get("pinned_by_profile", {}).get("player_01", ["FG01", "FG11", "FG08"])
 
 static func status_text(status: String) -> String:
-	return {"LOCKED": "Позже в истории", "AVAILABLE": "Можно начать", "IN_PROGRESS": "Продолжить", "ACTIVE": "Продолжить", "PAUSED": "Отложено", "AWAITING_REVIEW": "Покажем вместе", "SUBMITTED": "Покажем вместе", "COMPLETED": "Готово к выставке"}.get(status, "Можно начать")
+	return {"LOCKED": "Позже в истории", "AVAILABLE": "Можно начать", "IN_PROGRESS": "Продолжить", "ACTIVE": "Продолжить", "PAUSED": "Отложено", "AWAITING_REVIEW": "Осталось проверить", "SUBMITTED": "Осталось проверить", "COMPLETED": "Готово"}.get(status, "Можно начать")
 
 static func result_text(result: Dictionary) -> String:
 	if result.has("message"):

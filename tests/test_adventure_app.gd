@@ -39,6 +39,43 @@ func press_key(key: Key, unicode_value: int = 0) -> void:
 	root.push_input(event)
 	await settle()
 
+func click_world(node: Node3D) -> void:
+	var point: Vector2 = app.station_room.camera.unproject_position(node.global_position)
+	var motion := InputEventMouseMotion.new()
+	motion.position = point
+	motion.global_position = point
+	root.push_input(motion)
+	await settle()
+	var click := InputEventMouseButton.new()
+	click.position = point
+	click.global_position = point
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	root.push_input(click)
+	await settle()
+	click = InputEventMouseButton.new()
+	click.position = point
+	click.global_position = point
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = false
+	root.push_input(click)
+	await settle()
+
+func _screen_text(node: Node) -> String:
+	var parts: Array[String] = []
+	for label in node.find_children("*", "Label", true, false):
+		parts.append(label.text)
+	for button in node.find_children("*", "Button", true, false):
+		parts.append(button.text)
+	return "\n".join(PackedStringArray(parts))
+
+func _click_button(node: Node, button_name: String) -> bool:
+	var found := node.find_child(button_name, true, false) as Button
+	if found == null or found.disabled:
+		return false
+	found.pressed.emit()
+	return true
+
 func capture(name: String) -> void:
 	await settle()
 	if OS.get_cmdline_user_args().has("--render") and DisplayServer.get_name() != "headless":
@@ -91,9 +128,46 @@ func run() -> void:
 	var controller: Node = app.adventure_controller
 	controller.launch_service = load("res://scripts/services/launch_service.gd").new("user://test_adventure_app_launch_registry")
 	check(controller.navigation_bar.visible, "adventure navigation after prologue")
-	check(controller._run_command("publish_chapter", {}).get("ok", false), "parent publishes chapter atomically")
+	check(app.game_state.get("phase_b", {}).get("published_versions", {}).is_empty(), "old save can reach awakened station before story quests were published")
 	controller.refresh_world()
+	check(app.station_room.puzzle_box_root.position.x > 5.0, "completed S00 puzzle box leaves the desk for the history cabinet")
+	check(absf(app.station_room.prop_anchor.position.x) < 1.0 and app.station_room.prop_anchor.position.y > 1.0, "chosen symbol (owl) stays on the desk after the prologue")
+	check(app.station_room.prop_anchor.get_child_count() > 0, "desk symbol keeps its model after the prologue")
+	check(app.station_room.adventure_props.workshop_entry.visible and app.station_room.adventure_props.water_entry.visible, "three current missions keep distinct physical entry objects")
+	check(absf(app.station_room.adventure_props.water_entry.position.x) < 1.2 and app.station_room.adventure_props.water_entry.position.z > 0.3, "FG08 field folio stays on the active desk")
+	check(not app.station_room.adventure_props.arcade_result.visible and not app.station_room.adventure_props.water_result.visible, "future mission results do not crowd the active room")
+	check(not controller.handle_prop("adventure_radio"), "removed letter overlay is no longer a mission route")
+	await click_world(app.station_room.adventure_props.workshop_entry)
+	check(controller.route == "mission" and str(controller.route_context.get("quest", {}).get("quest_id", "")) == "FG11", "real Theo blueprint click opens the arcade mission page from an old save")
+	var guide_text := _screen_text(controller.screen)
+	check(guide_text.contains("Тео") and guide_text.contains("Довести игру"), "mission page shows the character, the goal and the story")
+	check(controller.screen.find_children("*","PanelContainer",true,false).size() >= 8, "mission page lists the whole path of six steps")
+	await capture("03b-workshop-intro")
+	check(_click_button(controller.screen,"MissionPrimaryAction") and controller.route == "episode", "start button opens the first step")
+	check(str(controller.route_context.stage_id) == "game_concept", "first Theo step is the concept")
+	await capture("03b2-workshop-first-step")
+	app._close_modals()
+	check(app.game_state.get("phase_b", {}).get("published_versions", {}).size() >= 3, "first current-story object makes all three current missions available")
+	check(controller._run_command("publish_chapter", {}).get("ok", false), "story chapter publication stays idempotent after automatic availability")
+	await click_world(app.station_room.adventure_props.water_entry)
+	check(controller.route == "mission" and str(controller.route_context.get("quest", {}).get("quest_id", "")) == "FG08", "real field folio click opens the water mission page")
+	await capture("03c-water-intro")
+	check(_click_button(controller.screen,"MissionPrimaryAction") and controller.route == "episode", "water mission starts from its page")
+	await capture("03c2-water-first-step")
+	app._close_modals()
+	check(controller.handle_prop("radio") and controller.route == "mission" and str(controller.route_context.get("quest", {}).get("quest_id", "")) == "FG01", "radio opens the South Lighthouse mission page")
+	await capture("03d-radio-intro")
+	check(_click_button(controller.screen,"MissionPrimaryAction") and controller.route == "episode", "radio mission starts from its page")
+	await capture("03d2-radio-first-step")
+	controller._close_screen()
+	check(app.modal_container.get_child_count() == 0, "closing a step opened from a desk object returns to the room")
+	controller.handle_prop("radio")
+	check(controller.route == "episode", "a mission that was already briefed goes straight to its next step")
+	app._close_modals()
 	await capture("01-station")
+	check(app.station_room.enter_room("observatory_annex"), "history cabinet room is reachable")
+	await capture("01b-history-cabinet")
+	check(app.station_room.enter_room("station_main"), "visual QA returns to the main station")
 	await measure_frames("awakened_station")
 	controller.open_hub()
 	await capture("02-hub")

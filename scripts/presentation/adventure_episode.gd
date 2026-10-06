@@ -4,12 +4,15 @@ extends Control
 ## Public: setup(state,audio=null); open_episode(instance_id,stage_id); show_result(result).
 ## Drafts stay local until main acknowledges; failed commands never clear any input.
 const UI = preload("res://scripts/presentation/adventure_ui.gd")
+const Art = preload("res://scripts/presentation/adventure_art.gd")
+const Guide = preload("res://scripts/presentation/mission_guide.gd")
 const TYPES_SUPPORTED := ["inspect_reveal","match_cards","order_fragments","assemble_selection","scripted_dialogue","real_world_step","compare_observations","exhibit_composition"]
 signal closed
 signal command_requested(operation: String, payload: Dictionary)
 signal episode_requested(instance_id: String, stage_id: String)
 signal gallery_requested(room_id: String)
 signal collection_requested
+signal mission_requested(quest_id: String)
 signal work_requested(work_id: String)
 
 var state: Dictionary = {}
@@ -195,8 +198,98 @@ func _send(op: String, extra: Dictionary) -> void:
 		return
 	command_requested.emit(op,_payload(extra))
 
+func _current_envelope() -> Dictionary:
+	var inter_id := str(_interaction().get("interaction_id", ""))
+	for entry in quest.get("adventure", {}).get("envelopes", []):
+		if entry.get("interaction_ids", []).has(inter_id):
+			return entry
+	return {}
+
+## Who is speaking and what they say at this moment: the character's line for the
+## step (or the current envelope's story in the radio mission), with the portrait.
+func _build_story(parent: Node, guide: Dictionary, step: Dictionary, status: String) -> void:
+	var speaker := str(guide.get("speaker", ""))
+	var text := str(step.get("say", ""))
+	var heading := speaker
+	var envelope := _current_envelope()
+	if status == "COMPLETED" and not str(step.get("done", "")).is_empty():
+		text = str(step.done)
+		envelope = {}
+	if not envelope.is_empty():
+		var place := Guide.envelope_position(quest, str(_interaction().get("interaction_id", "")))
+		heading = "%s · конверт %d из %d · %s" % [speaker, place.x, place.y, str(envelope.get("title", ""))]
+		text = str(envelope.get("story", text))
+	if text.is_empty():
+		# Family-made adventures have no guide text; keep their chosen-question line.
+		if not str(choice_context.get("summary", "")).is_empty():
+			UI.label(str(choice_context.summary), parent, 14, UI.TEAL)
+		return
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", UI.style(UI.PANEL, Color("4b5457"), 10))
+	parent.add_child(panel)
+	var line := UI.row(panel)
+	var expression := "happy" if status == "COMPLETED" or successful_interactions.has(str(_interaction().get("interaction_id", ""))) else "thinking" if hint_level > 0 else "neutral"
+	var portrait_path := "res://assets/characters/%s_%s.svg" % [persona_id, expression]
+	portrait_view = null
+	if not persona_id.is_empty() and ResourceLoader.exists(portrait_path):
+		var portrait := TextureRect.new()
+		portrait_view = portrait
+		portrait.texture = load(portrait_path)
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait.custom_minimum_size = Vector2(56, 56)
+		portrait.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		line.add_child(portrait)
+	elif not speaker.is_empty():
+		var art := Art.new()
+		art.kind = str(guide.get("portrait_art", quest.get("quest_id", "")))
+		art.custom_minimum_size = Vector2(56, 56)
+		art.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		line.add_child(art)
+	var words := UI.column(line)
+	if not heading.is_empty():
+		UI.label(heading, words, 14, UI.BRASS)
+	UI.label(text, words, 16)
+	if not str(choice_context.get("summary", "")).is_empty():
+		UI.label(str(choice_context.summary), words, 13, UI.TEAL)
+
+func _build_progress(parent: Node, stage_list: Array, subtitle: String) -> void:
+	var meta := UI.row(parent)
+	var where := UI.label(subtitle,meta,14,UI.MUTED)
+	where.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	where.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var done := 0
+	for definition in stage_list:
+		if str(UI.stage_progress(state, instance_id, str(definition.get("stage_id", ""))).get("status", "")) == "COMPLETED":
+			done += 1
+	var bar := ProgressBar.new()
+	bar.max_value = maxi(1, stage_list.size())
+	bar.value = done
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(140,8)
+	bar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bar.tooltip_text = "Пройдено шагов: %d из %d" % [done, stage_list.size()]
+	meta.add_child(bar)
+	if str(quest.get("quest_id", "")) == "FG01":
+		var album: Dictionary = state.get("adventures", {}).get("progress", {}).get(instance_id, {}).get("lexemes", {})
+		var used := 0
+		for word in album.values():
+			if bool(word.get("used", false)) or str(word.get("status", "")) == "used": used += 1
+		var counter := UI.label("Слов в альбоме: %d из 100 · применено в сценах: %d" % [album.size(), used],meta,13,UI.TEAL)
+		counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+
 func _build() -> void:
-	var s := UI.shell(self,state,str(stage.get("title", "Эпизод приключения")),str(quest.get("story_title",quest.get("title", ""))),_close,true)
+	var qid := str(quest.get("quest_id", ""))
+	var guide := Guide.mission(qid)
+	var step := Guide.step(stage_id)
+	var stage_list: Array = UI.stages(quest)
+	var place := Guide.position(stage_list, stage_id)
+	var story_title := str(quest.get("story_title", quest.get("title", "")))
+	var subtitle := story_title + (" · шаг %d из %d" % [place.x, place.y] if place.x > 0 else "")
+	var title := str(step.get("title", stage.get("title", "Эпизод приключения"))) if not stage.is_empty() else "Эпизод приключения"
+	var s := UI.shell(self,state,title,"",_close,true)
 	feedback = s.feedback
 	content = s.content
 	response_fields.clear()
@@ -204,34 +297,14 @@ func _build() -> void:
 	assistance = null
 	attest = null
 	if stage.is_empty():
-		UI.label("Выбери опубликованную историю и доступный этап на рабочем столе.",content)
+		UI.label("Эта история пока не может открыть следующий этап. Все миссии и их путь находятся в журнале.",content)
 		return
+	persona_id = str(guide.get("persona", ""))
 	var status := str(progress.get("status", "AVAILABLE"))
-	var header := UI.row(content)
-	var persona := "nora" if str(quest.get("quest_id", "")) == "FG01" else "teo" if str(quest.get("quest_id", "")) == "FG11" else ""
-	persona_id = persona
-	var expression := "happy" if status == "COMPLETED" or successful_interactions.has(str(_interaction().get("interaction_id", ""))) else "thinking" if hint_level > 0 else "neutral"
-	var portrait_path := "res://assets/characters/%s_%s.svg" % [persona,expression]
-	if not persona.is_empty() and ResourceLoader.exists(portrait_path):
-		var portrait := TextureRect.new()
-		portrait_view = portrait
-		portrait.texture = load(portrait_path)
-		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		portrait.custom_minimum_size = Vector2(52,52)
-		header.add_child(portrait)
-	var intro := UI.column(header)
-	UI.label(UI.status_text(status),intro,14,UI.TEAL)
-	if not str(choice_context.get("summary", "")).is_empty():
-		UI.label(str(choice_context.summary),intro,14,UI.TEAL)
-	if str(quest.get("quest_id", "")) == "FG01":
-		var words: Dictionary = state.get("adventures", {}).get("progress", {}).get(instance_id, {}).get("lexemes", {})
-		var used := 0
-		for word in words.values():
-			if bool(word.get("used",false)) or str(word.get("status", "")) == "used": used += 1
-		UI.label("В моём наборе: %d / 100 · пробовала использовать: %d" % [words.size(),used],intro,13,UI.MUTED)
+	_build_progress(content,stage_list,subtitle)
 	if status == "LOCKED":
-		UI.label("Сначала заверши предыдущие шаги в путевом листе. Уже сделанное сохраняется.",content)
+		UI.label("Этот шаг откроется после предыдущих. Всё, что уже сделано, сохраняется.",content)
+		if Guide.is_current(qid): UI.button("Карта миссии",content,func(): mission_requested.emit(qid))
 		return
 	var instance := UI.instance_for(state,instance_id)
 	if str(instance.get("status", "")) == "PAUSED" or bool(instance.get("safety_hold",false)):
@@ -241,60 +314,66 @@ func _build() -> void:
 		else: UI.label("Выберем следующее продолжение вместе в семейной мастерской.",content,0,UI.MUTED)
 		return
 	var sc := UI.scroll(content)
+	sc.add_theme_constant_override("separation",8)
 	if review_mode or status == "AWAITING_REVIEW":
+		_build_story(sc,guide,step,status)
 		_build_review(sc)
 		return
+	_build_story(sc,guide,step,status)
 	if _returned_for_revision():
 		var revision := UI.card(sc)
-		UI.label("Продолжим вместе",revision,20,UI.BRASS)
+		UI.label("Нужна доработка",revision,20,UI.BRASS)
 		UI.label(str(progress.get("review_note", "")),revision)
 		UI.label("Можно дописать одну деталь. Уже сделанное и предыдущие работы сохранены.",revision,14,UI.MUTED)
 	if status == "COMPLETED":
 		var work: Dictionary = state.get("collections", {}).get("works", {}).get(str(progress.get("work_id", "")), {})
 		var memory := UI.card(sc)
 		UI.label("В твоём архиве · " + str(work.get("title",stage.get("title", ""))),memory,21,UI.BRASS)
-		UI.label(str(stage.get("next_hint", "Эта часть истории сохранена. Можно продолжить в другой день.")),memory)
+		UI.label("Этот шаг уже пройден. Его результат сохранён.",memory)
 		if not work.is_empty():
 			UI.button("Посмотреть мою работу →",memory,func(): work_requested.emit(str(work.work_id)),true)
 	if not interactions.is_empty():
-		var labels: Array = []
-		for inter in interactions: labels.append(("✓ " if successful_interactions.has(str(inter.get("interaction_id", ""))) else "○ ") + str(inter.get("title", "Сцена")))
-		var scene_picker := UI.row(sc)
-		var counter := UI.label("Сцена %d из %d · готово %d" % [interaction_index+1,interactions.size(),successful_interactions.size()],scene_picker,13,UI.TEAL)
-		counter.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		counter.custom_minimum_size.x = 170
-		var choose := UI.option(scene_picker,labels,interaction_index)
-		choose.item_selected.connect(_select_interaction)
-		area = UI.card(sc)
-		_render_interaction()
 		if interactions.size() > 1:
-			var navigation := UI.row(sc)
-			var previous := UI.button("← Предыдущая сцена",navigation,func(): _select_interaction(interaction_index-1))
-			previous.disabled = interaction_index == 0
-			var next := UI.button("Следующая сцена →",navigation,func(): _select_interaction(interaction_index+1))
-			next.disabled = interaction_index == interactions.size()-1
+			var chips := UI.row(sc)
+			chips.add_theme_constant_override("separation",8)
+			var caption := UI.label("Задания шага:",chips,13,UI.TEAL)
+			caption.autowrap_mode = TextServer.AUTOWRAP_OFF
+			caption.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+			caption.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			for i in range(interactions.size()):
+				var index := i
+				var done_scene := successful_interactions.has(str(interactions[i].get("interaction_id", "")))
+				var chip := UI.button(("✓ " if done_scene else "") + str(i+1),chips,func(): _select_interaction(index),i == interaction_index)
+				chip.custom_minimum_size = Vector2(46,30)
+				chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+				chip.tooltip_text = str(interactions[i].get("title", "Задание"))
+		area = UI.card(sc,false,14)
+		_render_interaction()
 		_build_words(sc)
 	else:
-		UI.label("У этапа нет игрового взаимодействия. Прочитай критерии и сохрани результат ниже.",sc)
+		UI.label("У этапа нет игрового взаимодействия. Прочитай, что нужно сделать, и сохрани результат ниже.",sc)
 	if str(stage.get("completion_policy", "")) == "self_attest":
 		attest = CheckBox.new()
-		attest.text = "Мой замысел готов: я выбрала героя и цель" if stage_id == "game_concept" else "Мой результат готов — я выполнила эти действия"
+		attest.text = "Мой замысел готов: я выбрала героя и цель" if stage_id == "game_concept" else "Всё верно: я сделала эти шаги"
 		attest.button_pressed = bool(draft.get("attested",false))
 		sc.add_child(attest)
-	var details := UI.card(sc)
-	UI.label("Что получится",details,19,UI.BRASS)
-	UI.label(str(stage.get("summary", "")),details,0,UI.MUTED)
-	UI.label(str(stage.get("next_hint", "")),details)
-	for criterion in stage.get("criteria", []): UI.label("• " + str(criterion),details,0,UI.MUTED)
-	note = UI.text_input(sc,"Моя заметка: что получилось или где продолжить…",str(draft.get("note", "")),85)
+	if str(_interaction().get("type", "")) != "real_world_step":
+		var details := UI.card(sc)
+		UI.label("Шаг засчитывается, когда",details,16,UI.BRASS)
+		if not str(step.get("task", "")).is_empty(): UI.label(str(step.task),details,14)
+		for criterion in Guide.criteria(stage_id,"",stage.get("criteria", [])): UI.label("• " + str(criterion),details,14,UI.MUTED)
+	UI.label("Заметка для себя (по желанию)",sc,13,UI.TEAL)
+	note = UI.text_input(sc,"Что получилось или где продолжить…",str(draft.get("note", "")),85)
+	UI.label("Как ты это делала?",sc,13,UI.TEAL)
 	assistance = UI.option(sc,["Сама", "С подсказкой", "Сделали вместе"],int(draft.get("assistance_index",0)))
 	var footer := UI.row(content)
 	UI.button("Продолжить позже",footer,_close)
 	help_button = UI.button("Подсказка · %d/3" % hint_level,footer,_hint)
-	var submit_text := "Посмотреть вместе" if str(stage.get("completion_policy", "automatic")) == "joint_review" else "Сохранить результат"
+	if Guide.is_current(qid): UI.button("Карта миссии",footer,func(): _capture(); mission_requested.emit(qid))
+	var submit_text := "Проверить и отметить" if str(stage.get("completion_policy", "automatic")) == "joint_review" else "Завершить шаг"
 	var all_done := interactions.all(func(i): return successful_interactions.has(str(i.get("interaction_id", ""))))
 	var current_done := successful_interactions.has(str(_interaction().get("interaction_id", ""))) and not replay_interaction
-	var action_text := submit_text if all_done and not replay_interaction else "Продолжить →" if current_done else "Проверить сцену"
+	var action_text := submit_text if all_done and not replay_interaction else "Продолжить →" if current_done else "Проверить ответ"
 	var submit := UI.button(action_text,footer,func():
 		if all_done and not replay_interaction: _submit()
 		elif current_done:
@@ -352,7 +431,7 @@ func _render_interaction() -> void:
 		UI.label(_success_text(inter),area)
 		UI.button("Открыть сцену ещё раз",area,func(): _capture(); replay_interaction = true; _build())
 		return
-	UI.label(str(inter.get("prompt", "")),area,20)
+	UI.label(Guide.prompt(id,str(inter.get("prompt", ""))),area,19)
 	match str(inter.get("type", "")):
 		"inspect_reveal": _inspect(config)
 		"match_cards": _match(config)
@@ -418,6 +497,15 @@ func _inspect(config: Dictionary) -> void:
 		reveal.pressed.connect(func(): reveal.text = "✓ " + str(item.get("title",id)))
 
 func _match(config: Dictionary) -> void:
+	if str(_interaction().get("interaction_id", "")) == "water_home_examples":
+		var pictures := UI.row(area)
+		for example in [["example_flow","Рисунок горизонтального течения"],["example_fall","Рисунок падающей воды"]]:
+			var frame := UI.column(pictures)
+			var art := Art.new()
+			art.kind = example[0]
+			art.custom_minimum_size = Vector2(0,92)
+			frame.add_child(art)
+			UI.label(str(example[1]),frame,13,UI.MUTED).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if config.has("minimum_unassisted_correct"):
 		UI.button("Новая попытка без карточек",area,_reset_mixed_attempt)
 	if not response.has("pairs"): response["pairs"] = {}
@@ -536,15 +624,27 @@ func _dialogue(config: Dictionary) -> void:
 			_render_interaction())
 
 func _fields(config: Dictionary) -> void:
+	var interaction_id := str(_interaction().get("interaction_id", ""))
 	for field in config.get("fields", []):
 		var id := str(field.get("id", ""))
-		UI.label(str(field.get("label",id)) + (" *" if bool(field.get("required",false)) else ""),area,0,UI.BRASS)
+		var label_text := Guide.field_label(interaction_id,id,str(field.get("label",id)))
+		UI.label(label_text + (" *" if bool(field.get("required",false)) else ""),area,0,UI.BRASS)
 		response_fields[id] = UI.text_input(area,"Можно написать коротко…",str(response.get("fields", {}).get(id, "")),80)
 
 func _real_world(config: Dictionary) -> void:
-	UI.label("РЕАЛЬНЫЙ ШАГ · можно продолжить в другой день",area,14,UI.TEAL)
+	var interaction_id := str(_interaction().get("interaction_id", ""))
+	var how: Array = Guide.how_steps(interaction_id)
+	if how.is_empty():
+		UI.label("РЕАЛЬНЫЙ ШАГ · можно продолжить в другой день",area,14,UI.TEAL)
+	else:
+		UI.label("ЧТО СДЕЛАТЬ · можно продолжить в другой день",area,14,UI.TEAL)
+		for i in range(how.size()): UI.label("%d. %s" % [i+1,str(how[i])],area,15)
 	for hint in choice_context.get("hints", []): UI.label(str(hint),area,14,UI.TEAL)
-	for material in config.get("materials", []): UI.label("Нужно: " + str(material),area,0,UI.MUTED)
+	var materials: Array = Guide.materials(interaction_id,config.get("materials", []))
+	if not materials.is_empty():
+		var needed: Array[String] = []
+		for material in materials: needed.append(str(material))
+		UI.label("Понадобится: " + ", ".join(PackedStringArray(needed)),area,14,UI.MUTED)
 	_fields(config)
 	if bool(config.get("real_visit_required",false)) and config.has("atlas_location_id"):
 		var visit := CheckBox.new()
@@ -571,14 +671,15 @@ func _real_world(config: Dictionary) -> void:
 			c.toggled.connect(func(on): response.checks[key] = on)
 			area.add_child(c)
 	if not response.has("criteria"): response["criteria"] = []
-	var criteria: Array = config.get("criteria",stage.get("criteria", []))
+	var criteria: Array = Guide.criteria(stage_id,interaction_id,config.get("criteria",stage.get("criteria", [])))
+	if not criteria.is_empty(): UI.label("Отметь то, что уже сделано:",area,14,UI.TEAL)
 	while response.criteria.size() < criteria.size(): response.criteria.append(false)
 	for i in range(criteria.size()):
 		var idx := i
 		UI.check(str(criteria[i]),area,bool(response.criteria[i]),func(on): response.criteria[idx] = on)
 	if stage_id == "game_premiere":
 		var entries: Array = UI.context(state).get("launch_entries", [])
-		UI.label("Зарегистрированная версия игры",area,18,UI.BRASS)
+		UI.label("Сохранённая версия игры",area,18,UI.BRASS)
 		var titles: Array = ["Выбрать сохранённую сборку…"]
 		var chosen := 0
 		for i in range(entries.size()):
@@ -592,7 +693,15 @@ func _real_world(config: Dictionary) -> void:
 	if config.has("starter_project_id"):
 		UI.label("Учебная основа — отдельный проект. В заметке отметь, что выбрала сама и что вы сделали вместе.",area,0,UI.MUTED)
 		UI.button("Открыть учебную основу",area,func(): command_requested.emit("open_starter_project",{"starter_project_id":config.starter_project_id}))
-	UI.button("Прикрепить изображение",area,func():
+	var btn_attach_title := "Прикрепить изображение"
+	if stage_id == "water_river":
+		btn_attach_title = "Прикрепить фото реки 📷"
+	elif stage_id == "water_fall":
+		btn_attach_title = "Прикрепить фото водопада 📷"
+	var has_image := not str(draft.get("artifact_id", "")).is_empty()
+	if has_image:
+		UI.label("✓ Фотография прикреплена (появится в настенном диптихе на станции!)",area,14,UI.TEAL)
+	UI.button(btn_attach_title,area,func():
 		_capture()
 		command_requested.emit("attach_stage_media",_payload({"draft":draft.duplicate(true)})))
 
@@ -673,19 +782,19 @@ func _submit() -> void:
 
 func _build_review(parent: Node) -> void:
 	var box := UI.card(parent)
-	UI.label("Посмотрим результат вместе",box,25,UI.BRASS)
-	UI.label("Отметьте конкретные признаки результата. Можно попросить доработку: материалы и предыдущие шаги останутся.",box)
+	UI.label("Проверь результат",box,25,UI.BRASS)
+	UI.label("Пройди по пунктам и отметь каждый, когда он точно выполнен. Если чего-то не хватает, вернись и доработай: всё сделанное сохранится.",box)
 	UI.label(str(draft.get("note",progress.get("draft", {}).get("note", ""))),box)
 	for saved in draft.get("responses", {}).values():
 		for value in saved.get("fields", {}).values():
 			if not str(value).strip_edges().is_empty(): UI.label(str(value),box,0,UI.MUTED)
 	var checks: Array = []
-	for criterion in stage.get("criteria", []):
+	for criterion in Guide.criteria(stage_id,"",stage.get("criteria", [])):
 		var check := UI.check(str(criterion),box,false,func(_on): pass)
 		checks.append(check)
-	var review_note := UI.text_input(box,"Одна заметка о совместном просмотре…",str(progress.get("review_note", "")))
+	var review_note := UI.text_input(box,"Заметка (по желанию)…",str(progress.get("review_note", "")))
 	var r := UI.row(content)
-	var approve := UI.button("Подтвердить вместе",r,func():
+	var approve := UI.button("Всё верно — отмечаю",r,func():
 		var flags: Array = []
 		for check in checks: flags.append(check.button_pressed)
 		_send("stage_review",{"approved":true,"criteria":flags,"note":review_note.text,"assistance":draft.get("assistance", "together")}),true)
@@ -695,18 +804,15 @@ func _build_review(parent: Node) -> void:
 			var all_checked := true
 			for c in checks: all_checked = all_checked and c.button_pressed
 			approve.disabled = not all_checked)
-	UI.button("Есть что поправить",r,func(): _send("stage_review",{"approved":false,"criteria":[],"note":review_note.text}))
+	UI.button("Нужно доработать",r,func(): _send("stage_review",{"approved":false,"criteria":[],"note":review_note.text}))
 
 func _build_words(parent: Node) -> void:
 	var inter_id := str(_interaction().get("interaction_id", ""))
-	var envelope: Dictionary = {}
-	for entry in quest.get("adventure", {}).get("envelopes", []):
-		if entry.get("interaction_ids", []).has(inter_id): envelope = entry
+	var envelope := _current_envelope()
 	if envelope.is_empty(): return
 	var box := UI.card(parent)
-	UI.label("Конверт %d · %s" % [int(envelope.get("number", 1)),str(envelope.get("title", ""))],box,20,UI.BRASS)
-	UI.label(str(envelope.get("story", "")),box)
-	UI.button("Свернуть словарик" if words_open else "Словарик · 5 слов",box,func(): _capture(); words_open = not words_open; _build())
+	var count: int = envelope.get("lexeme_ids", []).size()
+	UI.button("Скрыть слова конверта" if words_open else "Слова этого конверта · %d" % count,box,func(): _capture(); words_open = not words_open; _build())
 	if not words_open: return
 	var lexicon: Array = UI.records(quest.get("adventure", {}).get("lexicon", []))
 	for word in lexicon:
@@ -716,7 +822,7 @@ func _build_words(parent: Node) -> void:
 		var id := str(word.get("lexeme_id", ""))
 		UI.button("Повторить позже",line,func(): _send("stage_lexemes",{"lexeme_ids":[id],"status":"want_review","assistance":""}))
 	var actions := UI.row(box)
-	UI.button("Добавить в набор",actions,func(): _send("stage_lexemes",{"lexeme_ids":envelope.get("lexeme_ids", []),"status":"encountered","assistance":""}))
+	UI.button("Добавить в альбом",actions,func(): _send("stage_lexemes",{"lexeme_ids":envelope.get("lexeme_ids", []),"status":"encountered","assistance":""}))
 	for pair in [["Узнаю в сцене","recognized"],["Использовала","used"]]:
 		var target_status: String = pair[1]
 		var mark := UI.button(pair[0],actions,func(): _send("stage_lexemes",{"lexeme_ids":envelope.get("lexeme_ids", []),"status":target_status,"assistance":"hint" if hint_level > 0 else ""}))
