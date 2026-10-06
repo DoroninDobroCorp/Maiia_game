@@ -110,7 +110,6 @@ func _build_now() -> void:
 	if shown == 0:
 		UI.label("Три первые истории пока не появились в журнале.",sc)
 		UI.button("Вместе откроем новую главу",sc,func(): family_requested.emit(),true)
-		UI.button("Открыть галерею",sc,func(): gallery_requested.emit(""))
 	var done := 0
 	for qid in CURRENT_STORY_QUEST_IDS:
 		if str(UI.instance_for(state,qid).get("status", "")) == "COMPLETED":
@@ -290,9 +289,10 @@ func _build_challenge_card(parent: Node) -> void:
 		count += 1
 		var item_key: String = str(key)
 		var text := "%s %s  %s" % [str(item_info.get("icon", "")), str(item_info.get("title", key)), "✓" if done else "○"]
-		UI.button(text, target_row, func():
+		var btn := UI.button(text, target_row, func():
 			command_requested.emit("toggle_challenge_item", {"item_key": item_key})
 		, done)
+		btn.size_flags_horizontal = SIZE_EXPAND_FILL
 
 	var status_row := UI.row(box)
 	if done_count == 6:

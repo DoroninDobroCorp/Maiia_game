@@ -19,6 +19,7 @@ var gallery: Node3D
 var route := "hub"
 var route_context: Dictionary = {}
 var navigation_bar: HBoxContainer
+var gallery_nav_button: Button
 var preview_state: Dictionary = {}
 var preview_active := false
 var preview_return_route := "editor"
@@ -42,11 +43,12 @@ func setup(root: Node) -> void:
 	_initialise()
 	navigation_bar = HBoxContainer.new()
 	navigation_bar.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	navigation_bar.position = Vector2(-452, -48)
+	navigation_bar.position = Vector2(-360, -48)
 	navigation_bar.add_theme_constant_override("separation", 8)
 	app.hud_root.add_child(navigation_bar)
 	UI.button("Журнал · J", navigation_bar, open_hub)
-	UI.button("Галерея", navigation_bar, func(): open_gallery(""))
+	gallery_nav_button = UI.button("Галерея", navigation_bar, func(): open_gallery(""))
+	gallery_nav_button.visible = false
 	UI.button("Вместе · P", navigation_bar, open_family_tools)
 	var launch_poll := Timer.new()
 	launch_poll.wait_time = 1.0
@@ -440,6 +442,8 @@ func refresh_world() -> void:
 			view.favourites.append(item)
 	app.station_room.apply_adventure_view(view)
 	app.station_room.apply_phase_b_world_effects(preload("res://scripts/services/progress_service.gd").get_profile_world_effects(app.game_state.duplicate(true), "player_01"))
+	if is_instance_valid(gallery_nav_button):
+		gallery_nav_button.visible = bool(view.get("chapter_complete", false))
 	if is_instance_valid(navigation_bar):
 		navigation_bar.visible = bool(view.awakened) and not is_in_gallery()
 
@@ -466,6 +470,13 @@ func handle_prop(id: String) -> bool:
 		"radio": open_quest("FG01")
 		"radio_weather": app._interact_radio()
 		"adventure_workshop": open_quest("FG11")
+		"arcade_cabinet":
+			var inst := UI.instance_for(app.game_state, "FG11")
+			if str(inst.get("status", "")) == "COMPLETED":
+				app.audio_service.play_sfx("click_dial")
+				app.show_toast("Твой игровой автомат работает! Запустить игру можно через терминал мастерской.")
+			else:
+				open_quest("FG11")
 		"adventure_water": open_quest("FG08")
 		"gallery_door": open_gallery("")
 		_:
@@ -509,6 +520,11 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 		refresh_world()
 		if operation == "stage_attempt" and bool(result.get("success", false)):
 			app.audio_service.play_sfx("click_dial")
+		if operation == "toggle_challenge_item":
+			if bool(result.get("newly_unlocked", false)):
+				app.audio_service.play_sfx("chime_solve")
+			else:
+				app.audio_service.play_sfx("click_dial")
 		if operation in ["stage_submit", "stage_review"] and bool(result.get("applied", false)) and not bool(result.get("awaiting_review", false)) and not bool(result.get("needs_revision", false)):
 			app.audio_service.play_sfx("chime_solve")
 			call_deferred("_present_pending")

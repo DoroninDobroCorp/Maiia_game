@@ -75,7 +75,7 @@ func _build() -> void:
 	add_child(folio)
 	_box(folio, Vector3(0.40, 0.25, 0.03), Vector3.ZERO, paper)
 	water_label = _label(folio, "ДВА ГОЛОСА\nВОДЫ", Vector3(0, 0, 0.022), 18, ink, 0.0015)
-	water_hit = _hit(folio, Vector3.ZERO, Vector3(0.45, 0.30, 0.09), "adventure_water", "Полевой альбом · миссия «Два голоса воды»")
+	water_hit = _hit(folio, Vector3.ZERO, Vector3(0.45, 0.30, 0.09), "adventure_water", "Альбом Клары · фоторепортаж «Два голоса воды»")
 
 	# The radio is the third mission object: a paper tag on its speaker cloth names
 	# the mission, so the three desk objects read as one family.
@@ -100,6 +100,7 @@ func _build() -> void:
 	for i in range(5):
 		arcade_lights.append(_box(arcade_result, Vector3(0.025, 0.025, 0.012), Vector3(-0.09 + i * 0.045, 0.42, 0.151), brass))
 	_label(arcade_result, "ОСТАЛСЯ В МАСТЕРСКОЙ", Vector3(0, 0.02, 0.17), 13, Color(0.83, 0.78, 0.67), 0.00115)
+	_hit(arcade_result, Vector3(0, 0.49, 0), Vector3(0.40, 0.85, 0.35), "arcade_cabinet", "Игровой автомат • мастерская")
 
 	# FG08 result lives on the side wall by the gallery entrance, away from the desk.
 	water_result = Node3D.new()

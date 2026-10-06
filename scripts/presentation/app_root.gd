@@ -91,7 +91,7 @@ func _ready() -> void:
 		var welcome := "С возвращением на станцию «" + str(game_state.get("station_name", "Лесная станция")) + "»!"
 		var chapter_done := bool(game_state.get("adventures", {}).get("chapters_by_profile", {}).get("player_01", {}).get("completed", false))
 		if bool(game_state.get("puzzle_solved", false)) and not chapter_done:
-			welcome += " На столе три миссии: радио Норы, чертёж Тео и полевой альбом."
+			welcome += " На столе три миссии: радио Норы, чертёж Тео и альбом Клары."
 		show_toast(welcome)
 
 func _unhandled_input(event: InputEvent) -> void:
