@@ -71,49 +71,33 @@ func _catalog() -> Array:
 	return values
 
 func _build() -> void:
-	var s := UI.shell(self,state,"Журнал станции","Три миссии станции. У каждой есть свой предмет на столе, а здесь видно, что дальше.",func(): closed.emit())
+	var s := UI.shell(self,state,"Журнал станции","Три миссии станции и твои свершения.",func(): closed.emit())
 	content = s.content
 	feedback = s.feedback
 	var tabs := UI.row(content)
-	var tab_names := ["Сейчас", "Приключения", "Мои работы", "Карта", "Летопись станции"]
+	var tab_names := ["Сейчас", "Летопись станции"]
 	for i in range(tab_names.size()):
 		var index := i
 		UI.button(tab_names[i],tabs,func():
 			current_tab = index
 			history_quest = {}
 			_build(), i == current_tab)
-	var space := Control.new()
-	space.size_flags_horizontal = SIZE_EXPAND_FILL
-	tabs.add_child(space)
-	UI.button("Архив старых записей",tabs,func(): legacy_journal_requested.emit())
+	# Примечание для разработчика: каталоги всех миссий, залы выставок и карты скрыты из
+	# детского вида, чтобы не перегружать интерфейс. Все инструменты разработчика
+	# по-прежнему доступны через родительскую панель «Вместе · P».
 	if not history_quest.is_empty():
 		_build_history()
 		return
 	match current_tab:
 		0: _build_now()
-		1: _build_catalog()
-		2:
-			var box := UI.card(content)
-			UI.label("История, которую создаёшь ты",box,25,UI.BRASS)
-			UI.label("Рисунки, страницы эфира, наблюдения и версии твоей игры. Здесь можно вернуться к каждой работе и выбрать, что оставить на виду.",box)
-			var r := UI.row(box)
-			UI.button("Открыть архив работ",r,func(): collection_requested.emit(),true)
-			UI.button("Войти в галерею",r,func(): gallery_requested.emit(""))
-		3:
-			var box := UI.card(content)
-			UI.label("Карта долины и план станции",box,25,UI.BRASS)
-			UI.label("Наблюдения открывают страницы атласа. Из галереи можно перейти в любой из своих залов.",box)
-			UI.button("Открыть карту",box,func(): map_requested.emit(),true)
-			UI.button("Мои выставочные залы",box,func(): gallery_requested.emit(""))
-		4:
-			_build_chronicle()
+		1, 4: _build_chronicle()
+		_: _build_now()
 	UI.focus_later(s.close,self)
 
 func _build_now() -> void:
 	var sc := UI.scroll(content)
 	var banner := UI.row(sc)
-	UI.label("МИССИИ СТАНЦИИ · можно в любом порядке",banner,14,UI.BRASS)
-	UI.button("Моя галерея →",banner,func(): gallery_requested.emit(""))
+	UI.label("ТРИ МИССИИ СТАНЦИИ · можно проходить в любом порядке",banner,15,UI.BRASS)
 	var cards := UI.row(sc)
 	var shown := 0
 	var catalog := _catalog()
@@ -282,15 +266,17 @@ func _build_challenge_card(parent: Node) -> void:
 
 	var box := UI.card(parent)
 	var top := UI.row(box)
-	UI.label("БОЛЬШОЙ РИТМ МАЙИ · 30 ДНЕЙ ПОДРЯД", top, 16, UI.BRASS)
-	var badge_text := "✦ ВЕЧНЫЙ ОГОНЬ ✦" if unlocked else ("🔥 День %d из 30" % streak)
+	UI.label("РИТМ ГОРНОЙ СТАНЦИИ · 30 ДНЕЙ ПОДРЯД", top, 16, UI.BRASS)
+	var badge_text := "✦ ВЕЧНЫЙ ОГОНЬ ОТКРЫТ ✦" if unlocked else ("🔥 Стрик: день %d из 30" % streak)
 	var badge := UI.label(badge_text, top, 16, Color(1.0, 0.82, 0.40) if unlocked else Color(1.0, 0.65, 0.30))
 	badge.size_flags_horizontal = SIZE_SHRINK_END
 
-	var info_text := "Утром пробежка, вечером растяжка, 4 подхода испанского. Если пропущен хотя бы 1 пункт за день — стрик сбрасывается. На 30-й день на станции навсегда появится памятная доска и вечный огонь!"
+	var story_text := "Хранительнице горной станции в Патагонии нужны бодрость, закалка и язык долины! 30 дней подряд: утром пробежка на горном воздухе, вечером растяжка и 4 подхода к испанскому языку. Смещать время занятий внутри дня можно, но пропуск даже 1 из 6 пунктов сбивает серию на ноль."
+	UI.label(story_text, box, 12, UI.MUTED)
+	var reward_text := "Что появится на станции на 30-й день: на стене зажжётся памятная латунная доска почёта с гравировкой, над ней загорится вечный огонь стойкости, а на панель архива добавится золотой жетон 30 DÍAS."
 	if max_s > 0 and not unlocked:
-		info_text += " (Рекорд: %d дней)" % max_s
-	UI.label(info_text, box, 12, UI.MUTED)
+		reward_text += " • Лучший рекорд: %d дней подряд." % max_s
+	UI.label(reward_text, box, 12, Color(0.85, 0.78, 0.60))
 
 	var items_row1 := UI.row(box)
 	var items_row2 := UI.row(box)
@@ -317,66 +303,67 @@ func _build_challenge_card(parent: Node) -> void:
 func _build_chronicle() -> void:
 	var sc := UI.scroll(content)
 	var box := UI.card(sc)
-	UI.label("Летопись станции · Хроника изменений мира", box, 24, UI.BRASS)
-	UI.label("Каждое реальное действие Майи навсегда меняет мир игры. Станция растёт новыми комнатами и артефактами. Здесь собрана вся история свершений.", box, 14, UI.MUTED)
+	UI.label("Летопись станции · Завершённые дела", box, 24, UI.BRASS)
+	UI.label("Здесь остаются только те дела, которые Майя уже полностью завершила, и то, как они изменили мир станции.", box, 14, UI.MUTED)
 
 	var entries: Array[Dictionary] = [
 		{
 			"title": "Пролог · Пробуждение станции (S00)",
-			"action": "Разгадана шкатулка (Гора / Ветер / Звезда), станция названа «Станция Майи», установлена сова.",
-			"impact": "Станция ожила: зажёгся тёплый свет, появилась вывеска над дверью, шкатулка бережно сохранена в шкафу истории.",
+			"action": "Разгадана старинная шкатулка (Гора / Ветер / Звезда), станция названа «Станция Майи», установлена сова.",
+			"impact": "Станция ожила: зажёгся тёплый свет, включилось питание, вывеска украшает вход, шкатулка бережно сохранена в шкафу истории.",
 			"icon": "✦",
 			"done": bool(state.get("puzzle_solved", false))
 		},
 		{
-			"title": "Радио «Южный Маяк» (FG01)",
-			"action": "20 конвертов историй, 100 испанских слов в личный словарь и авторская передача с Норой.",
-			"impact": "Ярлык радио переходит в режим «в эфире». В приёмнике навсегда разблокирован личный альбом слов и выпуски эфира.",
+			"title": "Радио «Южный Маяк» (Нора)",
+			"action": "Пройдены 20 конвертов, собраны 100 испанских слов и записана собственная передача в радиоэфир.",
+			"impact": "Ярлык радио перешёл в режим «в эфире». В приёмнике навсегда разблокирован личный альбом слов и выпуски эфира.",
 			"icon": "📻",
 			"done": str(UI.instance_for(state, "FG01").get("status", "")) == "COMPLETED"
 		},
 		{
-			"title": "Автомат для станции (FG11)",
-			"action": "Своя игра (на Python, JavaScript, Godot, Scratch или Lua): персонаж, 3 огонька, победа и перезапуск.",
-			"impact": "Чертёж уходит со стола. В мастерской у перехода к обсерватории появляется настоящий 3D автомат с игрой и зажжёнными огоньками.",
+			"title": "Автомат для станции (Тео)",
+			"action": "Создана собственная законченная игра (на Python, JavaScript, Godot, Scratch или Lua): персонаж, 3 огонька, победа и перезапуск.",
+			"impact": "Старый пустой корпус автомата в мастерской ожил: зажглись огоньки, экран показывает игру, и в неё можно играть прямо на станции!",
 			"icon": "🕹️",
 			"done": str(UI.instance_for(state, "FG11").get("status", "")) == "COMPLETED"
 		},
 		{
-			"title": "Два голоса воды (FG08)",
-			"action": "Семейные прогулки к реке и водопаду, две реальные фотографии и сравнение звуков воды.",
-			"impact": "На стене у входа в Галерею вешается латунный диптих с реальными фотографиями Майи. На карте атласа открыты Río Azul и Водопады.",
+			"title": "Два голоса воды (Клара)",
+			"action": "Сделаны две реальные фотографии реки и водопада, проведено исследование их звучания для фоторепортажа.",
+			"impact": "На стене у Галереи появился латунный диптих с реальными фотографиями Майи. На карте атласа открыты Río Azul и Водопады, а копия статьи Клары осталась в архиве.",
 			"icon": "🌊",
 			"done": str(UI.instance_for(state, "FG08").get("status", "")) == "COMPLETED"
 		},
 		{
-			"title": "Большой ритм Майи · 30 дней подряд",
-			"action": "30 дней подряд: утренняя пробежка, вечерняя растяжка и 4 подхода испанского без срывов.",
-			"impact": "На стене станции зажигается именная латунная доска почёта и вечный огонь стойкости; на панели архива появляется жетон 30 DÍAS.",
+			"title": "Ритм станции · 30 дней подряд",
+			"action": "30 дней подряд: утренний бег на горном воздухе, вечерняя растяжка и 4 подхода испанского без срывов.",
+			"impact": "На стене станции навечно сияет памятная латунная доска почёта и горит золотой огонь стойкости. На панели архива выгравирован жетон 30 DÍAS.",
 			"icon": "🔥",
 			"done": bool(state.get("phase_c", {}).get("rituals", {}).get("maya_30_streak", {}).get("unlocked", false))
 		},
 		{
-			"title": "Галерея моих открытий и Выставки",
+			"title": "Вечер открытой станции · Галерея открытий",
 			"action": "Завершение первой главы и сборка авторской выставки.",
-			"impact": "Открыта Галерея открытий (12 выставочных мест). На стене станции появились 3 рамы для сменяемых любимых работ.",
+			"impact": "Открыта Галерея моих открытий на 12 мест. На стене станции появились 3 рамы для сменяемых любимых работ.",
 			"icon": "🏛️",
-			"done": bool(state.get("puzzle_solved", false))
-		},
-		{
-			"title": "Концепция масштабирования: Новые комнаты станции",
-			"action": "По мере прохождения сотен новых миссий мир растёт новыми комнатами, а не захламляет одну.",
-			"impact": "Открыты: Главная комната, Переход к обсерватории, Галерея. Будущие главы добавят новые двери: Лабораторию природы, Радио-рубку и Оранжерею.",
-			"icon": "🚪",
-			"done": true
+			"done": bool(state.get("adventures", {}).get("chapters_by_profile", {}).get("player_01", {}).get("completed", false))
 		}
 	]
 
+	var finished_count := 0
 	for entry in entries:
+		if not bool(entry.done):
+			continue
+		finished_count += 1
 		var item_card := UI.card(sc)
 		var top_row := UI.row(item_card)
 		UI.label("%s  %s" % [entry.icon, entry.title], top_row, 18, UI.BRASS)
-		var status_lbl := UI.label("ГОТОВО ✓" if entry.done else "В ПРОЦЕССЕ", top_row, 14, UI.TEAL if entry.done else UI.MUTED)
+		var status_lbl := UI.label("ЗАВЕРШЕНО ✦", top_row, 14, UI.TEAL)
 		status_lbl.size_flags_horizontal = SIZE_SHRINK_END
 		UI.label("Что сделано: " + entry.action, item_card, 14)
-		UI.label("След в мире: " + entry.impact, item_card, 14, Color(0.85, 0.78, 0.60))
+		UI.label("След в мире: " + entry.impact, item_card, 14, Color(0.88, 0.82, 0.62))
+
+	if finished_count == 0:
+		var empty_card := UI.card(sc)
+		UI.label("Пока завершённых дел нет. Первая запись появится, когда станция проснётся или завершится первая миссия.", empty_card, 14, UI.MUTED)

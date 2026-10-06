@@ -102,7 +102,7 @@ func _generate_all_samples() -> void:
 	var chord_notes: Array[float] = [523.25, 659.25, 783.99, 987.77, 1046.50]
 	samples["chime_solve"] = _create_chord(chord_notes, 1.6)
 	samples["radio_tune"] = _create_radio_jingle()
-	samples["wind_ambient"] = _create_wind_loop(3.0)
+	samples["wind_ambient"] = _create_wind_loop(6.0)
 
 func _create_click(duration: float, freq: float, decay: float) -> AudioStreamWAV:
 	var sr: int = 22050
@@ -210,7 +210,8 @@ func _create_radio_jingle() -> AudioStreamWAV:
 	sample.data = data
 	return sample
 
-func _create_wind_loop(duration: float) -> AudioStreamWAV:
+func _create_wind_loop(duration: float = 6.0) -> AudioStreamWAV:
+	# Горный лесной амбиент Эль-Больсона: шелест крон и сосен без морского прибоя
 	var sr: int = 22050
 	var total: int = int(float(sr) * duration)
 	var sample: AudioStreamWAV = AudioStreamWAV.new()
@@ -222,14 +223,18 @@ func _create_wind_loop(duration: float) -> AudioStreamWAV:
 	var data: PackedByteArray = PackedByteArray()
 	data.resize(total * 2)
 	var seed_val: int = 98765
-	var last: float = 0.0
+	var low_pass: float = 0.0
+	var mid_pass: float = 0.0
 	for i in range(total):
 		var t: float = float(i) / float(sr)
 		seed_val = (seed_val * 1103515245 + 12345) & 0x7fffffff
 		var white: float = (float(seed_val) / 2147483648.0) * 2.0 - 1.0
-		last = last * 0.94 + white * 0.06
-		var swell: float = 0.6 + 0.4 * sin(TAU * 0.33 * t)
-		var val: float = last * swell * 0.25
+		# Двухуровневый фильтр: глубокий лесной воздух + мягкий шелест хвои
+		low_pass = low_pass * 0.965 + white * 0.035
+		mid_pass = mid_pass * 0.88 + white * 0.12
+		# Мягкий неритмичный лесной ветерок (бесшовный цикл 6 сек)
+		var forest_breeze: float = 0.75 + 0.15 * sin(TAU * 0.16667 * t) + 0.10 * sin(TAU * 0.33333 * t)
+		var val: float = (low_pass * 0.7 + (mid_pass - low_pass) * 0.18) * forest_breeze * 0.20
 		var s16: int = int(clampf(val * 32767.0, -32768.0, 32767.0))
 		data.encode_s16(i * 2, s16)
 	sample.data = data

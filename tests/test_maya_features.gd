@@ -112,9 +112,10 @@ func _init() -> void:
 	props.free()
 
 	# --- 4. ADVENTURE HUB & CHRONICLE ---
+	state.puzzle_solved = true
 	var hub := AdventureHub.new()
 	hub.setup(state)
-	# Check 5 tabs exist
+	# Check tabs exist
 	var tabs_row := hub.find_children("*", "Button", true, false)
 	var tab_labels: Array[String] = []
 	for b in tabs_row:
@@ -123,17 +124,18 @@ func _init() -> void:
 	assert(tab_labels.has("Сейчас"), "Tab 'Сейчас' is present")
 
 	# Test building Chronicle tab directly
-	hub.current_tab = 4
+	hub.current_tab = 1
 	hub._build()
 	var hub_text := ""
 	for l in hub.find_children("*", "Label", true, false):
 		hub_text += " " + l.text
-	assert(hub_text.contains("Хроника изменений мира"), "Chronicle header is rendered")
-	assert(hub_text.contains("Автомат для станции"), "FG11 in chronicle")
-	assert(hub_text.contains("Два голоса воды"), "FG08 in chronicle")
-	assert(hub_text.contains("Большой ритм Майи"), "Maya challenge in chronicle")
-	assert(hub_text.contains("Новые комнаты станции"), "New rooms concept in chronicle")
-	print("[PASS] 9. AdventureHub Chronicle tab renders all milestones")
+	assert(hub_text.contains("Завершённые дела"), "Chronicle header is rendered")
+	# With puzzle_solved=true in state, Prologue is in chronicle
+	assert(hub_text.contains("Пробуждение станции"), "S00 Prologue must be in chronicle")
+	# Unfinished missions must NOT be in chronicle!
+	assert(not hub_text.contains("Автомат для станции"), "Unfinished FG11 must not be in chronicle")
+	assert(not hub_text.contains("Два голоса воды"), "Unfinished FG08 must not be in chronicle")
+	print("[PASS] 9. AdventureHub Chronicle tab renders ONLY completed milestones")
 	hub.free()
 
 	print("==================================================")
