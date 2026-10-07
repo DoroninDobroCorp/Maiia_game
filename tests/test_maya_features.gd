@@ -120,11 +120,22 @@ func _init() -> void:
 	var tab_labels: Array[String] = []
 	for b in tabs_row:
 		tab_labels.append(b.text)
-	assert(tab_labels.has("Летопись станции"), "Tab 'Летопись станции' is present")
 	assert(tab_labels.has("Сейчас"), "Tab 'Сейчас' is present")
+	assert(tab_labels.has("Карта"), "Tab 'Карта' is present")
+	assert(tab_labels.has("Летопись станции"), "Tab 'Летопись станции' is present")
 
-	# Test building Chronicle tab directly
+	# Test building Map tab directly (tab index 1)
 	hub.current_tab = 1
+	hub._build()
+	var map_text := ""
+	for l in hub.find_children("*", "Label", true, false):
+		map_text += " " + l.text
+	assert(map_text.contains("Карта долины"), "Map header rendered")
+	assert(map_text.contains("Горная станция"), "Station point in map")
+	print("[PASS] 9a. AdventureHub Map tab renders atlas info")
+
+	# Test building Chronicle tab directly (tab index 2)
+	hub.current_tab = 2
 	hub._build()
 	var hub_text := ""
 	for l in hub.find_children("*", "Label", true, false):
@@ -135,10 +146,19 @@ func _init() -> void:
 	# Unfinished missions must NOT be in chronicle!
 	assert(not hub_text.contains("Автомат для станции"), "Unfinished FG11 must not be in chronicle")
 	assert(not hub_text.contains("Два голоса воды"), "Unfinished FG08 must not be in chronicle")
-	print("[PASS] 9. AdventureHub Chronicle tab renders ONLY completed milestones")
+	print("[PASS] 9b. AdventureHub Chronicle tab renders ONLY completed milestones")
 	hub.free()
 
+	# --- 5. RECURRING CHARACTERS ENSEMBLE ---
+	var MissionGuide = preload("res://scripts/presentation/mission_guide.gd")
+	assert(MissionGuide.CHARACTERS.has("nora"), "Character Nora exists")
+	assert(MissionGuide.CHARACTERS.has("teo"), "Character Theo exists")
+	assert(MissionGuide.CHARACTERS.has("clara"), "Character Clara exists")
+	assert(MissionGuide.CHARACTERS.has("bruno"), "Character Bruno exists")
+	assert(not MissionGuide.character("bruno").greeting.is_empty(), "Bruno greeting exists")
+	print("[PASS] 10. Recurring characters ensemble verified (Nora, Theo, Clara, Bruno)")
+
 	print("==================================================")
-	print("  ALL MAYA FEATURE TESTS PASSED (9/9 checks)")
+	print("  ALL MAYA FEATURE TESTS PASSED (11/11 checks)")
 	print("==================================================")
 	quit()

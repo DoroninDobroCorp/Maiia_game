@@ -75,22 +75,23 @@ func _build() -> void:
 	content = s.content
 	feedback = s.feedback
 	var tabs := UI.row(content)
-	var tab_names := ["Сейчас", "Летопись станции"]
+	var tab_names := ["Сейчас", "Карта", "Летопись станции"]
 	for i in range(tab_names.size()):
 		var index := i
 		UI.button(tab_names[i],tabs,func():
 			current_tab = index
 			history_quest = {}
 			_build(), i == current_tab)
-	# Примечание для разработчика: каталоги всех миссий, залы выставок и карты скрыты из
-	# детского вида, чтобы не перегружать интерфейс. Все инструменты разработчика
-	# по-прежнему доступны через родительскую панель «Вместе · P».
+	# Примечание для разработчика: каталоги всех старых миссий и выставочные залы
+	# скрыты из детского вида, чтобы не перегружать интерфейс. Все инструменты
+	# разработчика по-прежнему доступны через родительскую панель «Вместе · P».
 	if not history_quest.is_empty():
 		_build_history()
 		return
 	match current_tab:
 		0: _build_now()
-		1, 4: _build_chronicle()
+		1: _build_map_tab()
+		2, 4: _build_chronicle()
 		_: _build_now()
 	UI.focus_later(s.close,self)
 
@@ -265,17 +266,17 @@ func _build_challenge_card(parent: Node) -> void:
 
 	var box := UI.card(parent)
 	var top := UI.row(box)
-	UI.label("РИТМ ГОРНОЙ СТАНЦИИ · 30 ДНЕЙ ПОДРЯД", top, 16, UI.BRASS)
+	UI.label("🏃‍♂️ ТРЕНЕР БРУНО · ВЫЗОВ ТРИДЦАТИ ВЕРШИН", top, 16, UI.BRASS)
 	var badge_text := "✦ ВЕЧНЫЙ ОГОНЬ ОТКРЫТ ✦" if unlocked else ("🔥 Стрик: день %d из 30" % streak)
 	var badge := UI.label(badge_text, top, 16, Color(1.0, 0.82, 0.40) if unlocked else Color(1.0, 0.65, 0.30))
 	badge.size_flags_horizontal = SIZE_SHRINK_END
 
-	var story_text := "Хранительнице горной станции в Патагонии нужны бодрость, закалка и язык долины! 30 дней подряд: утром пробежка на горном воздухе, вечером растяжка и 4 подхода к испанскому языку. Смещать время занятий внутри дня можно, но пропуск даже 1 из 6 пунктов сбивает серию на ноль."
+	var story_text := "Безумный спортсмен Эль-Больсона Бруно в оранжевой панаме примчался на станцию и кричит: «¡VAMOS, CAMPEONA! Настоящая хозяйка станции должна быть быстрой, как горный ветер, гибкой, как сосна, и знать язык долины! 30 дней подряд: утром горная пробежка, вечером растяжка и 4 подхода испанского! Часы тренировок внутри дня можно смещать, но если за день пропустишь хоть 1 пункт из 6 — стрик сгорает, и мы начинаем восхождение сначала!»"
 	UI.label(story_text, box, 12, UI.MUTED)
-	var reward_text := "Что появится на станции на 30-й день: на стене зажжётся памятная латунная доска почёта с гравировкой, над ней загорится вечный огонь стойкости, а на панель архива добавится золотой жетон 30 DÍAS."
+	var reward_text := "Награда от Бруно: «Если выдержишь все 30 дней подряд — я лично выкую тебе именную латунную Доску Чемпиона, повешу на стену станции и зажгу Вечный Огонь стойкости! А на ленту архива добавлю жетон 30 DÍAS!»"
 	if max_s > 0 and not unlocked:
 		reward_text += " • Лучший рекорд: %d дней подряд." % max_s
-	UI.label(reward_text, box, 12, Color(0.85, 0.78, 0.60))
+	UI.label(reward_text, box, 12, Color(0.88, 0.82, 0.60))
 
 	var items_row1 := UI.row(box)
 	var items_row2 := UI.row(box)
@@ -296,9 +297,30 @@ func _build_challenge_card(parent: Node) -> void:
 
 	var status_row := UI.row(box)
 	if done_count == 6:
-		UI.label("🎉 Все 6 пунктов на сегодня закрыты! День засчитан в стрик!", status_row, 14, Color(0.55, 0.95, 0.72))
+		UI.label("🎉 Бруно в восторге: все 6 пунктов на сегодня закрыты! День засчитан в стрик!", status_row, 14, Color(0.55, 0.95, 0.72))
 	else:
-		UI.label("Сегодня выполнено: %d из 6 пунктов" % done_count, status_row, 13, UI.TEAL)
+		UI.label("Сегодня выполнено: %d из 6 пунктов (Бруно ждёт полной тренировки!)" % done_count, status_row, 13, UI.TEAL)
+
+func _build_map_tab() -> void:
+	var sc := UI.scroll(content)
+	var box := UI.card(sc)
+	UI.label("Карта долины и окрестностей станции", box, 22, UI.BRASS)
+	UI.label("Исследуй долину Эль-Больсона: реку Río Azul, горные водопады и лесные тропы. Каждое завершённое наблюдение рассеивает туман и открывает новые точки в атласе.", box, 14, UI.MUTED)
+	var r := UI.row(box)
+	UI.button("Открыть карту атласа 🗺️", r, func(): map_requested.emit(), true)
+
+	var atlas: Array = state.get("phase_c", {}).get("atlas_unlocked", ["station"])
+	var points_box := UI.card(sc)
+	UI.label("ОТКРЫТЫЕ ТОЧКИ АТЛАСА", points_box, 13, UI.TEAL)
+	var names := {
+		"station": "🌲 Горная станция (база Майи)",
+		"rio_azul": "🌊 Река Río Azul (долина)",
+		"waterfalls": "💧 Водопады (горный каскад)"
+	}
+	for pt in atlas:
+		var pt_str := str(pt)
+		var title: String = str(names.get(pt_str, pt_str))
+		UI.label("✦ " + title, points_box, 14, Color(0.92, 0.86, 0.68))
 
 func _build_chronicle() -> void:
 	var sc := UI.scroll(content)

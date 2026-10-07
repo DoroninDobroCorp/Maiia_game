@@ -980,6 +980,14 @@ func _build_radio_receiver() -> void:
 	_make_interactive_area(knob2, "radio_weather", "Ручка погоды • прогноз Эль-Больсона", Vector3(0.07, 0.07, 0.07))
 
 func _build_history_cabinet() -> void:
+	# =========================================================================
+	# АРХИТЕКТУРА ШКАФА ИСТОРИИ (History Cabinet Relics Architecture):
+	# Шкаф истории в переходе к обсерватории рассчитан на ТРИ ключевые реликвии:
+	# - Нижняя полка (y = 0.62, PUZZLE_ARCHIVE_POS): шкатулка S00 (первая тайна станции, уже лежит);
+	# - Средняя полка (y = 1.12, свободно): зарезервировано под ключевой артефакт 2-й главы;
+	# - Верхняя полка (y = 1.60, свободно): зарезервировано под ключевой артефакт 3-й главы/финала.
+	# Шкаф не на одну вещь: две верхние полки ждут следующие сюжетные находки Майи.
+	# =========================================================================
 	history_cabinet = Node3D.new()
 	history_cabinet.position = Vector3(7.0, 0.0, -0.42)
 	add_child(history_cabinet)
@@ -1003,7 +1011,7 @@ func _build_history_cabinet() -> void:
 	history_cabinet.add_child(trim)
 
 	var label := Label3D.new()
-	label.text = "ШКАФ ИСТОРИИ\nпервая тайна станции"
+	label.text = "ШКАФ ИСТОРИИ\nреликвии станции"
 	label.position = Vector3(0.0, 1.82, 0.18)
 	label.font_size = 18
 	label.pixel_size = 0.0017
@@ -1014,7 +1022,7 @@ func _build_history_cabinet() -> void:
 	var hit_anchor := Node3D.new()
 	hit_anchor.position = Vector3(0.0, 0.86, 0.10)
 	history_cabinet.add_child(hit_anchor)
-	_make_interactive_area(hit_anchor, "history_cabinet", "Шкаф истории • здесь лежит шкатулка первой тайны", Vector3(0.82, 1.72, 0.46))
+	_make_interactive_area(hit_anchor, "history_cabinet", "Шкаф истории • реликвии станции (шкатулка S00 и свободные полки)", Vector3(0.82, 1.72, 0.46))
 
 func _build_valley_map() -> void:
 	var mat_map := _textured_material("res://assets/textures/parchment.png", Color(0.94, 0.87, 0.70), 0.88, Vector3(1.6, 1.6, 1.6))

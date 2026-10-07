@@ -357,7 +357,7 @@ func _on_prop_clicked(prop_id: String) -> void:
 			open_journal()
 		"history_cabinet":
 			audio_service.play_sfx("wood_thump")
-			show_toast("Здесь теперь лежит старая шкатулка — первая тайна станции. Новые миссии и их записи — в журнале (J).")
+			show_toast("Шкаф истории: здесь бережно хранится шкатулка первой тайны S00. Две верхние полки ждут будущие реликвии следующих глав.")
 		"challenge_board":
 			audio_service.play_sfx("chime_solve")
 			show_toast("✨ Памятная доска стойкости Майи: 30 дней чемпионского ритма! Каждое усилие оставляет след на станции.")
