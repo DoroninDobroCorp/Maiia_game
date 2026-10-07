@@ -132,6 +132,17 @@ func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> 
 		art.custom_minimum_size.y = 104
 		box.add_child(art)
 	var qid := str(quest.get("quest_id", ""))
+	var hero_id := str(Guide.mission(qid).get("persona", ""))
+	var hero_portrait := Guide.portrait_path(hero_id, "neutral")
+	if illustrated and not hero_portrait.is_empty():
+		var hero_row := UI.row(box)
+		hero_row.add_theme_constant_override("separation", 12)
+		UI.portrait(hero_portrait, 92, hero_row)
+		var hero_text := UI.column(hero_row)
+		hero_text.alignment = BoxContainer.ALIGNMENT_CENTER
+		UI.label(str(Guide.character(hero_id).get("name", "")), hero_text, 18, UI.BRASS)
+		UI.label(str(Guide.character(hero_id).get("role", "")), hero_text, 12, UI.TEAL)
+		UI.label("«" + str(Guide.character(hero_id).get("catchphrase", "")) + "»", hero_text, 13, UI.MUTED)
 	var inst := UI.instance_for(state,qid)
 	var guide := Guide.mission(qid)
 	var stages := UI.stages(quest)
@@ -263,20 +274,27 @@ func _build_challenge_card(parent: Node) -> void:
 	var unlocked := bool(c.get("unlocked", false))
 	var cl: Dictionary = c.get("today_checklist", {})
 	var meta := Ritual.challenge_item_meta()
+	var bruno := Guide.character("bruno")
+	var done_today := 0
+	for key in Ritual.CHALLENGE_ITEMS:
+		if bool(cl.get(key, false)): done_today += 1
 
 	var box := UI.card(parent)
-	var top := UI.row(box)
-	UI.label("🏃‍♂️ ТРЕНЕР БРУНО · ВЫЗОВ ТРИДЦАТИ ВЕРШИН", top, 16, UI.BRASS)
+	var head := UI.row(box)
+	head.add_theme_constant_override("separation", 14)
+	var mood := "happy" if unlocked or done_today == 6 else "thinking" if done_today == 0 and streak == 0 else "neutral"
+	var portrait_path := Guide.portrait_path("bruno", mood)
+	if not portrait_path.is_empty():
+		UI.portrait(portrait_path, 150, head)
+	var intro := UI.column(head)
+	UI.label("ТРЕНЕР БРУНО · ВЫЗОВ ТРИДЦАТИ ВЕРШИН", intro, 16, UI.BRASS)
 	var badge_text := "✦ ВЕЧНЫЙ ОГОНЬ ОТКРЫТ ✦" if unlocked else ("🔥 Стрик: день %d из 30" % streak)
-	var badge := UI.label(badge_text, top, 16, Color(1.0, 0.82, 0.40) if unlocked else Color(1.0, 0.65, 0.30))
-	badge.size_flags_horizontal = SIZE_SHRINK_END
-
-	var story_text := "Безумный спортсмен Эль-Больсона Бруно в оранжевой панаме примчался на станцию и кричит: «¡VAMOS, CAMPEONA! Настоящая хозяйка станции должна быть быстрой, как горный ветер, гибкой, как сосна, и знать язык долины! 30 дней подряд: утром горная пробежка, вечером растяжка и 4 подхода испанского! Часы тренировок внутри дня можно смещать, но если за день пропустишь хоть 1 пункт из 6 — стрик сгорает, и мы начинаем восхождение сначала!»"
-	UI.label(story_text, box, 12, UI.MUTED)
-	var reward_text := "Награда от Бруно: «Если выдержишь все 30 дней подряд — я лично выкую тебе именную латунную Доску Чемпиона, повешу на стену станции и зажгу Вечный Огонь стойкости! А на ленту архива добавлю жетон 30 DÍAS!»"
+	UI.label(badge_text, intro, 16, Color(1.0, 0.82, 0.40) if unlocked else Color(1.0, 0.65, 0.30))
+	UI.label(str(bruno.get("pitch", "")), intro, 13, UI.MUTED)
+	var reward_text := str(bruno.get("reward", ""))
 	if max_s > 0 and not unlocked:
-		reward_text += " • Лучший рекорд: %d дней подряд." % max_s
-	UI.label(reward_text, box, 12, Color(0.88, 0.82, 0.60))
+		reward_text += " Лучший рекорд: %d дней подряд." % max_s
+	UI.label(reward_text, intro, 13, Color(0.88, 0.82, 0.60))
 
 	var items_row1 := UI.row(box)
 	var items_row2 := UI.row(box)
@@ -297,9 +315,9 @@ func _build_challenge_card(parent: Node) -> void:
 
 	var status_row := UI.row(box)
 	if done_count == 6:
-		UI.label("🎉 Бруно в восторге: все 6 пунктов на сегодня закрыты! День засчитан в стрик!", status_row, 14, Color(0.55, 0.95, 0.72))
+		UI.label(str(bruno.get("all_done", "")), status_row, 14, Color(0.55, 0.95, 0.72))
 	else:
-		UI.label("Сегодня выполнено: %d из 6 пунктов (Бруно ждёт полной тренировки!)" % done_count, status_row, 13, UI.TEAL)
+		UI.label("Сегодня выполнено: %d из 6 дел. %s" % [done_count, str(bruno.get("waiting", ""))], status_row, 13, UI.TEAL)
 
 func _build_map_tab() -> void:
 	var sc := UI.scroll(content)

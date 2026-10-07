@@ -94,6 +94,22 @@ static func label(text: String, parent: Node, size: int = 0, color: Color = PAPE
 	parent.add_child(n)
 	return n
 
+## A hero portrait (240:270 card) at the given height; the caller decides the path.
+static func portrait(path: String, height: float, parent: Node) -> TextureRect:
+	var n := TextureRect.new()
+	n.texture = load(path)
+	n.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	n.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	n.custom_minimum_size = Vector2(roundf(height * 240.0 / 270.0), height)
+	n.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	parent.add_child(n)
+	return n
+
+## A hero's signature sound ("greet", "happy", "think"); silent without an audio service.
+static func voice(audio: Node, hero: String, mood: String) -> void:
+	if audio != null and not hero.is_empty() and audio.has_method("play_voice"):
+		audio.play_voice(hero, mood)
+
 static func button(text: String, parent: Node, callback: Callable, primary: bool = false) -> Button:
 	var n := Button.new()
 	n.text = text

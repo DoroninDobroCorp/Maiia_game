@@ -55,6 +55,19 @@ func play_sfx(sound_name: String) -> void:
 	player.finished.connect(player.queue_free)
 	player.play()
 
+## Short signature sounds of the four heroes: mood is "greet", "happy" or "think".
+## Rendered lazily on first use, so they cost nothing at startup and nothing when muted.
+func play_voice(hero: String, mood: String) -> void:
+	if is_muted:
+		return
+	var key := "voice_%s_%s" % [hero, mood]
+	if not samples.has(key):
+		var made := _create_voice(hero, mood)
+		if made == null:
+			return
+		samples[key] = made
+	play_sfx(key)
+
 func play_radio_broadcast() -> void:
 	if is_muted or not samples.has("radio_tune"):
 		return
@@ -274,3 +287,140 @@ func _create_wind_loop(duration: float = 8.0) -> AudioStreamWAV:
 
 	sample.data = data
 	return sample
+
+
+# --------------------------------------------------------------------------- hero voices
+const VOICE_RATE := 22050
+
+## Renders `duration` seconds by calling voice.call(t, noise) per sample; noise is -1..1.
+func _render(duration: float, seed_value: int, voice: Callable) -> AudioStreamWAV:
+	var total: int = int(float(VOICE_RATE) * duration)
+	var sample := AudioStreamWAV.new()
+	sample.format = AudioStreamWAV.FORMAT_16_BITS
+	sample.mix_rate = VOICE_RATE
+	var data := PackedByteArray()
+	data.resize(total * 2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	for i in range(total):
+		var t := float(i) / float(VOICE_RATE)
+		var val: float = voice.call(t, rng.randf_range(-1.0, 1.0))
+		# Gentle fade on the last 15 ms avoids a click at the end of the sample.
+		val *= clampf((duration - t) / 0.015, 0.0, 1.0)
+		data.encode_s16(i * 2, int(clampf(val * 0.6, -1.0, 1.0) * 32767.0))
+	sample.data = data
+	return sample
+
+## A decaying sine that starts at `start`; the building block of chimes and dings.
+func _ping(t: float, start: float, freq: float, decay: float, amp: float = 1.0) -> float:
+	var nt := t - start
+	if nt < 0.0:
+		return 0.0
+	return sin(TAU * freq * nt) * exp(-decay * nt) * minf(nt / 0.004, 1.0) * amp
+
+## A short burst of noise: shutter clicks, gear teeth, stopwatch ticks.
+func _burst(t: float, start: float, noise: float, decay: float, amp: float = 1.0) -> float:
+	var nt := t - start
+	if nt < 0.0:
+		return 0.0
+	return noise * exp(-decay * nt) * amp
+
+## Rich "brass" tone: first six harmonics with a soft attack and release.
+func _brass(t: float, start: float, length: float, freq: float, amp: float = 1.0) -> float:
+	var nt := t - start
+	if nt < 0.0 or nt > length:
+		return 0.0
+	var env := minf(nt / 0.03, 1.0) * clampf((length - nt) / 0.08, 0.0, 1.0)
+	var sum := 0.0
+	for h in range(1, 7):
+		sum += sin(TAU * freq * float(h) * nt) / float(h)
+	return sum * env * amp * 0.45
+
+func _create_voice(hero: String, mood: String) -> AudioStreamWAV:
+	match hero + ":" + mood:
+		# Nora: a voice that surfaces from radio static.
+		"nora:greet":
+			return _render(1.2, 11, func(t: float, n: float) -> float:
+				var crackle := n * 0.22 * exp(-2.2 * t) * (1.0 if absf(n) > 0.35 else 0.25)
+				var sweep := sin(TAU * (500.0 + 900.0 * sin(PI * minf(t / 0.5, 1.0))) * t) * 0.16 * (1.0 if t < 0.5 else 0.0) * clampf((0.5 - t) / 0.12, 0.0, 1.0)
+				return crackle + sweep + _ping(t, 0.55, 392.0, 4.5, 0.4) + _ping(t, 0.78, 587.33, 4.0, 0.34))
+		"nora:happy":
+			return _render(1.3, 12, func(t: float, n: float) -> float:
+				var warm := _ping(t, 0.0, 440.0, 4.0, 0.34) + _ping(t, 0.17, 554.37, 4.0, 0.34) + _ping(t, 0.34, 659.25, 3.4, 0.38) + _ping(t, 0.34, 329.63, 3.0, 0.2)
+				return warm + n * 0.04 * exp(-3.0 * t))
+		"nora:think":
+			return _render(1.0, 13, func(t: float, n: float) -> float:
+				var gate := 1.0 if absf(n) > 0.55 else 0.15
+				var wobble := sin(TAU * (330.0 - 120.0 * t + 14.0 * sin(TAU * 6.0 * t)) * t) * 0.22 * exp(-2.5 * t)
+				return n * 0.2 * gate * exp(-1.3 * t) + wobble)
+		# Teo: springs, clanks and sparks.
+		"teo:greet":
+			return _render(0.9, 21, func(t: float, n: float) -> float:
+				var f := 260.0 * (1.0 + 0.55 * sin(TAU * 13.0 * t) * exp(-4.0 * t)) * (1.0 - 0.3 * t)
+				var boing := (sin(TAU * f * t) + 0.3 * sin(TAU * f * 2.0 * t)) * exp(-4.5 * t) * 0.5
+				var clank := (_ping(t, 0.38, 830.0, 16.0) + _ping(t, 0.38, 1370.0, 20.0, 0.7) + _ping(t, 0.38, 2210.0, 26.0, 0.5)) * 0.35
+				return boing + clank + _burst(t, 0.38, n, 90.0, 0.25))
+		"teo:happy":
+			return _render(1.2, 22, func(t: float, n: float) -> float:
+				var run := 0.0
+				var notes := [523.25, 659.25, 783.99, 1046.5, 1318.5]
+				for k in range(notes.size()):
+					run += (_ping(t, 0.07 * float(k), notes[k], 7.0) + 0.3 * _ping(t, 0.07 * float(k), notes[k] * 3.0, 9.0)) * 0.4
+				var gears := 0.0
+				for k in range(5):
+					gears += _burst(t, 0.5 + 0.06 * float(k), n, 140.0, 0.35)
+				return run + gears + _ping(t, 0.82, 2093.0, 5.0, 0.3) + _ping(t, 0.88, 2637.0, 6.0, 0.2))
+		"teo:think":
+			return _render(1.0, 23, func(t: float, n: float) -> float:
+				var ticks := 0.0
+				for k in range(5):
+					var s := 0.1 * float(k)
+					ticks += _burst(t, s, n, 220.0, 0.4) + _ping(t, s, 1800.0, 160.0, 0.3)
+				var hmm := 0.0
+				if t > 0.55:
+					var nt := t - 0.55
+					hmm = sin(TAU * (230.0 - 70.0 * nt + 8.0 * sin(TAU * 7.0 * nt)) * nt) * exp(-3.0 * nt) * 0.4
+				return ticks + hmm)
+		# Clara: a camera shutter, a soft focus motor and bright chimes.
+		"clara:greet":
+			return _render(0.45, 31, func(t: float, n: float) -> float:
+				return _burst(t, 0.0, n, 260.0, 0.6) + _ping(t, 0.0, 150.0, 70.0, 0.7) + _burst(t, 0.09, n, 300.0, 0.4) + _ping(t, 0.09, 120.0, 80.0, 0.5))
+		"clara:happy":
+			return _render(1.0, 32, func(t: float, n: float) -> float:
+				return _burst(t, 0.0, n, 260.0, 0.5) + _ping(t, 0.0, 150.0, 70.0, 0.6) + _ping(t, 0.18, 987.77, 5.0, 0.42) + _ping(t, 0.3, 1318.5, 4.5, 0.4) + _ping(t, 0.3, 659.25, 4.0, 0.2))
+		"clara:think":
+			return _render(0.75, 33, func(t: float, n: float) -> float:
+				var whirr := 0.0
+				if t < 0.36:
+					var f := 900.0 + 600.0 * sin(PI * t / 0.36)
+					whirr = (1.0 if sin(TAU * f * t) > 0.0 else -1.0) * 0.1 * sin(PI * t / 0.36)
+				return whirr + _burst(t, 0.46, n, 260.0, 0.5) + _ping(t, 0.46, 150.0, 70.0, 0.6))
+		# Bruno: whistles, stopwatch ticks and a brass fanfare.
+		"bruno:greet":
+			return _render(0.95, 41, func(t: float, n: float) -> float:
+				var blast_a := 0.0
+				if t < 0.36:
+					blast_a = sin(TAU * (2600.0 + 380.0 * sin(TAU * 18.0 * t)) * t) * 0.34 * minf(t / 0.02, 1.0) * clampf((0.36 - t) / 0.05, 0.0, 1.0)
+				var blast_b := 0.0
+				if t > 0.46 and t < 0.78:
+					var nt := t - 0.46
+					blast_b = sin(TAU * (2950.0 + 320.0 * sin(TAU * 20.0 * nt)) * nt) * 0.34 * minf(nt / 0.02, 1.0) * clampf((0.32 - nt) / 0.05, 0.0, 1.0)
+				return blast_a + blast_b + n * 0.03 * (1.0 if (blast_a != 0.0 or blast_b != 0.0) else 0.0))
+		"bruno:happy":
+			return _render(1.5, 42, func(t: float, n: float) -> float:
+				var fanfare := _brass(t, 0.0, 0.2, 261.63) + _brass(t, 0.16, 0.2, 329.63) + _brass(t, 0.32, 0.2, 392.0) + _brass(t, 0.5, 0.75, 523.25) + _brass(t, 0.5, 0.75, 392.0, 0.6)
+				var cheer := 0.0
+				if t > 0.8:
+					cheer = n * 0.1 * sin(PI * clampf((t - 0.8) / 0.7, 0.0, 1.0))
+				return fanfare * 0.7 + cheer)
+		"bruno:think":
+			return _render(0.95, 43, func(t: float, n: float) -> float:
+				var ticks := 0.0
+				for k in range(6):
+					var s := 0.12 * float(k)
+					ticks += _ping(t, s, 1200.0 if k % 2 == 0 else 900.0, 120.0, 0.5) + _burst(t, s, n, 300.0, 0.18)
+				var blip := 0.0
+				if t > 0.8 and t < 0.93:
+					blip = sin(TAU * 2800.0 * t) * 0.28
+				return ticks + blip)
+	return null

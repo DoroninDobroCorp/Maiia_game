@@ -47,6 +47,7 @@ var last_payload: Dictionary = {}
 var choice_context: Dictionary = {}
 var portrait_view: TextureRect
 var persona_id := ""
+var voiced_stage := ""
 var replay_interaction := false
 var help_button: Button
 
@@ -178,6 +179,7 @@ func show_result(result: Dictionary) -> void:
 			feedback.text = str(result.get("message", "Попытка сохранена."))
 			if bool(result.get("success",result.get("correct",false))):
 				successful_interactions[str(_interaction().get("interaction_id", ""))] = true
+				UI.voice(audio_service, persona_id, "happy")
 				replay_interaction = false
 				_capture()
 				_build()
@@ -218,7 +220,7 @@ func _build_story(parent: Node, guide: Dictionary, step: Dictionary, status: Str
 	if not envelope.is_empty():
 		var place := Guide.envelope_position(quest, str(_interaction().get("interaction_id", "")))
 		heading = "%s · конверт %d из %d · %s" % [speaker, place.x, place.y, str(envelope.get("title", ""))]
-		text = str(envelope.get("story", text))
+		text = Guide.envelope_story(str(envelope.get("envelope_id", "")), str(envelope.get("story", text)))
 	if text.is_empty():
 		# Family-made adventures have no guide text; keep their chosen-question line.
 		if not str(choice_context.get("summary", "")).is_empty():
@@ -226,21 +228,18 @@ func _build_story(parent: Node, guide: Dictionary, step: Dictionary, status: Str
 		return
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel", UI.style(UI.PANEL, Color("4b5457"), 10))
+	panel.add_theme_stylebox_override("panel", UI.style(UI.PANEL, Color("4b5457"), 6))
 	parent.add_child(panel)
 	var line := UI.row(panel)
 	var expression := "happy" if status == "COMPLETED" or successful_interactions.has(str(_interaction().get("interaction_id", ""))) else "thinking" if hint_level > 0 else "neutral"
-	var portrait_path := "res://assets/characters/%s_%s.svg" % [persona_id, expression]
+	var portrait_path := Guide.portrait_path(persona_id, expression)
+	if voiced_stage != stage_id and status != "COMPLETED":
+		voiced_stage = stage_id
+		UI.voice(audio_service, persona_id, "greet")
 	portrait_view = null
-	if not persona_id.is_empty() and ResourceLoader.exists(portrait_path):
-		var portrait := TextureRect.new()
-		portrait_view = portrait
-		portrait.texture = load(portrait_path)
-		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		portrait.custom_minimum_size = Vector2(56, 56)
-		portrait.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		line.add_child(portrait)
+	line.add_theme_constant_override("separation", 14)
+	if not portrait_path.is_empty():
+		portrait_view = UI.portrait(portrait_path, 80, line)
 	elif not speaker.is_empty():
 		var art := Art.new()
 		art.kind = str(guide.get("portrait_art", quest.get("quest_id", "")))
@@ -251,8 +250,22 @@ func _build_story(parent: Node, guide: Dictionary, step: Dictionary, status: Str
 	if not heading.is_empty():
 		UI.label(heading, words, 14, UI.BRASS)
 	UI.label(text, words, 16)
+	var glossary := _envelope_glossary(envelope)
+	if not glossary.is_empty():
+		UI.label("Слова конверта:  " + glossary, words, 13, UI.TEAL)
 	if not str(choice_context.get("summary", "")).is_empty():
 		UI.label(str(choice_context.summary), words, 13, UI.TEAL)
+
+## "pan — хлеб  ·  leche — молоко": the five Spanish words of the current envelope, always visible.
+func _envelope_glossary(envelope: Dictionary) -> String:
+	if envelope.is_empty():
+		return ""
+	var ids: Array = envelope.get("lexeme_ids", [])
+	var parts: Array[String] = []
+	for word in UI.records(quest.get("adventure", {}).get("lexicon", [])):
+		if ids.has(str(word.get("lexeme_id", ""))):
+			parts.append("%s — %s" % [str(word.get("base_form", word.get("lemma", ""))), str(word.get("translation", ""))])
+	return "  ·  ".join(parts)
 
 func _build_progress(parent: Node, stage_list: Array, subtitle: String) -> void:
 	var meta := UI.row(parent)
@@ -738,9 +751,10 @@ func _hint() -> void:
 	response["hint_level"] = hint_level
 	hint_label.text = str(hints[hint_level-1])
 	hint_label.visible = true
+	UI.voice(audio_service, persona_id, "think")
 	if is_instance_valid(portrait_view) and not persona_id.is_empty():
-		var path := "res://assets/characters/%s_thinking.svg" % persona_id
-		if ResourceLoader.exists(path): portrait_view.texture = load(path)
+		var path := Guide.portrait_path(persona_id, "thinking")
+		if not path.is_empty(): portrait_view.texture = load(path)
 	if _interaction().get("config", {}).has("minimum_unassisted_correct") and hint_level == 3:
 		if not response.has("assisted_ids"): response["assisted_ids"] = []
 		for card in _interaction().config.get("cards", []):

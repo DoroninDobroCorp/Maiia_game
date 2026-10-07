@@ -21,6 +21,7 @@ var audio_service: Node
 var quest: Dictionary = {}
 var instance_id := ""
 var feedback: Label
+var voiced := false
 
 func setup(game_state: Dictionary, audio_svc: Node = null) -> void:
 	state = game_state.duplicate(true)
@@ -93,15 +94,14 @@ func _build() -> void:
 func _build_story(parent: Node, guide: Dictionary, finished: bool) -> void:
 	var card := UI.card(parent)
 	var head := UI.row(card)
+	head.add_theme_constant_override("separation", 14)
 	var persona := str(guide.get("persona", ""))
-	var portrait_path := "res://assets/characters/%s_%s.svg" % [persona, "happy" if finished else "neutral"]
-	if not persona.is_empty() and ResourceLoader.exists(portrait_path):
-		var portrait := TextureRect.new()
-		portrait.texture = load(portrait_path)
-		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		portrait.custom_minimum_size = Vector2(64, 64)
-		head.add_child(portrait)
+	var portrait_path := Guide.portrait_path(persona, "happy" if finished else "neutral")
+	if not voiced:
+		voiced = true
+		UI.voice(audio_service, persona, "happy" if finished else "greet")
+	if not portrait_path.is_empty():
+		UI.portrait(portrait_path, 150, head)
 	else:
 		var art := Art.new()
 		art.kind = str(guide.get("portrait_art", quest.get("quest_id", "")))
@@ -109,11 +109,17 @@ func _build_story(parent: Node, guide: Dictionary, finished: bool) -> void:
 		head.add_child(art)
 	var who := UI.column(head)
 	who.alignment = BoxContainer.ALIGNMENT_CENTER
-	UI.label(str(guide.get("speaker", "")), who, 18, UI.BRASS)
+	UI.label(str(guide.get("speaker", "")), who, 22, UI.BRASS)
+	var hero := Guide.character(persona)
+	if not hero.is_empty():
+		UI.label(str(hero.get("role", "")), who, 14, UI.TEAL)
+		UI.label("«" + str(hero.get("tagline", "")) + "»", who, 14, UI.MUTED)
 	UI.label(("Миссия выполнена" if finished else "Предмет на столе: " + str(guide.get("object", ""))), who, 13, UI.MUTED)
 	if finished:
 		UI.label(str(guide.get("done_title", "Готово")), card, 20, UI.BRASS)
 		UI.label(str(guide.get("done_text", "")), card, 16)
+		if not str(guide.get("postscript", "")).is_empty():
+			UI.label("«" + str(guide.get("postscript", "")) + "»", card, 15, UI.TEAL)
 	else:
 		UI.label("«" + str(guide.get("hook", quest.get("summary", ""))) + "»", card, 16)
 	var goal := UI.card(parent)

@@ -521,8 +521,17 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 		if operation == "stage_attempt" and bool(result.get("success", false)):
 			app.audio_service.play_sfx("click_dial")
 		if operation == "toggle_challenge_item":
+			var Ritual = preload("res://scripts/services/ritual_service.gd")
+			var checklist: Dictionary = Ritual.get_challenge_state(_state().duplicate(true)).get("today_checklist", {})
+			var item_done := bool(checklist.get(str(payload.get("item_key", "")), false))
+			var day_done: bool = Ritual.CHALLENGE_ITEMS.all(func(key): return bool(checklist.get(key, false)))
 			if bool(result.get("newly_unlocked", false)):
 				app.audio_service.play_sfx("chime_solve")
+				app.audio_service.play_voice("bruno", "happy")
+			elif day_done:
+				app.audio_service.play_voice("bruno", "happy")
+			elif item_done:
+				app.audio_service.play_voice("bruno", "greet")
 			else:
 				app.audio_service.play_sfx("click_dial")
 		if operation in ["stage_submit", "stage_review"] and bool(result.get("applied", false)) and not bool(result.get("awaiting_review", false)) and not bool(result.get("needs_revision", false)):
