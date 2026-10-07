@@ -26,6 +26,7 @@ func _init() -> void:
 	assert(RitualService.days_between("2026-10-01", "2026-10-02") == 1, "days_between adjacent")
 	assert(RitualService.days_between("2026-10-01", "2026-10-05") == 4, "days_between 4 days")
 	assert(RitualService.days_between("2026-10-02", "2026-10-01") == -1, "days_between negative")
+	assert(RitualService.days_between("2026-10-01", "invalid") == 999999, "invalid date handled safely")
 	print("[PASS] 2. Date difference helper")
 
 	# Toggle item

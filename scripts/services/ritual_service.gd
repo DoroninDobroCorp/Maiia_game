@@ -33,13 +33,30 @@ static func challenge_item_meta() -> Dictionary:
 		"spanish_4": {"title": "Испанский · подход 4", "icon": "🇪🇸", "desc": "Закрепление слов перед сном"}
 	}
 
+static func _is_valid_date_format(s: String) -> bool:
+	if s.length() < 10:
+		return false
+	if s[4] != "-" or s[7] != "-":
+		return false
+	for i in [0, 1, 2, 3, 5, 6, 8, 9]:
+		var c := s.unicode_at(i)
+		if c < 48 or c > 57:
+			return false
+	return true
+
 static func days_between(date_a: String, date_b: String) -> int:
 	if date_a.is_empty() or date_b.is_empty():
 		return 999999
-	var dt_a: String = date_a if date_a.contains("T") else date_a + "T00:00:00"
-	var dt_b: String = date_b if date_b.contains("T") else date_b + "T00:00:00"
+	var s_a := date_a.strip_edges()
+	var s_b := date_b.strip_edges()
+	if not _is_valid_date_format(s_a) or not _is_valid_date_format(s_b):
+		return 999999
+	var dt_a: String = s_a if s_a.contains("T") else s_a + "T00:00:00"
+	var dt_b: String = s_b if s_b.contains("T") else s_b + "T00:00:00"
 	var unix_a := Time.get_unix_time_from_datetime_string(dt_a)
 	var unix_b := Time.get_unix_time_from_datetime_string(dt_b)
+	if unix_a == -1 or unix_b == -1:
+		return 999999
 	return int(round((unix_b - unix_a) / 86400.0))
 
 static func ensure_challenge(state: Dictionary) -> Dictionary:
