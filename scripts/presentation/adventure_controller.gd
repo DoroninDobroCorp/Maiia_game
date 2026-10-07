@@ -257,7 +257,7 @@ func open_quest(qid: String, instance_id: String = "") -> void:
 	var iid := str(inst.get("instance_id", ""))
 	# First visit to a current mission: explain the story, the goal and the path
 	# before the first question. Later visits go straight to the next step.
-	if not preview_active and CURRENT_STORY_QUEST_IDS.has(qid) and not _briefed.has(qid) and _mission_is_fresh(iid):
+	if not preview_active and CURRENT_STORY_QUEST_IDS.has(qid) and not _briefed.has(qid) and (_mission_is_fresh(iid) or _mission_has_no_completed_stages(inst)):
 		_show_mission(qid, inst)
 		return
 	var chosen := _next_open_stage(inst)
@@ -314,6 +314,14 @@ func _next_open_stage(inst: Dictionary) -> String:
 		if status in ["AVAILABLE", "IN_PROGRESS", "AWAITING_REVIEW"]:
 			return sid
 	return ""
+
+func _mission_has_no_completed_stages(inst: Dictionary) -> bool:
+	var iid := str(inst.get("instance_id", ""))
+	for stage in inst.get("quest_snapshot", {}).get("adventure", {}).get("stages", []):
+		var sid := str(stage.get("stage_id", ""))
+		if str(UI.stage_progress(_state(), iid, sid).get("status", "")) == "COMPLETED":
+			return false
+	return true
 
 func _mission_is_fresh(iid: String) -> bool:
 	var progress: Dictionary = _state().get("adventures", {}).get("progress", {}).get(iid, {})

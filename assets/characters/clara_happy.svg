@@ -22,12 +22,6 @@
 <rect x="103" y="160" width="34" height="36" rx="8" fill="#d9a07a"/>
 <path d="M86 190 Q96 232 116 246 M154 190 Q144 232 124 246" fill="none" stroke="#7b3f2c" stroke-width="5"/>
 <path d="M172 150 Q196 170 190 204 Q186 232 200 248" fill="none" stroke="#7a4426" stroke-width="22" stroke-linecap="round"/>
-<ellipse cx="190" cy="164" rx="9.5" ry="6" fill="#a05d33" transform="rotate(20 190 164)"/>
-<ellipse cx="182" cy="180" rx="9.5" ry="6" fill="#a05d33" transform="rotate(-20 182 180)"/>
-<ellipse cx="189" cy="196" rx="9.5" ry="6" fill="#a05d33" transform="rotate(20 189 196)"/>
-<ellipse cx="183" cy="212" rx="9.5" ry="6" fill="#a05d33" transform="rotate(-20 183 212)"/>
-<ellipse cx="188" cy="228" rx="9.5" ry="6" fill="#a05d33" transform="rotate(20 188 228)"/>
-<circle cx="200" cy="250" r="6" fill="#3ba8a0"/>
 <rect x="82" y="224" width="76" height="46" rx="9" fill="#2a2d33"/><rect x="82" y="224" width="76" height="16" rx="8" fill="#c9ced3"/><rect x="92" y="216" width="22" height="10" rx="3" fill="#c9ced3"/><rect x="130" y="218" width="16" height="8" rx="2" fill="#e95a3a"/><circle cx="120" cy="252" r="21" fill="#17191d"/><circle cx="120" cy="252" r="16" fill="#3a4a63"/><circle cx="120" cy="252" r="9" fill="#101a2a"/><circle cx="115" cy="247" r="3.4" fill="#cfe4ff" opacity=".9"/>
 <ellipse cx="75" cy="126" rx="8" ry="11" fill="#f0c4a0"/><ellipse cx="165" cy="126" rx="8" ry="11" fill="#f0c4a0"/><ellipse cx="75" cy="126" rx="3.5" ry="6" fill="#d9a07a" opacity=".55"/><ellipse cx="165" cy="126" rx="3.5" ry="6" fill="#d9a07a" opacity=".55"/><rect x="104" y="160" width="32" height="34" rx="8" fill="#d9a07a"/><ellipse cx="120" cy="120" rx="46" ry="54" fill="#f0c4a0"/>
 <circle cx="92" cy="142" r="9" fill="#f08a78" opacity=".38"/><circle cx="148" cy="142" r="9" fill="#f08a78" opacity=".38"/>

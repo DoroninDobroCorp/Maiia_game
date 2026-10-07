@@ -661,7 +661,7 @@ func _real_world(config: Dictionary) -> void:
 	_fields(config)
 	if bool(config.get("real_visit_required",false)) and config.has("atlas_location_id"):
 		var visit := CheckBox.new()
-		visit.text = "Этот семейный выход состоялся · " + {"rio_azul":"Río Azul","waterfalls":"Водопады"}.get(str(config.atlas_location_id),str(config.atlas_location_id))
+		visit.text = "Этот семейный выход состоялся · " + {"rio_azul":"Río Azul","waterfalls":"Ближайший водопад (Cascada Escondida)"}.get(str(config.atlas_location_id),str(config.atlas_location_id))
 		visit.button_pressed = bool(response.get("visited",false))
 		visit.toggled.connect(func(on): response["visited"] = on; response["atlas_location_id"] = config.atlas_location_id)
 		area.add_child(visit)

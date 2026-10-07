@@ -93,7 +93,7 @@ func _build_atlas_tab(state: Dictionary) -> Control:
 		station_name = "Лесная станция"
 
 	var intro := Label.new()
-	intro.text = "Открыта только станция «%s». Всё остальное уже видно на карте сквозь туман войны: близкая речка и водопады, вершина и скейт-парк, дальше Лаго-Пуэло и Барилоче, а по краям — будущие далёкие главы." % station_name
+	intro.text = "Открыта только станция «%s». Всё остальное уже видно на карте сквозь туман войны: близкая речка и ближайший водопад (Cascada Escondida), вершина и скейт-парк, дальше Лаго-Пуэло и Барилоче, а по краям — будущие далёкие главы." % station_name
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", 12)
 	intro.add_theme_color_override("font_color", Color(0.76, 0.78, 0.74))

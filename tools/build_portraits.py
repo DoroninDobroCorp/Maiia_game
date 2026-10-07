@@ -241,11 +241,6 @@ def clara(expr: str) -> str:
     # braid
     braid = '<path d="M172 150 Q196 170 190 204 Q186 232 200 248" fill="none" stroke="%s" stroke-width="22" stroke-linecap="round"/>' % hair
     p.append(braid)
-    for i in range(5):
-        y = 164 + i * 16
-        x = 186 + (-4 if i % 2 else 4) * (1 - i * .12)
-        p.append(f'<ellipse cx="{x:.0f}" cy="{y}" rx="9.5" ry="6" fill="{hair2}" transform="rotate({-20 if i % 2 else 20} {x:.0f} {y})"/>')
-    p.append('<circle cx="200" cy="250" r="6" fill="#3ba8a0"/>')
     # retro camera on her chest
     p.append('<rect x="82" y="224" width="76" height="46" rx="9" fill="#2a2d33"/><rect x="82" y="224" width="76" height="16" rx="8" fill="#c9ced3"/>'
              '<rect x="92" y="216" width="22" height="10" rx="3" fill="#c9ced3"/><rect x="130" y="218" width="16" height="8" rx="2" fill="#e95a3a"/>'

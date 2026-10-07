@@ -27,9 +27,10 @@ const LOCATIONS: Array[Dictionary] = [
 	},
 	{
 		"id": "waterfalls",
-		"title": "Водопады неподалёку",
-		"subtitle": "ближняя долина",
-		"description": "Одна из первых будущих природных экспедиций рядом с Эль-Больсоном.",
+		"title": "Ближайший водопад — Cascada Escondida",
+		"marker_title": "Ближайший водопад\nCascada Escondida",
+		"subtitle": "Cascada Escondida • ближняя долина",
+		"description": "Ближайший водопад рядом с Эль-Больсоном — Cascada Escondida (Скрытый водопад) в Мальин-Аогадо. Горный поток падает каскадом среди патагонского леса.",
 		"icon": "≋",
 		"map_position": Vector2(0.35, 0.42),
 		"distance": "near"

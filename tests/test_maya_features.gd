@@ -150,7 +150,7 @@ func _init() -> void:
 	print("[PASS] 9b. AdventureHub Chronicle tab renders ONLY completed milestones")
 	hub.free()
 
-	# --- 5. RECURRING CHARACTERS ENSEMBLE ---
+	# --- 5. RECURRING CHARACTERS ENSEMBLE & WATERFALL ATLAS ---
 	var MissionGuide = preload("res://scripts/presentation/mission_guide.gd")
 	assert(MissionGuide.CHARACTERS.has("nora"), "Character Nora exists")
 	assert(MissionGuide.CHARACTERS.has("teo"), "Character Theo exists")
@@ -159,7 +159,25 @@ func _init() -> void:
 	assert(not MissionGuide.character("bruno").greeting.is_empty(), "Bruno greeting exists")
 	print("[PASS] 10. Recurring characters ensemble verified (Nora, Theo, Clara, Bruno)")
 
+	# --- 6. NEAREST WATERFALL ON MAP & CLARA PORTRAIT CLEAN TAIL ---
+	var AtlasService = preload("res://scripts/services/atlas_service.gd")
+	var wf_loc: Array = AtlasService.LOCATIONS.filter(func(l): return l.get("id", "") == "waterfalls")
+	assert(wf_loc.size() == 1, "waterfalls location exists in atlas")
+	assert(wf_loc[0].title.contains("Ближайший водопад") and wf_loc[0].title.contains("Cascada Escondida"), "Nearest waterfall Cascada Escondida is titled in atlas")
+	assert(wf_loc[0].subtitle.contains("Cascada Escondida"), "Nearest waterfall Cascada Escondida is subtitled in atlas")
+
+	# Clara's avatar tail has no ovals and no circles
+	var clara_svg := FileAccess.get_file_as_string("res://assets/characters/clara_neutral.svg")
+	assert(not clara_svg.is_empty(), "Clara neutral portrait exists")
+	assert(not clara_svg.contains("<ellipse cx=\"190\"") and not clara_svg.contains("cx=\"200\" cy=\"250\""), "Clara tail has no ovals or circle")
+	assert(clara_svg.contains("M172 150 Q196 170 190 204 Q186 232 200 248"), "Clara base tail stroke preserved")
+
+	# Water intro step has the initial story
+	var water_intro_say: String = MissionGuide.step("water_intro").say
+	assert(water_intro_say.contains("Клара") and water_intro_say.contains("Río Azul и водопадах"), "Water intro has initial story")
+	print("[PASS] 11. Nearest waterfall on map, Clara clean tail avatar and initial story verified")
+
 	print("==================================================")
-	print("  ALL MAYA FEATURE TESTS PASSED (11/11 checks)")
+	print("  ALL MAYA FEATURE TESTS PASSED (12/12 checks)")
 	print("==================================================")
 	quit()
