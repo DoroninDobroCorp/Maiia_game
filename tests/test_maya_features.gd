@@ -177,7 +177,30 @@ func _init() -> void:
 	assert(water_intro_say.contains("Клара") and water_intro_say.contains("Río Azul и водопадах"), "Water intro has initial story")
 	print("[PASS] 11. Nearest waterfall on map, Clara clean tail avatar and initial story verified")
 
+	# --- 7. MAYA VISITED RIVER & WATERFALL: PHOTO UPLOAD FORM & NARRATIVE ---
+	var WaterPhotoUpload = preload("res://scripts/presentation/water_photo_upload.gd")
+	var wpu := WaterPhotoUpload.new()
+	wpu.setup(state)
+	assert(wpu.clara_speech_label.text.contains("Río Azul") and wpu.clara_speech_label.text.contains("Cascada Escondida"), "Photo upload form acknowledges Maya visited both river and waterfall")
+	assert(wpu.clara_speech_label.text.contains("Новую миссию я тебе пока не даю"), "Narratively explains that no next mission is given right now")
+	assert(wpu.clara_speech_label.text.contains("обязательно загляну к тебе на станцию позже") or wpu.clara_speech_label.text.contains("позже"), "Clara will appear again later")
+	wpu.show_clara_submission_success()
+	assert(wpu.submitted == true, "Submission status is set")
+	assert(wpu.clara_status_label.text.contains("Клара вернётся позже") or wpu.clara_status_label.text.contains("позже"), "Status confirms Clara returns later")
+	wpu.free()
+
+	# Station 3D props reflect submitted photos and Clara waiting in editorial
+	var p2 := StationAdventureProps.new()
+	p2._build()
+	p2.apply_view({"awakened": true, "water_photos_submitted": true})
+	assert(p2.water_result.visible == true, "3D water result visible on submission")
+	assert(p2.water_panels[0].visible == true and p2.water_panels[1].visible == true, "Both 3D diptych panels visible")
+	assert(p2.water_caption.text.contains("РЕПОРТАЖ ДЛЯ КЛАРЫ"), "Diptych caption shows reportage for Clara")
+	assert(p2.water_label.text.contains("СНИМКИ У КЛАРЫ"), "Desk label reflects photos delivered to Clara")
+	p2.free()
+	print("[PASS] 12. Water photo upload form, narrative justification & Clara returning later verified")
+
 	print("==================================================")
-	print("  ALL MAYA FEATURE TESTS PASSED (12/12 checks)")
+	print("  ALL MAYA FEATURE TESTS PASSED (13/13 checks)")
 	print("==================================================")
 	quit()

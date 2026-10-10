@@ -137,7 +137,8 @@ func _show(kind: String, extra: Dictionary = {}) -> void:
 		"mission": "res://scripts/presentation/mission_page.gd",
 		"collection": "res://scripts/presentation/collection_browser.gd",
 		"editor": "res://scripts/presentation/adventure_editor.gd",
-		"family": "res://scripts/presentation/family_adventure_tools.gd"
+		"family": "res://scripts/presentation/family_adventure_tools.gd",
+		"water_photos": "res://scripts/presentation/water_photo_upload.gd"
 	}
 	var script: Script = load(str(paths[kind]))
 	screen = script.new()
@@ -174,6 +175,8 @@ func _connect_screen(node: Node) -> void:
 		node.connect("legacy_journal_requested", app.open_legacy_journal)
 	if node.has_signal("mission_requested"):
 		node.connect("mission_requested", func(qid: String): open_mission(qid))
+	if node.has_signal("water_photos_requested"):
+		node.connect("water_photos_requested", func(): open_water_photos())
 	if node.has_signal("hub_requested"):
 		node.connect("hub_requested", open_hub)
 	if node.has_signal("weather_requested"):
@@ -278,6 +281,15 @@ func open_mission(qid: String, instance_id: String = "") -> void:
 		app.open_quest_detail(inst.get("quest_snapshot", {}), inst)
 		return
 	_show_mission(qid, inst)
+
+## Dedicated screen for Maya's river and waterfall photo upload & Clara's reportage.
+func open_water_photos(instance_id: String = "") -> void:
+	var inst := _ensure_instance("FG08", instance_id)
+	if inst.is_empty():
+		return
+	var iid := str(inst.get("instance_id", ""))
+	_briefed["FG08"] = true
+	_show("water_photos", {"instance_id": iid, "quest": inst.get("quest_snapshot", {})})
 
 func _show_mission(qid: String, inst: Dictionary) -> void:
 	_briefed[qid] = true
@@ -438,6 +450,9 @@ func refresh_world() -> void:
 			var f_path := _find_stage_image_path(iid, "water_fall")
 			if not r_path.is_empty(): view["river_image_path"] = r_path
 			if not f_path.is_empty(): view["fall_image_path"] = f_path
+			var inst_prog: Dictionary = app.game_state.get("adventures", {}).get("progress", {}).get(iid, {})
+			if bool(inst_prog.get("water_photos_submitted", false)):
+				view["water_photos_submitted"] = true
 	for room in Collections.list_rooms(app.game_state):
 		if str(room.get("template_id", "")) != "station_favorites":
 			continue
@@ -485,7 +500,11 @@ func handle_prop(id: String) -> bool:
 				app.show_toast("Твой игровой автомат работает! Запустить игру можно через терминал мастерской.")
 			else:
 				open_quest("FG11")
-		"adventure_water": open_quest("FG08")
+		"adventure_water":
+			if _briefed.get("FG08", false):
+				open_water_photos()
+			else:
+				open_quest("FG08")
 		"gallery_door": open_gallery("")
 		_:
 			if id.begins_with("station_favourite_"):
@@ -511,7 +530,7 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 	if operation == "preview_adventure":
 		_preview_quest(payload.get("quest", {}))
 		return
-	if operation in ["prepare_learning_project", "open_learning_project", "open_starter_project", "register_game", "launch_work", "backup_export", "backup_import", "restore_local_snapshot", "attach_stage_media", "import_image", "migration_preview"]:
+	if operation in ["prepare_learning_project", "open_learning_project", "open_starter_project", "register_game", "launch_work", "backup_export", "backup_import", "restore_local_snapshot", "attach_stage_media", "import_image", "migration_preview", "attach_water_photo", "submit_water_photos", "open_water_photos"]:
 		_external_command(operation, payload)
 		return
 	var result := _run_command(operation, payload)
@@ -756,6 +775,12 @@ func _external_command(operation: String, payload: Dictionary) -> void:
 			_preview_local_restore(str(payload.get("path", "")))
 		"attach_stage_media", "import_image":
 			_attach_media(payload)
+		"attach_water_photo":
+			_attach_water_photo(payload)
+		"submit_water_photos":
+			_submit_water_photos(payload)
+		"open_water_photos":
+			open_water_photos(str(payload.get("instance_id", "")))
 		"migration_preview":
 			_migration_preview(str(payload.get("instance_id", "")))
 
@@ -822,6 +847,129 @@ func _attach_media(payload: Dictionary) -> void:
 		dialog.queue_free())
 	dialog.canceled.connect(func(): dialog.queue_free())
 	dialog.popup_centered_ratio(0.8)
+
+func _attach_water_photo(payload: Dictionary) -> void:
+	var target := str(payload.get("target", "river"))
+	if payload.has("path") and not str(payload.path).is_empty():
+		_process_water_photo(target, str(payload.path), payload)
+		return
+	var dialog := FileDialog.new()
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Изображения"])
+	app.add_child(dialog)
+	dialog.file_selected.connect(func(path: String):
+		_process_water_photo(target, path, payload)
+		dialog.queue_free())
+	dialog.canceled.connect(func(): dialog.queue_free())
+	dialog.popup_centered_ratio(0.8)
+
+func _process_water_photo(target: String, path: String, payload: Dictionary) -> void:
+	var candidate: Dictionary = app.game_state.duplicate(true)
+	var title := "Фото реки Río Azul · Майя" if target == "river" else "Фото водопада Cascada Escondida · Майя"
+	var imported := Artifacts.import_local_image(candidate, path, title)
+	if bool(imported.get("ok", false)):
+		var artifact_id: String = imported.artifact.artifact_id
+		var iid := str(payload.get("instance_id", ""))
+		if iid.is_empty():
+			iid = str(UI.instance_for(candidate, "FG08").get("instance_id", ""))
+		var stage_id := "water_river" if target == "river" else "water_fall"
+		_apply_stage_artifact(candidate, iid, stage_id, artifact_id, path)
+		var loc_id := "rio_azul" if target == "river" else "waterfalls"
+		AtlasService.unlock(candidate, loc_id)
+		if Save.save_game(candidate):
+			app.game_state = candidate
+			refresh_world()
+			if route == "water_photos" and is_instance_valid(screen):
+				screen.setup(_view(route_context), app.audio_service)
+			elif route == "episode" and is_instance_valid(screen):
+				screen.setup(_view(route_context), app.audio_service)
+			_result({"ok": true, "message": "Фотография сохранена: %s ✓" % ("река" if target == "river" else "водопад")})
+		else:
+			_result({"ok": false, "message": "Не удалось сохранить фотографию."})
+	else:
+		_result(imported)
+
+func _apply_stage_artifact(candidate: Dictionary, iid: String, stage_id: String, artifact_id: String, original_path: String = "") -> void:
+	if iid.is_empty():
+		return
+	if not candidate.has("adventures"):
+		candidate["adventures"] = {}
+	if not candidate.adventures.has("progress"):
+		candidate.adventures["progress"] = {}
+	if not candidate.adventures.progress.has(iid):
+		candidate.adventures.progress[iid] = {"instance_id": iid, "stages": {}}
+	var inst_prog: Dictionary = candidate.adventures.progress[iid]
+	if not inst_prog.has("stages"):
+		inst_prog["stages"] = {}
+	if not inst_prog.stages.has(stage_id):
+		inst_prog.stages[stage_id] = {"stage_id": stage_id, "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+	var stage_data: Dictionary = inst_prog.stages[stage_id]
+	if not stage_data.has("draft"):
+		stage_data["draft"] = {}
+	stage_data.draft["artifact_id"] = artifact_id
+	if not original_path.is_empty():
+		stage_data.draft["source_path"] = original_path
+	if str(stage_data.get("status", "LOCKED")) == "LOCKED":
+		stage_data["status"] = "IN_PROGRESS"
+
+func _submit_water_photos(payload: Dictionary) -> void:
+	var candidate: Dictionary = app.game_state.duplicate(true)
+	var iid := str(payload.get("instance_id", ""))
+	if iid.is_empty():
+		iid = str(UI.instance_for(candidate, "FG08").get("instance_id", ""))
+	if iid.is_empty():
+		_result({"ok": false, "message": "Миссия не найдена."})
+		return
+
+	var r_note := str(payload.get("river_note", "")).strip_edges()
+	var f_note := str(payload.get("fall_note", "")).strip_edges()
+	var d_note := str(payload.get("diff_note", "")).strip_edges()
+
+	if not candidate.has("adventures"): candidate["adventures"] = {}
+	if not candidate.adventures.has("progress"): candidate.adventures["progress"] = {}
+	if not candidate.adventures.progress.has(iid): candidate.adventures.progress[iid] = {"instance_id": iid, "stages": {}}
+	var inst_prog: Dictionary = candidate.adventures.progress[iid]
+	if not inst_prog.has("stages"): inst_prog["stages"] = {}
+
+	if not inst_prog.stages.has("water_river"):
+		inst_prog.stages["water_river"] = {"stage_id": "water_river", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+	if not r_note.is_empty():
+		inst_prog.stages["water_river"]["draft"]["note"] = r_note
+		if not inst_prog.stages["water_river"]["draft"].has("responses"):
+			inst_prog.stages["water_river"]["draft"]["responses"] = {}
+		inst_prog.stages["water_river"]["draft"]["responses"]["water_river_return"] = {"fields": {"observation": r_note}}
+
+	if not inst_prog.stages.has("water_fall"):
+		inst_prog.stages["water_fall"] = {"stage_id": "water_fall", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+	if not f_note.is_empty():
+		inst_prog.stages["water_fall"]["draft"]["note"] = f_note
+		if not inst_prog.stages["water_fall"]["draft"].has("responses"):
+			inst_prog.stages["water_fall"]["draft"]["responses"] = {}
+		inst_prog.stages["water_fall"]["draft"]["responses"]["water_fall_return"] = {"fields": {"observation": f_note}}
+
+	if not inst_prog.stages.has("water_compare"):
+		inst_prog.stages["water_compare"] = {"stage_id": "water_compare", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+	if not d_note.is_empty():
+		inst_prog.stages["water_compare"]["draft"]["note"] = d_note
+		if not inst_prog.stages["water_compare"]["draft"].has("responses"):
+			inst_prog.stages["water_compare"]["draft"]["responses"] = {}
+		inst_prog.stages["water_compare"]["draft"]["responses"]["water_compare_pages"] = {"fields": {"difference": d_note}}
+
+	inst_prog["water_photos_submitted"] = true
+	AtlasService.unlock(candidate, "rio_azul")
+	AtlasService.unlock(candidate, "waterfalls")
+
+	if Save.save_game(candidate):
+		app.game_state = candidate
+		refresh_world()
+		if route == "water_photos" and is_instance_valid(screen):
+			screen.setup(_view(route_context), app.audio_service)
+			if screen.has_method("show_clara_submission_success"):
+				screen.show_clara_submission_success()
+		_result({"ok": true, "message": "Снимки переданы Кларе! Героиня появится позже."})
+	else:
+		_result({"ok": false, "message": "Не удалось сохранить фоторепортаж."})
 
 func _preview_backup(directory: String) -> void:
 	# Apply the same bounded JSON read as the worker before using preview fields.

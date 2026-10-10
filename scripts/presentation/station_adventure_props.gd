@@ -145,6 +145,7 @@ func apply_view(view: Dictionary) -> void:
 	radio_tag_label.text = _tag("ЭФИР НОРЫ", "начать", missions.get("FG01", {}), "", "в эфире")
 	var workshop_complete := bool(view.get("workshop_complete", false))
 	var water_complete := bool(view.get("water_complete", false))
+	var photos_submitted := bool(view.get("water_photos_submitted", false))
 	var river_path := str(view.get("river_image_path", ""))
 	var fall_path := str(view.get("fall_image_path", ""))
 	var has_water_images := not river_path.is_empty() or not fall_path.is_empty()
@@ -156,13 +157,15 @@ func apply_view(view: Dictionary) -> void:
 	workshop_hit.input_ray_pickable = not workshop_complete
 	water_hit.input_ray_pickable = not water_complete
 	arcade_result.visible = workshop_complete
-	water_result.visible = water_complete or has_water_images or river_done or fall_done
+	water_result.visible = water_complete or has_water_images or river_done or fall_done or photos_submitted
 	arcade_screen.text = "МОЯ ИГРА\nГОТОВА"
 	for i in range(arcade_lights.size()):
 		arcade_lights[i].visible = workshop_complete or progress > i + 1
-	water_panels[0].visible = water_complete or river_done or not river_path.is_empty()
-	water_panels[1].visible = water_complete or fall_done or not fall_path.is_empty()
-	water_caption.text = "МОЙ ПОЛЕВОЙ ДИПТИХ"
+	water_panels[0].visible = water_complete or river_done or not river_path.is_empty() or photos_submitted
+	water_panels[1].visible = water_complete or fall_done or not fall_path.is_empty() or photos_submitted
+	water_caption.text = "РЕПОРТАЖ ДЛЯ КЛАРЫ · ФОТО МАЙИ" if photos_submitted else "МОЙ ПОЛЕВОЙ ДИПТИХ"
+	if photos_submitted:
+		water_label.text = "ДВА ГОЛОСА ВОДЫ\nСНИМКИ У КЛАРЫ"
 
 	if not river_path.is_empty() and water_panels.size() > 0:
 		var tex := _texture(river_path)

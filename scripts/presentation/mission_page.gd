@@ -15,6 +15,7 @@ signal collection_requested
 signal weather_requested
 signal secret_requested(secret_id: String)
 signal hub_requested
+signal water_photos_requested
 
 var state: Dictionary = {}
 var audio_service: Node
@@ -120,6 +121,8 @@ func _build_story(parent: Node, guide: Dictionary, finished: bool) -> void:
 		UI.label(str(guide.get("done_text", "")), card, 16)
 		if not str(guide.get("postscript", "")).is_empty():
 			UI.label("«" + str(guide.get("postscript", "")) + "»", card, 15, UI.TEAL)
+	elif str(quest.get("quest_id", "")) == "FG08" and bool(state.get("adventures", {}).get("progress", {}).get(instance_id, {}).get("water_photos_submitted", false)):
+		UI.label("«Снимки реки и водопада переданы Кларе! Клара проявляет плёнку в тёмной комнате редакции газеты Эль-Больсона. Новых миссий пока нет — героиня появится на станции позже!»", card, 16, UI.TEAL)
 	else:
 		UI.label("«" + str(guide.get("hook", quest.get("summary", ""))) + "»", card, 16)
 	var goal := UI.card(parent)
@@ -202,6 +205,12 @@ func _build_actions(footer: Control, guide: Dictionary, instance: Dictionary, st
 		var resume := UI.button("Вернуться к миссии", footer, func(): command_requested.emit("resume_adventure", {"instance_id": instance_id}), true)
 		resume.name = "MissionPrimaryAction"
 		return
+	if qid == "FG08":
+		var inst_prog: Dictionary = state.get("adventures", {}).get("progress", {}).get(instance_id, {})
+		var photos_submitted := bool(inst_prog.get("water_photos_submitted", false))
+		if photos_submitted:
+			UI.label("Снимки у Клары · героиня появится позже", footer, 13, UI.TEAL)
+		UI.button("Загрузить фото реки и водопада 📷", footer, func(): water_photos_requested.emit())
 	var next := _next_stage(stages)
 	var started := _completed_count(stages) > 0 or str(UI.stage_progress(state, instance_id, str(next.get("stage_id", ""))).get("status", "")) == "IN_PROGRESS"
 	var step_title := str(Guide.step(str(next.get("stage_id", ""))).get("title", next.get("title", "")))

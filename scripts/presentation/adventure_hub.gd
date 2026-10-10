@@ -16,6 +16,7 @@ signal map_requested
 signal editor_requested
 signal family_requested
 signal legacy_journal_requested
+signal water_photos_requested
 
 var state: Dictionary = {}
 var audio_service: Node
@@ -185,6 +186,11 @@ func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> 
 	if guide.is_empty():
 		UI.button("Посмотреть путь",bottom,func(): history_quest = quest; _build())
 	else:
+		if qid == "FG08":
+			var inst_prog: Dictionary = state.get("adventures", {}).get("progress", {}).get(str(inst.get("instance_id", "")), {})
+			if bool(inst_prog.get("water_photos_submitted", false)):
+				UI.label("Снимки у Клары · героиня появится позже", bottom, 13, UI.TEAL)
+			UI.button("Загрузить фото реки и водопада 📷", bottom, func(): water_photos_requested.emit())
 		UI.button("О миссии и весь путь",bottom,func(): mission_requested.emit(qid))
 	if not CURRENT_STORY_QUEST_IDS.has(qid):
 		var pinned: Array = UI.pinned(state)

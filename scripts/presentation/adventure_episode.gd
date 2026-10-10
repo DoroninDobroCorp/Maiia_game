@@ -14,6 +14,7 @@ signal gallery_requested(room_id: String)
 signal collection_requested
 signal mission_requested(quest_id: String)
 signal work_requested(work_id: String)
+signal water_photos_requested
 
 var state: Dictionary = {}
 var audio_service: Node
@@ -713,10 +714,24 @@ func _real_world(config: Dictionary) -> void:
 		btn_attach_title = "Прикрепить фото водопада 📷"
 	var has_image := not str(draft.get("artifact_id", "")).is_empty()
 	if has_image:
+		var Artifacts = preload("res://scripts/services/artifact_service.gd")
+		var art_path := Artifacts.media_path_for(state, str(draft.get("artifact_id", "")))
+		if not art_path.is_empty() and FileAccess.file_exists(art_path):
+			var tex := UI.texture(art_path, 400)
+			if tex != null:
+				var prev := TextureRect.new()
+				prev.texture = tex
+				prev.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				prev.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				prev.custom_minimum_size = Vector2(240, 140)
+				area.add_child(prev)
 		UI.label("✓ Фотография прикреплена (появится в настенном диптихе на станции!)",area,14,UI.TEAL)
 	UI.button(btn_attach_title,area,func():
 		_capture()
 		command_requested.emit("attach_stage_media",_payload({"draft":draft.duplicate(true)})))
+	if str(quest.get("quest_id", "")) == "FG08":
+		UI.button("Форма загрузки обоих фото (река и водопад) 📷", area, func():
+			water_photos_requested.emit())
 
 func _compare(config: Dictionary) -> void:
 	var pair := UI.row(area)
