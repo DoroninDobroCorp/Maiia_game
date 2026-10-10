@@ -229,7 +229,46 @@ func _init() -> void:
 
 	print("[PASS] 12. Water photo upload form, narrative justification & Clara returning later verified")
 
+	# --- 8. TRAINER BRUNO: 3 DAYS DONE, FORGOTTEN STRETCH, COMFORT & ALARM CLOCK GIFT ---
+	var bruno_char := MissionGuide.character("bruno")
+	assert(bruno_char.has("stretch_comfort"), "Bruno has stretch_comfort text")
+	var sc_text: String = str(bruno_char.stretch_comfort)
+	assert(sc_text.contains("Три дня"), "Mentions 3 days on mountain")
+	assert(sc_text.contains("растяжку"), "Mentions forgotten evening stretch")
+	assert(sc_text.contains("ЭТО ЖЕ НИЧЕГО") or sc_text.contains("НИЧЕГО") or sc_text.contains("NADA"), "Bruno comforts that it's nothing")
+	assert(sc_text.contains("повторить"), "Says she can repeat the challenge")
+	assert(sc_text.contains("БУДИЛЬНИК"), "Bruno gifts her the champion alarm clock")
+
+	# RitualService alarm clock logic
+	var r_state := SaveService.get_default_state()
+	assert(RitualService.has_alarm_clock(r_state) == false, "Default fresh state has no alarm clock yet")
+	RitualService.gift_alarm_clock(r_state)
+	assert(RitualService.has_alarm_clock(r_state) == true, "After gifting, has_alarm_clock is true")
+
+	# 3D Station alarm clock mesh
+	var r3d := StationRoom.new()
+	r3d._ready()
+	r3d.apply_adventure_view({"awakened": true, "has_alarm_clock": true})
+	assert(r3d.alarm_clock_mesh != null and r3d.alarm_clock_mesh.visible == true, "Alarm clock mesh visible on station shelf")
+	r3d.apply_adventure_view({"awakened": true, "has_alarm_clock": false})
+	assert(r3d.alarm_clock_mesh.visible == false, "Alarm clock mesh hidden when not gifted")
+	r3d.free()
+
+	# AdventureHub challenge card with alarm clock gift
+	var hub3 := AdventureHub.new()
+	var hub3_state := SaveService.get_default_state()
+	hub3_state.puzzle_solved = true
+	RitualService.gift_alarm_clock(hub3_state)
+	hub3.setup(hub3_state)
+	var hub3_text := ""
+	for l in hub3.find_children("*", "Label", true, false):
+		hub3_text += " " + l.text
+	assert(hub3_text.contains("БУДИЛЬНИК ЧЕМПИОНА"), "Hub challenge card shows Champion Alarm Clock")
+	assert(hub3_text.contains("растяжк"), "Hub challenge card mentions stretching")
+	hub3.free()
+	print("[PASS] 13. Bruno 3-day streak forgotten stretch reaction & gifted alarm clock verified")
+
 	print("==================================================")
-	print("  ALL MAYA FEATURE TESTS PASSED (13/13 checks)")
+	print("  ALL MAYA FEATURE TESTS PASSED (14/14 checks)")
 	print("==================================================")
 	quit()

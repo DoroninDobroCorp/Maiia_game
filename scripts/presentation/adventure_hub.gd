@@ -283,6 +283,7 @@ func _build_challenge_card(parent: Node) -> void:
 	var streak := int(c.get("current_streak", 0))
 	var max_s := int(c.get("max_streak", 0))
 	var unlocked := bool(c.get("unlocked", false))
+	var has_clock := bool(c.get("has_alarm_clock", false))
 	var cl: Dictionary = c.get("today_checklist", {})
 	var meta := Ritual.challenge_item_meta()
 	var bruno := Guide.character("bruno")
@@ -299,13 +300,35 @@ func _build_challenge_card(parent: Node) -> void:
 		UI.portrait(portrait_path, 150, head)
 	var intro := UI.column(head)
 	UI.label("ТРЕНЕР БРУНО · ВЫЗОВ ТРИДЦАТИ ВЕРШИН", intro, 16, UI.BRASS)
-	var badge_text := "✦ ВЕЧНЫЙ ОГОНЬ ОТКРЫТ ✦" if unlocked else ("🔥 Стрик: день %d из 30" % streak)
+	var badge_text := "✦ ВЕЧНЫЙ ОГОНЬ ОТКРЫТ ✦" if unlocked else ("🔥 Стрик: день %d из 30 · повторный штурм!" % streak if has_clock and streak == 0 and max_s >= 3 else "🔥 Стрик: день %d из 30" % streak)
 	UI.label(badge_text, intro, 16, Color(1.0, 0.82, 0.40) if unlocked else Color(1.0, 0.65, 0.30))
 	UI.label(str(bruno.get("pitch", "")), intro, 13, UI.MUTED)
 	var reward_text := str(bruno.get("reward", ""))
 	if max_s > 0 and not unlocked:
 		reward_text += " Лучший рекорд: %d дней подряд." % max_s
 	UI.label(reward_text, intro, 13, Color(0.88, 0.82, 0.60))
+
+	if has_clock:
+		var clock_card := UI.card(box)
+		var cc_row := UI.row(clock_card)
+		cc_row.add_theme_constant_override("separation", 14)
+		var clock_icon := Label.new()
+		clock_icon.text = "⏰"
+		clock_icon.add_theme_font_size_override("font_size", 30)
+		cc_row.add_child(clock_icon)
+
+		var cc_text := UI.column(cc_row)
+		UI.label("ПОДАРОК ТРЕНЕРА БРУНО · БУДИЛЬНИК ЧЕМПИОНА", cc_text, 15, UI.BRASS)
+		var comfort_msg := str(bruno.get("stretch_comfort", ""))
+		UI.label(comfort_msg, cc_text, 13, UI.PAPER)
+
+		var cc_btn := UI.button("🔔 Позвонить в чемпионский будильник", cc_text, func():
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("chime_solve")
+			if audio_service != null and audio_service.has_method("play_voice"):
+				audio_service.play_voice("bruno", "happy")
+			show_result({"ok": true, "message": str(bruno.get("alarm_clock_toast", "⏰ Звонок будильника! Не забудь растяжку!"))})
+		)
 
 	var items_row1 := UI.row(box)
 	var items_row2 := UI.row(box)

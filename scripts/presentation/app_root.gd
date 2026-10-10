@@ -361,6 +361,12 @@ func _on_prop_clicked(prop_id: String) -> void:
 		"challenge_board":
 			audio_service.play_sfx("chime_solve")
 			show_toast("✨ Памятная доска стойкости Майи: 30 дней чемпионского ритма! Каждое усилие оставляет след на станции.")
+		"bruno_alarm_clock":
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("chime_solve")
+			if audio_service != null and audio_service.has_method("play_voice"):
+				audio_service.play_voice("bruno", "happy")
+			show_toast(preload("res://scripts/presentation/mission_guide.gd").character("bruno").get("alarm_clock_toast", "⏰ Будильник Чемпиона от Бруно: «¡VAMOS! Растяжка вечером, пробежка утром и четыре испанских! Ничего не забываем!»"))
 		"door_observatory":
 			audio_service.play_sfx("wood_thump")
 			if station_room.enter_room("observatory_annex"):

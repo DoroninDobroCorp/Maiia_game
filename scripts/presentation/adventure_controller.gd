@@ -463,6 +463,7 @@ func refresh_world() -> void:
 					var info := Collections.inspect_placement(app.game_state, placement)
 					item = {"title": info.get("work", {}).get("title", "Моя работа"), "media_path": info.get("media_path", "")}
 			view.favourites.append(item)
+	view["has_alarm_clock"] = preload("res://scripts/services/ritual_service.gd").has_alarm_clock(app.game_state)
 	app.station_room.apply_adventure_view(view)
 	app.station_room.apply_phase_b_world_effects(preload("res://scripts/services/progress_service.gd").get_profile_world_effects(app.game_state.duplicate(true), "player_01"))
 	if is_instance_valid(gallery_nav_button):
@@ -511,6 +512,12 @@ func handle_prop(id: String) -> bool:
 			else:
 				open_quest("FG08")
 		"gallery_door": open_gallery("")
+		"bruno_alarm_clock":
+			if app.audio_service != null:
+				app.audio_service.play_sfx("chime_solve")
+				app.audio_service.play_voice("bruno", "happy")
+			app.show_toast(Guide.character("bruno").get("alarm_clock_toast", "⏰ Будильник Чемпиона от Бруно: «¡VAMOS! Растяжка вечером, пробежка утром и четыре испанских! Ничего не забываем!»"))
+			return true
 		_:
 			if id.begins_with("station_favourite_"):
 				for room in Collections.list_rooms(app.game_state):

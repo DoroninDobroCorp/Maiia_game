@@ -38,6 +38,7 @@ var movement_ritual_marker: Node3D
 var movement_ritual_light: OmniLight3D
 var challenge_board_marker: Node3D
 var challenge_board_light: OmniLight3D
+var alarm_clock_mesh: Node3D
 var adventure_props: StationAdventureProps
 
 # Материалы для фаз
@@ -89,6 +90,8 @@ func _ready() -> void:
 func apply_adventure_view(view: Dictionary) -> void:
 	if adventure_props != null:
 		adventure_props.apply_view(view)
+	if alarm_clock_mesh != null:
+		alarm_clock_mesh.visible = bool(view.get("awakened", false)) and bool(view.get("has_alarm_clock", false))
 
 func _process(delta: float) -> void:
 	_update_navigation(delta)
@@ -838,6 +841,9 @@ func _setup_props() -> void:
 	# 8. Декоративные мелочи на верстаке (линейка, карандаш, чернильница)
 	_build_workbench_clutter()
 
+	# 9. Будильник Чемпиона (подарок тренера Бруно)
+	_build_bruno_alarm_clock()
+
 func _build_station_sign() -> void:
 	var mat_sign_wood := _textured_material("res://assets/textures/desk_wood.png", Color(0.62, 0.38, 0.19), 0.60, Vector3(1.8, 1.8, 1.8))
 	
@@ -1186,6 +1192,83 @@ func _build_workbench_clutter() -> void:
 	var inkwell := _create_cylinder(0.045, 0.07, mat_brass)
 	inkwell.position = Vector3(1.22, 0.96, 0.92)
 	add_child(inkwell)
+
+func _build_bruno_alarm_clock() -> void:
+	alarm_clock_mesh = Node3D.new()
+	alarm_clock_mesh.name = "bruno_alarm_clock"
+	alarm_clock_mesh.position = Vector3(-0.55, 1.17, 0.24)
+	alarm_clock_mesh.rotation_degrees = Vector3(0, 12, 0)
+	alarm_clock_mesh.visible = false
+	add_child(alarm_clock_mesh)
+
+	var mat_orange := StandardMaterial3D.new()
+	mat_orange.albedo_color = Color(0.96, 0.48, 0.12)
+	mat_orange.roughness = 0.45
+
+	var mat_brass := StandardMaterial3D.new()
+	mat_brass.albedo_color = Color(0.88, 0.72, 0.32)
+	mat_brass.metallic = 0.85
+	mat_brass.roughness = 0.28
+
+	var mat_dial := StandardMaterial3D.new()
+	mat_dial.albedo_color = Color(0.96, 0.95, 0.90)
+
+	var mat_dark := StandardMaterial3D.new()
+	mat_dark.albedo_color = Color(0.14, 0.12, 0.10)
+
+	# Корпус (оранжевый круглый будильник)
+	var body := _create_cylinder(0.045, 0.035, mat_orange)
+	body.rotation_degrees.x = 90
+	alarm_clock_mesh.add_child(body)
+
+	# Циферблат
+	var face := _create_cylinder(0.040, 0.004, mat_dial)
+	face.rotation_degrees.x = 90
+	face.position = Vector3(0.0, 0.0, 0.018)
+	alarm_clock_mesh.add_child(face)
+
+	# Стрелки часов (направлены на вечернюю растяжку!)
+	var hand_h := _create_box(Vector3(0.003, 0.022, 0.002), mat_dark)
+	hand_h.position = Vector3(0.006, 0.008, 0.021)
+	hand_h.rotation_degrees.z = -35
+	alarm_clock_mesh.add_child(hand_h)
+
+	var hand_m := _create_box(Vector3(0.0025, 0.032, 0.002), mat_dark)
+	hand_m.position = Vector3(-0.004, 0.012, 0.021)
+	hand_m.rotation_degrees.z = 25
+	alarm_clock_mesh.add_child(hand_m)
+
+	# Центральная заклёпка
+	var pin := _create_sphere(0.004, mat_brass)
+	pin.position = Vector3(0.0, 0.0, 0.022)
+	alarm_clock_mesh.add_child(pin)
+
+	# Два латунных колокольчика сверху
+	var bell_l := _create_sphere(0.016, mat_brass)
+	bell_l.position = Vector3(-0.032, 0.052, 0.0)
+	alarm_clock_mesh.add_child(bell_l)
+
+	var bell_r := _create_sphere(0.016, mat_brass)
+	bell_r.position = Vector3(0.032, 0.052, 0.0)
+	alarm_clock_mesh.add_child(bell_r)
+
+	# Молоток между колокольчиками
+	var hammer := _create_box(Vector3(0.005, 0.014, 0.005), mat_brass)
+	hammer.position = Vector3(0.0, 0.054, 0.0)
+	alarm_clock_mesh.add_child(hammer)
+
+	# Латунные ножки
+	var leg_l := _create_box(Vector3(0.005, 0.015, 0.005), mat_brass)
+	leg_l.position = Vector3(-0.028, -0.048, 0.0)
+	leg_l.rotation_degrees.z = 20
+	alarm_clock_mesh.add_child(leg_l)
+
+	var leg_r := _create_box(Vector3(0.005, 0.015, 0.005), mat_brass)
+	leg_r.position = Vector3(0.028, -0.048, 0.0)
+	leg_r.rotation_degrees.z = -20
+	alarm_clock_mesh.add_child(leg_r)
+
+	_make_interactive_area(alarm_clock_mesh, "bruno_alarm_clock", "Будильник Чемпиона • подарок тренера Бруно [Позвонить]", Vector3(0.16, 0.18, 0.14))
 
 # ==================== МОДЕЛИ ЭКСПОНАТОВ ====================
 

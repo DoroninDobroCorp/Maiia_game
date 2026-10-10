@@ -60,6 +60,8 @@ static func days_between(date_a: String, date_b: String) -> int:
 	return int(round((unix_b - unix_a) / 86400.0))
 
 static func ensure_challenge(state: Dictionary) -> Dictionary:
+	if bool(state.get("read_only", false)):
+		return state.get("phase_c", {}).get("rituals", {}).get(CHALLENGE_ID, {}).duplicate(true)
 	var phase_c: Dictionary = state.get("phase_c", {})
 	var rituals: Dictionary = phase_c.get("rituals", {})
 	var c: Dictionary = rituals.get(CHALLENGE_ID, {})
@@ -78,6 +80,9 @@ static func ensure_challenge(state: Dictionary) -> Dictionary:
 			cl[item] = false
 		c["today_checklist"] = cl
 
+	if not c.has("has_alarm_clock"):
+		c["has_alarm_clock"] = int(c.get("max_streak", 0)) >= 3 or c.get("history", {}).size() >= 2 or bool(c.get("alarm_clock", false))
+
 	var stored_today: String = str(c.get("today_date", ""))
 	if stored_today != today:
 		# Проверка смены дня и стрика
@@ -86,6 +91,8 @@ static func ensure_challenge(state: Dictionary) -> Dictionary:
 			var diff := days_between(last_date, today)
 			if diff > 1:
 				# Был пропущен как минимум один полный день — стрик сбивается
+				if int(c.get("current_streak", 0)) >= 3 or int(c.get("max_streak", 0)) >= 3 or c.get("history", {}).size() >= 2:
+					c["has_alarm_clock"] = true
 				c["current_streak"] = 0
 		else:
 			c["current_streak"] = 0
@@ -147,6 +154,9 @@ static func toggle_challenge_item(state: Dictionary, item_key: String) -> Dictio
 			if int(c["current_streak"]) > int(c.get("max_streak", 0)):
 				c["max_streak"] = c["current_streak"]
 
+			if int(c["max_streak"]) >= 3 or c.get("history", {}).size() >= 2:
+				c["has_alarm_clock"] = true
+
 			history[today] = {
 				"completed": true,
 				"items": cl.duplicate(true),
@@ -190,8 +200,22 @@ static func toggle_challenge_item(state: Dictionary, item_key: String) -> Dictio
 		"unlocked": bool(c.get("unlocked", false)),
 		"newly_unlocked": newly_unlocked,
 		"all_done_today": all_done,
+		"has_alarm_clock": bool(c.get("has_alarm_clock", false)),
 		"award": award
 	}
+
+static func gift_alarm_clock(state: Dictionary) -> Dictionary:
+	var c := ensure_challenge(state)
+	c["has_alarm_clock"] = true
+	var phase_c: Dictionary = state.get("phase_c", {})
+	var rituals: Dictionary = phase_c.get("rituals", {})
+	rituals[CHALLENGE_ID] = c
+	phase_c["rituals"] = rituals
+	state["phase_c"] = phase_c
+	return c
+
+static func has_alarm_clock(state: Dictionary) -> bool:
+	return bool(state.get("phase_c", {}).get("rituals", {}).get(CHALLENGE_ID, {}).get("has_alarm_clock", false))
 
 static func _find_previous_completed_date(history: Dictionary, before_date: String) -> String:
 	var best := ""
@@ -203,6 +227,8 @@ static func _find_previous_completed_date(history: Dictionary, before_date: Stri
 	return best
 
 static func ensure(state: Dictionary) -> Dictionary:
+	if bool(state.get("read_only", false)):
+		return state.get("phase_c", {}).get("rituals", {}).get(MOVEMENT_RITUAL_ID, {}).duplicate(true)
 	var phase_c: Dictionary = state.get("phase_c", {})
 	var rituals: Dictionary = phase_c.get("rituals", {})
 	var ritual: Dictionary = rituals.get(MOVEMENT_RITUAL_ID, {})
