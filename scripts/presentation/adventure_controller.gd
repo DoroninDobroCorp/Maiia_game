@@ -501,7 +501,12 @@ func handle_prop(id: String) -> bool:
 			else:
 				open_quest("FG11")
 		"adventure_water":
-			if _briefed.get("FG08", false):
+			var inst := UI.instance_for(app.game_state, "FG08")
+			var iid := str(inst.get("instance_id", ""))
+			var inst_prog: Dictionary = app.game_state.get("adventures", {}).get("progress", {}).get(iid, {})
+			var photos_submitted := bool(inst_prog.get("water_photos_submitted", false))
+			var has_photos := not _find_stage_image_path(iid, "water_river").is_empty() or not _find_stage_image_path(iid, "water_fall").is_empty()
+			if photos_submitted or has_photos or _briefed.get("FG08", false):
 				open_water_photos()
 			else:
 				open_quest("FG08")
@@ -875,6 +880,14 @@ func _process_water_photo(target: String, path: String, payload: Dictionary) -> 
 			iid = str(UI.instance_for(candidate, "FG08").get("instance_id", ""))
 		var stage_id := "water_river" if target == "river" else "water_fall"
 		_apply_stage_artifact(candidate, iid, stage_id, artifact_id, path)
+		if payload.has("river_note") and not str(payload.river_note).strip_edges().is_empty():
+			candidate.adventures.progress[iid].stages["water_river"].draft["note"] = str(payload.river_note).strip_edges()
+		if payload.has("fall_note") and not str(payload.fall_note).strip_edges().is_empty():
+			candidate.adventures.progress[iid].stages["water_fall"].draft["note"] = str(payload.fall_note).strip_edges()
+		if payload.has("diff_note") and not str(payload.diff_note).strip_edges().is_empty():
+			if not candidate.adventures.progress[iid].stages.has("water_compare"):
+				candidate.adventures.progress[iid].stages["water_compare"] = {"stage_id": "water_compare", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+			candidate.adventures.progress[iid].stages["water_compare"].draft["note"] = str(payload.diff_note).strip_edges()
 		var loc_id := "rio_azul" if target == "river" else "waterfalls"
 		AtlasService.unlock(candidate, loc_id)
 		if Save.save_game(candidate):
@@ -956,7 +969,9 @@ func _submit_water_photos(payload: Dictionary) -> void:
 			inst_prog.stages["water_compare"]["draft"]["responses"] = {}
 		inst_prog.stages["water_compare"]["draft"]["responses"]["water_compare_pages"] = {"fields": {"difference": d_note}}
 
-	inst_prog["water_photos_submitted"] = true
+	var silent := bool(payload.get("silent", false))
+	if not silent:
+		inst_prog["water_photos_submitted"] = true
 	AtlasService.unlock(candidate, "rio_azul")
 	AtlasService.unlock(candidate, "waterfalls")
 
@@ -965,9 +980,10 @@ func _submit_water_photos(payload: Dictionary) -> void:
 		refresh_world()
 		if route == "water_photos" and is_instance_valid(screen):
 			screen.setup(_view(route_context), app.audio_service)
-			if screen.has_method("show_clara_submission_success"):
+			if not silent and screen.has_method("show_clara_submission_success"):
 				screen.show_clara_submission_success()
-		_result({"ok": true, "message": "Снимки переданы Кларе! Героиня появится позже."})
+		if not silent:
+			_result({"ok": true, "message": "Снимки переданы Кларе! Героиня появится позже."})
 	else:
 		_result({"ok": false, "message": "Не удалось сохранить фоторепортаж."})
 

@@ -158,12 +158,17 @@ func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> 
 	else:
 		UI.label("Миссия выполнена" if finished else "Шаг %d из %d" % [mini(done+1,stages.size()),stages.size()] if done > 0 else "Новая миссия",box,14,UI.TEAL)
 	UI.label(str(quest.get("story_title",quest.get("title", "Приключение"))),box,21)
+	var is_water_submitted := qid == "FG08" and bool(state.get("adventures", {}).get("progress", {}).get(str(inst.get("instance_id", "")), {}).get("water_photos_submitted", false))
 	if guide.is_empty():
 		UI.label(str(next.get("title",quest.get("summary", "Выбери первое действие"))),box)
 	else:
 		UI.label(str(guide.get("goal", quest.get("summary", ""))),box,14)
 		if finished:
 			UI.label(str(guide.get("remains", "")),box,13,UI.BRASS)
+		elif is_water_submitted:
+			UI.label("Клара проявляет снимки в редакции", box, 15, UI.TEAL)
+			UI.label("Новых миссий пока нет — героиня появится позже!", box, 13, UI.MUTED)
+			UI.label("Альбом со снимками на столе станции", box, 12, UI.BRASS)
 		else:
 			var info := Guide.step(str(next.get("stage_id", "")))
 			UI.label("Дальше: %s" % str(info.get("title", next.get("title", ""))),box,15)
@@ -177,8 +182,11 @@ func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> 
 	bottom.size_flags_vertical = SIZE_EXPAND_FILL
 	bottom.alignment = BoxContainer.ALIGNMENT_END
 	box.add_child(bottom)
-	var primary := UI.button(("Открыть итог →" if finished else "Продолжить →") if not inst.is_empty() else "Начать миссию →",bottom,func():
-		if inst.is_empty() or (finished and not guide.is_empty()):
+	var primary_label := "Фоторепортаж Клары 📷" if is_water_submitted else (("Открыть итог →" if finished else "Продолжить →") if not inst.is_empty() else "Начать миссию →")
+	var primary := UI.button(primary_label, bottom, func():
+		if is_water_submitted:
+			water_photos_requested.emit()
+		elif inst.is_empty() or (finished and not guide.is_empty()):
 			if guide.is_empty(): quest_requested.emit(qid)
 			else: mission_requested.emit(qid)
 		else: episode_requested.emit(str(inst.get("instance_id", "")),str(next.get("stage_id", ""))),true)
@@ -186,10 +194,7 @@ func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> 
 	if guide.is_empty():
 		UI.button("Посмотреть путь",bottom,func(): history_quest = quest; _build())
 	else:
-		if qid == "FG08":
-			var inst_prog: Dictionary = state.get("adventures", {}).get("progress", {}).get(str(inst.get("instance_id", "")), {})
-			if bool(inst_prog.get("water_photos_submitted", false)):
-				UI.label("Снимки у Клары · героиня появится позже", bottom, 13, UI.TEAL)
+		if qid == "FG08" and not is_water_submitted:
 			UI.button("Загрузить фото реки и водопада 📷", bottom, func(): water_photos_requested.emit())
 		UI.button("О миссии и весь путь",bottom,func(): mission_requested.emit(qid))
 	if not CURRENT_STORY_QUEST_IDS.has(qid):

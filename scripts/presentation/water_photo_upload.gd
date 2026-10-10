@@ -70,7 +70,7 @@ func show_result(result: Dictionary) -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
-		closed.emit()
+		_close_and_save()
 
 func _load_existing_data() -> void:
 	var progress: Dictionary = state.get("adventures", {}).get("progress", {}).get(instance_id, {})
@@ -90,9 +90,10 @@ func _load_existing_data() -> void:
 	else:
 		river_image_path = str(r_stage.get("draft", {}).get("source_path", ""))
 
-	river_note = str(r_stage.get("draft", {}).get("note", ""))
 	if river_note.is_empty():
-		river_note = str(r_stage.get("draft", {}).get("responses", {}).get("water_river_return", {}).get("fields", {}).get("observation", ""))
+		river_note = str(r_stage.get("draft", {}).get("note", ""))
+		if river_note.is_empty():
+			river_note = str(r_stage.get("draft", {}).get("responses", {}).get("water_river_return", {}).get("fields", {}).get("observation", ""))
 
 	# Waterfall stage
 	var f_stage: Dictionary = stages.get("water_fall", {})
@@ -108,15 +109,17 @@ func _load_existing_data() -> void:
 	else:
 		fall_image_path = str(f_stage.get("draft", {}).get("source_path", ""))
 
-	fall_note = str(f_stage.get("draft", {}).get("note", ""))
 	if fall_note.is_empty():
-		fall_note = str(f_stage.get("draft", {}).get("responses", {}).get("water_fall_return", {}).get("fields", {}).get("observation", ""))
+		fall_note = str(f_stage.get("draft", {}).get("note", ""))
+		if fall_note.is_empty():
+			fall_note = str(f_stage.get("draft", {}).get("responses", {}).get("water_fall_return", {}).get("fields", {}).get("observation", ""))
 
 	# Comparison stage
 	var comp_stage: Dictionary = stages.get("water_compare", {})
-	diff_note = str(comp_stage.get("draft", {}).get("note", ""))
 	if diff_note.is_empty():
-		diff_note = str(comp_stage.get("draft", {}).get("responses", {}).get("water_compare_pages", {}).get("fields", {}).get("difference", ""))
+		diff_note = str(comp_stage.get("draft", {}).get("note", ""))
+		if diff_note.is_empty():
+			diff_note = str(comp_stage.get("draft", {}).get("responses", {}).get("water_compare_pages", {}).get("fields", {}).get("difference", ""))
 
 	submitted = bool(progress.get("water_photos_submitted", false))
 
@@ -197,7 +200,13 @@ func _build_river_card(parent: Node) -> void:
 		UI.label("✓ Снимок реки прикреплён (на диптихе станции)", photo_box, 13, UI.TEAL)
 		UI.button("Заменить фото реки 📷", photo_box, func():
 			_capture_edits()
-			command_requested.emit("attach_water_photo", {"target": "river", "instance_id": instance_id}))
+			command_requested.emit("attach_water_photo", {
+				"target": "river",
+				"instance_id": instance_id,
+				"river_note": river_note,
+				"fall_note": fall_note,
+				"diff_note": diff_note
+			}))
 	else:
 		var placeholder := PanelContainer.new()
 		placeholder.custom_minimum_size = Vector2(260, 130)
@@ -213,7 +222,13 @@ func _build_river_card(parent: Node) -> void:
 
 		UI.button("Загрузить фото реки 📷", photo_box, func():
 			_capture_edits()
-			command_requested.emit("attach_water_photo", {"target": "river", "instance_id": instance_id}), true)
+			command_requested.emit("attach_water_photo", {
+				"target": "river",
+				"instance_id": instance_id,
+				"river_note": river_note,
+				"fall_note": fall_note,
+				"diff_note": diff_note
+			}), true)
 
 	UI.label("Что запомнилось на реке? (голос воды, цвет, течение)", card, 13, UI.TEAL)
 	river_edit = TextEdit.new()
@@ -248,7 +263,13 @@ func _build_fall_card(parent: Node) -> void:
 		UI.label("✓ Снимок водопада прикреплён (на диптихе станции)", photo_box, 13, UI.TEAL)
 		UI.button("Заменить фото водопада 📷", photo_box, func():
 			_capture_edits()
-			command_requested.emit("attach_water_photo", {"target": "fall", "instance_id": instance_id}))
+			command_requested.emit("attach_water_photo", {
+				"target": "fall",
+				"instance_id": instance_id,
+				"river_note": river_note,
+				"fall_note": fall_note,
+				"diff_note": diff_note
+			}))
 	else:
 		var placeholder := PanelContainer.new()
 		placeholder.custom_minimum_size = Vector2(260, 130)
@@ -264,7 +285,13 @@ func _build_fall_card(parent: Node) -> void:
 
 		UI.button("Загрузить фото водопада 📷", photo_box, func():
 			_capture_edits()
-			command_requested.emit("attach_water_photo", {"target": "fall", "instance_id": instance_id}), true)
+			command_requested.emit("attach_water_photo", {
+				"target": "fall",
+				"instance_id": instance_id,
+				"river_note": river_note,
+				"fall_note": fall_note,
+				"diff_note": diff_note
+			}), true)
 
 	UI.label("Что запомнилось у водопада? (грохот, свежесть, брызги)", card, 13, UI.TEAL)
 	fall_edit = TextEdit.new()
@@ -287,7 +314,7 @@ func _build_comparison_card(parent: Node) -> void:
 
 func _build_footer(parent: Node) -> void:
 	var footer := UI.row(parent)
-	UI.button("Вернуться на станцию", footer, func(): closed.emit())
+	UI.button("Вернуться на станцию", footer, func(): _close_and_save())
 	UI.button("О миссии Клары", footer, func(): mission_requested.emit("FG08"))
 
 	var space := Control.new()
@@ -296,7 +323,7 @@ func _build_footer(parent: Node) -> void:
 
 	if submitted:
 		UI.label("✓ Снимки у Клары · Клара появится позже", footer, 13, UI.TEAL)
-		var view_btn := UI.button("Полюбоваться диптихом на станции →", footer, func(): closed.emit(), true)
+		var view_btn := UI.button("Полюбоваться диптихом на станции →", footer, func(): _close_and_save(), true)
 		view_btn.name = "PhotoUploadPrimaryAction"
 	else:
 		submit_button = UI.button("Передать снимки Кларе ✨", footer, func():
@@ -316,6 +343,18 @@ func _capture_edits() -> void:
 		fall_note = fall_edit.text.strip_edges()
 	if is_instance_valid(diff_edit):
 		diff_note = diff_edit.text.strip_edges()
+
+func _close_and_save() -> void:
+	_capture_edits()
+	if not river_note.is_empty() or not fall_note.is_empty() or not diff_note.is_empty():
+		command_requested.emit("submit_water_photos", {
+			"instance_id": instance_id,
+			"river_note": river_note,
+			"fall_note": fall_note,
+			"diff_note": diff_note,
+			"silent": true
+		})
+	closed.emit()
 
 func show_clara_submission_success() -> void:
 	submitted = true

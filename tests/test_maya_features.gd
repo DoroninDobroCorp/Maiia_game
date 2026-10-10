@@ -6,6 +6,7 @@ const ProgressService = preload("res://scripts/services/progress_service.gd")
 const StationRoom = preload("res://scripts/presentation/station_room.gd")
 const StationAdventureProps = preload("res://scripts/presentation/station_adventure_props.gd")
 const AdventureHub = preload("res://scripts/presentation/adventure_hub.gd")
+const AdventureContent = preload("res://scripts/services/adventure_content.gd")
 const SaveService = preload("res://scripts/services/save_service.gd")
 
 func _init() -> void:
@@ -198,6 +199,34 @@ func _init() -> void:
 	assert(p2.water_caption.text.contains("РЕПОРТАЖ ДЛЯ КЛАРЫ"), "Diptych caption shows reportage for Clara")
 	assert(p2.water_label.text.contains("СНИМКИ У КЛАРЫ"), "Desk label reflects photos delivered to Clara")
 	p2.free()
+
+	# Test MissionPage and AdventureHub respect submitted state without offering premature next steps
+	var test_state := state.duplicate(true)
+	test_state.puzzle_solved = true
+	var fg08_inst_id := ""
+	for i in test_state.get("phase_b", {}).get("quest_instances", {}).values():
+		if str(i.get("quest_id", "")) == "FG08":
+			fg08_inst_id = str(i.get("instance_id", ""))
+	if fg08_inst_id.is_empty():
+		fg08_inst_id = "FG08:test"
+		test_state.phase_b.quest_instances[fg08_inst_id] = {"instance_id": fg08_inst_id, "quest_id": "FG08", "profile_id": "player_01", "status": "ACTIVE", "quest_snapshot": AdventureContent.get_quest("FG08")}
+	if not test_state.has("adventures"): test_state["adventures"] = {}
+	if not test_state.adventures.has("progress"): test_state.adventures["progress"] = {}
+	test_state.adventures.progress[fg08_inst_id] = {"instance_id": fg08_inst_id, "water_photos_submitted": true, "stages": {}}
+
+	var mp := preload("res://scripts/presentation/mission_page.gd").new()
+	test_state._adventure_ui = {"instance_id": fg08_inst_id, "quest": AdventureContent.get_quest("FG08")}
+	mp.setup(test_state)
+	var mp_action := mp.find_child("MissionPrimaryAction", true, false) as Button
+	assert(mp_action != null and mp_action.text.contains("Фоторепортаж Клары"), "MissionPage offers photo reportage rather than demanding next stage")
+	mp.free()
+
+	var hub2 := AdventureHub.new()
+	hub2.setup(test_state)
+	var hub2_primary := hub2.find_child("QuestPrimary_FG08", true, false) as Button
+	assert(hub2_primary != null and hub2_primary.text.contains("Фоторепортаж Клары"), "AdventureHub primary button opens photo reportage")
+	hub2.free()
+
 	print("[PASS] 12. Water photo upload form, narrative justification & Clara returning later verified")
 
 	print("==================================================")

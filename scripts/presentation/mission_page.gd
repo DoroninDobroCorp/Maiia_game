@@ -210,6 +210,9 @@ func _build_actions(footer: Control, guide: Dictionary, instance: Dictionary, st
 		var photos_submitted := bool(inst_prog.get("water_photos_submitted", false))
 		if photos_submitted:
 			UI.label("Снимки у Клары · героиня появится позже", footer, 13, UI.TEAL)
+			var view_photos := UI.button("Фоторепортаж Клары 📷", footer, func(): water_photos_requested.emit(), true)
+			view_photos.name = "MissionPrimaryAction"
+			return
 		UI.button("Загрузить фото реки и водопада 📷", footer, func(): water_photos_requested.emit())
 	var next := _next_stage(stages)
 	var started := _completed_count(stages) > 0 or str(UI.stage_progress(state, instance_id, str(next.get("stage_id", ""))).get("status", "")) == "IN_PROGRESS"
