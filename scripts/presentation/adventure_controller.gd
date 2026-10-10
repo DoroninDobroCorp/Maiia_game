@@ -888,12 +888,22 @@ func _process_water_photo(target: String, path: String, payload: Dictionary) -> 
 		var stage_id := "water_river" if target == "river" else "water_fall"
 		_apply_stage_artifact(candidate, iid, stage_id, artifact_id, path)
 		if payload.has("river_note") and not str(payload.river_note).strip_edges().is_empty():
+			if not candidate.adventures.progress[iid].stages.has("water_river"):
+				candidate.adventures.progress[iid].stages["water_river"] = {"stage_id": "water_river", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+			if not candidate.adventures.progress[iid].stages["water_river"].has("draft"):
+				candidate.adventures.progress[iid].stages["water_river"]["draft"] = {}
 			candidate.adventures.progress[iid].stages["water_river"].draft["note"] = str(payload.river_note).strip_edges()
 		if payload.has("fall_note") and not str(payload.fall_note).strip_edges().is_empty():
+			if not candidate.adventures.progress[iid].stages.has("water_fall"):
+				candidate.adventures.progress[iid].stages["water_fall"] = {"stage_id": "water_fall", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+			if not candidate.adventures.progress[iid].stages["water_fall"].has("draft"):
+				candidate.adventures.progress[iid].stages["water_fall"]["draft"] = {}
 			candidate.adventures.progress[iid].stages["water_fall"].draft["note"] = str(payload.fall_note).strip_edges()
 		if payload.has("diff_note") and not str(payload.diff_note).strip_edges().is_empty():
 			if not candidate.adventures.progress[iid].stages.has("water_compare"):
 				candidate.adventures.progress[iid].stages["water_compare"] = {"stage_id": "water_compare", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+			if not candidate.adventures.progress[iid].stages["water_compare"].has("draft"):
+				candidate.adventures.progress[iid].stages["water_compare"]["draft"] = {}
 			candidate.adventures.progress[iid].stages["water_compare"].draft["note"] = str(payload.diff_note).strip_edges()
 		var loc_id := "rio_azul" if target == "river" else "waterfalls"
 		AtlasService.unlock(candidate, loc_id)
@@ -954,6 +964,8 @@ func _submit_water_photos(payload: Dictionary) -> void:
 
 	if not inst_prog.stages.has("water_river"):
 		inst_prog.stages["water_river"] = {"stage_id": "water_river", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+	if not inst_prog.stages["water_river"].has("draft"):
+		inst_prog.stages["water_river"]["draft"] = {}
 	if not r_note.is_empty():
 		inst_prog.stages["water_river"]["draft"]["note"] = r_note
 		if not inst_prog.stages["water_river"]["draft"].has("responses"):
@@ -962,6 +974,8 @@ func _submit_water_photos(payload: Dictionary) -> void:
 
 	if not inst_prog.stages.has("water_fall"):
 		inst_prog.stages["water_fall"] = {"stage_id": "water_fall", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+	if not inst_prog.stages["water_fall"].has("draft"):
+		inst_prog.stages["water_fall"]["draft"] = {}
 	if not f_note.is_empty():
 		inst_prog.stages["water_fall"]["draft"]["note"] = f_note
 		if not inst_prog.stages["water_fall"]["draft"].has("responses"):
@@ -970,6 +984,8 @@ func _submit_water_photos(payload: Dictionary) -> void:
 
 	if not inst_prog.stages.has("water_compare"):
 		inst_prog.stages["water_compare"] = {"stage_id": "water_compare", "status": "IN_PROGRESS", "draft": {}, "attempts": []}
+	if not inst_prog.stages["water_compare"].has("draft"):
+		inst_prog.stages["water_compare"]["draft"] = {}
 	if not d_note.is_empty():
 		inst_prog.stages["water_compare"]["draft"]["note"] = d_note
 		if not inst_prog.stages["water_compare"]["draft"].has("responses"):
