@@ -828,6 +828,9 @@ func _attach_media(payload: Dictionary) -> void:
 	dialog.access = FileDialog.ACCESS_FILESYSTEM
 	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	dialog.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Изображения"])
+	var downloads := OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS)
+	if not downloads.is_empty() and DirAccess.dir_exists_absolute(downloads):
+		dialog.current_dir = downloads
 	app.add_child(dialog)
 	dialog.file_selected.connect(func(path: String):
 		var candidate: Dictionary = app.game_state.duplicate(true)
@@ -869,6 +872,9 @@ func _attach_water_photo(payload: Dictionary) -> void:
 	dialog.access = FileDialog.ACCESS_FILESYSTEM
 	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	dialog.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Изображения"])
+	var downloads := OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS)
+	if not downloads.is_empty() and DirAccess.dir_exists_absolute(downloads):
+		dialog.current_dir = downloads
 	app.add_child(dialog)
 	dialog.file_selected.connect(func(path: String):
 		_process_water_photo(target, path, payload)

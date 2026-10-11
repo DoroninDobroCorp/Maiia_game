@@ -290,6 +290,7 @@ func run() -> void:
 	var version_before := Collections.get_version(app.game_state, str(created.work_id))
 	controller._attach_media({"work_id":created.work_id,"version_id":version_before.version_id,"content":attached_content,"note":"Рисунок и описание"})
 	var chooser := app.find_children("*","FileDialog",true,false)[0] as FileDialog
+	check(chooser.current_dir == OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS), "image attachment dialog starts in Downloads directory")
 	chooser.file_selected.emit(fixture_path)
 	await settle()
 	var attached_version := Collections.get_version(app.game_state,str(created.work_id))

@@ -295,6 +295,9 @@ func _build_instance_controls(root: VBoxContainer, quest: Dictionary, instance: 
 		file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 		file_dialog.access = FileDialog.ACCESS_FILESYSTEM
 		file_dialog.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Images"])
+		var downloads := OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS)
+		if not downloads.is_empty() and DirAccess.dir_exists_absolute(downloads):
+			file_dialog.current_dir = downloads
 		add_child(file_dialog)
 		add_image.pressed.connect(func(): file_dialog.popup_centered_ratio(0.72))
 		file_dialog.file_selected.connect(func(path: String): artifact_import_requested.emit(path, instance_id))
