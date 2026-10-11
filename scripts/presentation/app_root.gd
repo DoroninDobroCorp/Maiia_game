@@ -634,6 +634,21 @@ func open_parent_console() -> void:
 func open_world_explorer() -> void:
 	_close_modals()
 	modal_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	if not bool(game_state.get("read_only", false)):
+		var has_fg08 := false
+		for inst in game_state.get("phase_b", {}).get("quest_instances", {}).values():
+			if str(inst.get("quest_id", "")) == "FG08":
+				has_fg08 = true
+				break
+		if has_fg08:
+			var AtlasServiceScript = preload("res://scripts/services/atlas_service.gd")
+			var unlocked_any := false
+			if AtlasServiceScript.unlock(game_state, "rio_azul"):
+				unlocked_any = true
+			if AtlasServiceScript.unlock(game_state, "waterfalls"):
+				unlocked_any = true
+			if unlocked_any:
+				SaveServiceScript.save_game(game_state)
 	var explorer: Control = WorldExplorerScene.instantiate()
 	modal_container.add_child(explorer)
 	explorer.setup(game_state, audio_service)

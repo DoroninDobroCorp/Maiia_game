@@ -667,8 +667,18 @@ func _build_atlas_tab(state: Dictionary) -> Control:
 	if station_name.is_empty():
 		station_name = "Лесная станция"
 
+	var unlocked_locations: Array[Dictionary] = AtlasMapScript.AtlasServiceScript.list_locations(state).filter(func(l): return bool(l.get("unlocked", false)))
+	var unlocked_ids: Array[String] = []
+	for l in unlocked_locations:
+		unlocked_ids.append(str(l.get("id", "")))
+
 	var intro := Label.new()
-	intro.text = "Открыта только станция «%s». Остальные места видны сквозь туман войны и будут раскрываться постепенно." % station_name
+	if unlocked_ids.has("rio_azul") and unlocked_ids.has("waterfalls"):
+		intro.text = "На карте открыты новые точки долины: станция «%s», 🌊 река Río Azul и 💧 водопад Cascada Escondida! До них уже можно бегать и планировать походы." % station_name
+	elif unlocked_ids.size() > 1:
+		intro.text = "На карте открыта станция «%s» и исследованные точки долины. Остальные места видны сквозь туман войны." % station_name
+	else:
+		intro.text = "Открыта пока только станция «%s». Остальные места видны сквозь туман войны и будут раскрываться постепенно." % station_name
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_color_override("font_color", Color(0.78, 0.77, 0.70))
 	vbox.add_child(intro)
@@ -680,14 +690,25 @@ func _build_atlas_tab(state: Dictionary) -> Control:
 	atlas.setup(state)
 
 	var detail := Label.new()
-	detail.text = "◎ %s — единственная открытая точка. Нажми на метку в тумане, чтобы увидеть, что там появится позже." % station_name
+	if unlocked_ids.has("rio_azul") and unlocked_ids.has("waterfalls"):
+		detail.text = "◎ Открытые точки: %s, 🌊 Река Río Azul и 💧 Cascada Escondida. Нажми на метку реки или водопада, чтобы увидеть открытые возможности и суперчелленджи!" % station_name
+	elif unlocked_ids.size() > 1:
+		detail.text = "◎ %s и открытые точки на карте. Выбери любую метку: туман покажет, что ждёт дальше." % station_name
+	else:
+		detail.text = "◎ %s — единственная открытая точка. Нажми на метку в тумане, чтобы увидеть, что там появится позже." % station_name
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail.add_theme_font_size_override("font_size", 12)
 	detail.add_theme_color_override("font_color", Color(0.88, 0.84, 0.73))
 	vbox.add_child(detail)
 	atlas.location_selected.connect(func(location: Dictionary):
+		var loc_id := str(location.get("id", ""))
 		if bool(location.get("unlocked", false)):
-			detail.text = "◎ %s — %s\n%s" % [str(location.get("title", "")), str(location.get("subtitle", "")), str(location.get("description", ""))]
+			if loc_id == "rio_azul":
+				detail.text = "◎ %s — %s\n🟢 Новая возможность (уже открыта):\n«Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега»." % [str(location.get("title", "")), str(location.get("subtitle", ""))]
+			elif loc_id == "waterfalls":
+				detail.text = "◎ %s — %s\n⚡ На новой локации открыты два суперчелленджа:\n1) Суперчеллендж: Пробежка до водопада (большое расстояние и частично в горку — это челлендж на ощутимое будущее).\n2) Суперчеллендж: Большой круговой поход от дома к водопаду на 12 км частично в гору (это уже очень серьёзный поход, в него можно идти только с основательной подготовкой!)." % [str(location.get("title", "")), str(location.get("subtitle", ""))]
+			else:
+				detail.text = "◎ %s — %s\n%s" % [str(location.get("title", "")), str(location.get("subtitle", "")), str(location.get("description", ""))]
 		else:
 			detail.text = "☁ %s — %s\nТуман войны. %s" % [str(location.get("title", "")), str(location.get("subtitle", "")), str(location.get("description", ""))]
 	)

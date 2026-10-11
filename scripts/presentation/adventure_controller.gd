@@ -453,6 +453,14 @@ func refresh_world() -> void:
 			var inst_prog: Dictionary = app.game_state.get("adventures", {}).get("progress", {}).get(iid, {})
 			if bool(inst_prog.get("water_photos_submitted", false)):
 				view["water_photos_submitted"] = true
+			if not bool(app.game_state.get("read_only", false)):
+				var unlocked_any := false
+				if AtlasService.unlock(app.game_state, "rio_azul"):
+					unlocked_any = true
+				if AtlasService.unlock(app.game_state, "waterfalls"):
+					unlocked_any = true
+				if unlocked_any:
+					Save.save_game(app.game_state)
 	for room in Collections.list_rooms(app.game_state):
 		if str(room.get("template_id", "")) != "station_favorites":
 			continue
@@ -464,6 +472,8 @@ func refresh_world() -> void:
 					item = {"title": info.get("work", {}).get("title", "Моя работа"), "media_path": info.get("media_path", "")}
 			view.favourites.append(item)
 	view["has_alarm_clock"] = preload("res://scripts/services/ritual_service.gd").has_alarm_clock(app.game_state)
+	view["river_unlocked"] = AtlasService.is_unlocked(app.game_state, "rio_azul")
+	view["fall_unlocked"] = AtlasService.is_unlocked(app.game_state, "waterfalls")
 	app.station_room.apply_adventure_view(view)
 	app.station_room.apply_phase_b_world_effects(preload("res://scripts/services/progress_service.gd").get_profile_world_effects(app.game_state.duplicate(true), "player_01"))
 	if is_instance_valid(gallery_nav_button):

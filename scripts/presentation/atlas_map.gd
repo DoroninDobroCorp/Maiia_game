@@ -40,7 +40,13 @@ func _rebuild_markers() -> void:
 		marker_buttons[str(location.get("id", ""))] = marker
 
 func _marker_text(location: Dictionary) -> String:
-	var prefix := str(location.get("icon", "•")) if bool(location.get("unlocked", false)) else "☁"
+	var is_unlocked := bool(location.get("unlocked", false))
+	var prefix := str(location.get("icon", "•")) if is_unlocked else "☁"
+	var loc_id := str(location.get("id", ""))
+	if is_unlocked:
+		if loc_id == "station": prefix = "🌲"
+		elif loc_id == "rio_azul": prefix = "🌊"
+		elif loc_id == "waterfalls": prefix = "💧"
 	return "%s  %s" % [prefix, str(location.get("marker_title", location.get("title", "")))]
 
 func _tooltip_text(location: Dictionary) -> String:
@@ -105,9 +111,14 @@ func _draw() -> void:
 		if str(location.get("id", "")) == "station":
 			continue
 		var point := _point_for(location)
-		var alpha := 0.19 if str(location.get("distance", "")) == "distant" else 0.28
-		draw_line(station, point, Color(0.70, 0.65, 0.47, alpha), 1.0, true)
-		if not bool(location.get("unlocked", false)):
+		var is_loc_unlocked := bool(location.get("unlocked", false))
+		if is_loc_unlocked:
+			draw_line(station, point, Color(0.96, 0.78, 0.32, 0.85), 2.5, true)
+			draw_circle(point, 14.0, Color(0.25, 0.65, 0.75, 0.22))
+			draw_arc(point, 18.0, 0.0, TAU, 32, Color(0.96, 0.78, 0.32, 0.88), 2.0, true)
+		else:
+			var alpha := 0.19 if str(location.get("distance", "")) == "distant" else 0.28
+			draw_line(station, point, Color(0.70, 0.65, 0.47, alpha), 1.0, true)
 			_draw_fog(point, str(location.get("distance", "near")))
 
 	draw_circle(station, 18.0, Color(0.95, 0.70, 0.22, 0.13))

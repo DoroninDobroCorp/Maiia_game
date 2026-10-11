@@ -39,6 +39,7 @@ var movement_ritual_light: OmniLight3D
 var challenge_board_marker: Node3D
 var challenge_board_light: OmniLight3D
 var alarm_clock_mesh: Node3D
+var valley_map_notes: Label3D
 var adventure_props: StationAdventureProps
 
 # Материалы для фаз
@@ -92,6 +93,16 @@ func apply_adventure_view(view: Dictionary) -> void:
 		adventure_props.apply_view(view)
 	if alarm_clock_mesh != null:
 		alarm_clock_mesh.visible = bool(view.get("awakened", false)) and bool(view.get("has_alarm_clock", false))
+	if valley_map_notes != null:
+		var has_river: bool = bool(view.get("river_unlocked", false))
+		var has_fall: bool = bool(view.get("fall_unlocked", false))
+		if has_river and has_fall:
+			valley_map_notes.text = "🌊 р. Рио Асуль • [ОТКРЫТА]\n💧 Cascada Escondida • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
+			valley_map_notes.modulate = Color(0.18, 0.38, 0.28)
+		elif has_river:
+			valley_map_notes.text = "🌊 р. Рио Асуль • [ОТКРЫТА]\n▲ Пилтрикитрон • [ТУМАН]"
+		elif has_fall:
+			valley_map_notes.text = "💧 Cascada Escondida • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
 
 func _process(delta: float) -> void:
 	_update_navigation(delta)
@@ -1070,6 +1081,7 @@ func _build_valley_map() -> void:
 	map_notes.rotation_degrees = Vector3(0, 90, 0)
 	map_notes.position = Vector3(-2.32, 1.55, 0.45)
 	add_child(map_notes)
+	valley_map_notes = map_notes
 	
 	_make_interactive_area(map_mesh, "map_table", "Карта долины Эль-Больсон [Изучить]", Vector3(0.15, 1.25, 1.05))
 
