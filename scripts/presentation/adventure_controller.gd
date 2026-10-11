@@ -512,6 +512,16 @@ func handle_prop(id: String) -> bool:
 			else:
 				open_quest("FG08")
 		"gallery_door": open_gallery("")
+		"water_panel_river":
+			if app.audio_service != null:
+				app.audio_service.play_sfx("paper_flip")
+			app.show_toast("🌊 Река Río Azul (новая возможность):\n«Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега».")
+			return true
+		"water_panel_fall":
+			if app.audio_service != null:
+				app.audio_service.play_sfx("paper_flip")
+			app.show_toast("💧 Cascada Escondida (два суперчелленджа):\n1) Пробежка до водопада (в горку, на будущее);\n2) Большой круговой поход на 12 км частично в гору (только с основательной подготовкой!).")
+			return true
 		"bruno_alarm_clock":
 			if app.audio_service != null:
 				app.audio_service.play_sfx("chime_solve")

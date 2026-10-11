@@ -268,7 +268,41 @@ func _init() -> void:
 	hub3.free()
 	print("[PASS] 13. Bruno 3-day streak forgotten stretch reaction & gifted alarm clock verified")
 
+	# --- 9. RIVER OPPORTUNITY & WATERFALL SUPER-CHALLENGES ---
+	var exp_state := SaveService.get_default_state()
+	exp_state.puzzle_solved = true
+	AtlasService.unlock(exp_state, "rio_azul")
+	AtlasService.unlock(exp_state, "waterfalls")
+
+	var explorer := preload("res://scripts/presentation/world_explorer.gd").new()
+	explorer.setup(exp_state, null)
+
+	var rio_data := AtlasService.get_location(exp_state, "rio_azul")
+	explorer._on_location_selected(rio_data)
+	assert(explorer.detail_label.text.contains("Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега"), "River detail mentions running to the river as great starter location")
+	assert(explorer.detail_label.text.contains("Новая возможность") or explorer.detail_label.text.contains("уже открыта"), "River marked as new opportunity already open")
+
+	var wf_data := AtlasService.get_location(exp_state, "waterfalls")
+	explorer._on_location_selected(wf_data)
+	assert(explorer.detail_label.text.contains("суперчеллендж"), "Waterfall introduces super-challenges")
+	assert(explorer.detail_label.text.contains("Пробежка до водопада") and (explorer.detail_label.text.contains("ощутимое будущее") or explorer.detail_label.text.contains("в горку")), "Super-challenge 1: run to waterfall in future")
+	assert(explorer.detail_label.text.contains("12 км") and explorer.detail_label.text.contains("основательной подготовк"), "Super-challenge 2: 12km hike with thorough preparation")
+	explorer.free()
+
+	# AdventureHub map tab renders river opportunity and waterfall super-challenges
+	var hub_map := AdventureHub.new()
+	hub_map.setup(exp_state)
+	hub_map.current_tab = 1
+	hub_map._build()
+	var hub_map_text := ""
+	for l in hub_map.find_children("*", "Label", true, false):
+		hub_map_text += " " + l.text
+	assert(hub_map_text.contains("Теперь пробежка доступна до реки"), "Hub map tab has river running opportunity")
+	assert(hub_map_text.contains("суперчеллендж") and hub_map_text.contains("12 км"), "Hub map tab has waterfall super-challenges")
+	hub_map.free()
+	print("[PASS] 14. River run opportunity & Waterfall two super-challenges verified")
+
 	print("==================================================")
-	print("  ALL MAYA FEATURE TESTS PASSED (14/14 checks)")
+	print("  ALL MAYA FEATURE TESTS PASSED (15/15 checks)")
 	print("==================================================")
 	quit()

@@ -364,15 +364,29 @@ func _build_map_tab() -> void:
 	var atlas: Array = state.get("phase_c", {}).get("atlas_unlocked", ["station"])
 	var points_box := UI.card(sc)
 	UI.label("ОТКРЫТЫЕ ТОЧКИ АТЛАСА", points_box, 13, UI.TEAL)
-	var names := {
-		"station": "🌲 Горная станция (база Майи)",
-		"rio_azul": "🌊 Река Río Azul (долина)",
-		"waterfalls": "💧 Ближайший водопад — Cascada Escondida (горный каскад)"
-	}
 	for pt in atlas:
 		var pt_str := str(pt)
-		var title: String = str(names.get(pt_str, pt_str))
-		UI.label("✦ " + title, points_box, 14, Color(0.92, 0.86, 0.68))
+		if pt_str == "station":
+			var c_box := UI.card(points_box)
+			UI.label("🌲 Горная станция (база Майи)", c_box, 16, UI.BRASS)
+			UI.label("Главный штаб Майи: рабочий верстак, радиостанция и полевой архив.", c_box, 12, UI.MUTED)
+		elif pt_str == "rio_azul":
+			var c_box := UI.card(points_box)
+			UI.label("🌊 Река Río Azul (долина)", c_box, 16, UI.BRASS)
+			UI.label("🟢 Новая возможность (уже открыта):", c_box, 13, UI.TEAL)
+			UI.label("«Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега».", c_box, 13, UI.PAPER)
+		elif pt_str == "waterfalls":
+			var c_box := UI.card(points_box)
+			UI.label("💧 Ближайший водопад — Cascada Escondida (горный каскад)", c_box, 16, UI.BRASS)
+			UI.label("⚡ На новой локации открыты два суперчелленджа:", c_box, 13, UI.BRASS)
+			var ch1 := UI.column(c_box)
+			UI.label("🏃‍♀️ 1. Суперчеллендж: Пробежка до водопада", ch1, 13, Color(1.0, 0.85, 0.50))
+			UI.label("Большое расстояние и частично в горку — это челлендж на ощутимое будущее.", ch1, 12, UI.MUTED)
+			var ch2 := UI.column(c_box)
+			UI.label("🥾 2. Суперчеллендж: Большой круговой поход от дома к водопаду на 12 км частично в гору", ch2, 13, Color(1.0, 0.85, 0.50))
+			UI.label("Это уже очень серьёзный поход, и в него можно идти только с основательной подготовкой!", ch2, 12, UI.MUTED)
+		else:
+			UI.label("✦ " + pt_str, points_box, 14, Color(0.92, 0.86, 0.68))
 
 func _build_chronicle() -> void:
 	var sc := UI.scroll(content)

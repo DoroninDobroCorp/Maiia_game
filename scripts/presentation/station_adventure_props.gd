@@ -112,6 +112,8 @@ func _build() -> void:
 		var panel := _box(water_result, Vector3(0.25, 0.29, 0.026), Vector3(-0.17 + i * 0.34, 0.0, 0.026), _material(Color(0.20, 0.54, 0.61), 0.25))
 		water_panels.append(panel)
 	water_caption = _label(water_result, "МОЙ ПОЛЕВОЙ ДИПТИХ", Vector3(0, -0.25, 0.055), 14, Color(0.81, 0.85, 0.75), 0.0011)
+	_hit(water_result, Vector3(-0.17, 0.0, 0.03), Vector3(0.28, 0.32, 0.07), "water_panel_river", "Створка диптиха: Река Río Azul • осмотреть")
+	_hit(water_result, Vector3(0.17, 0.0, 0.03), Vector3(0.28, 0.32, 0.07), "water_panel_fall", "Створка диптиха: Cascada Escondida • осмотреть")
 	# Three personal favourites on the right wall, clear of all original anchors.
 	for i in range(3):
 		var frame := Node3D.new()

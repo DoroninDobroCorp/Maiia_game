@@ -367,6 +367,14 @@ func _on_prop_clicked(prop_id: String) -> void:
 			if audio_service != null and audio_service.has_method("play_voice"):
 				audio_service.play_voice("bruno", "happy")
 			show_toast(preload("res://scripts/presentation/mission_guide.gd").character("bruno").get("alarm_clock_toast", "⏰ Будильник Чемпиона от Бруно: «¡VAMOS! Растяжка вечером, пробежка утром и четыре испанских! Ничего не забываем!»"))
+		"water_panel_river":
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("paper_flip")
+			show_toast("🌊 Река Río Azul (новая возможность):\n«Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега».")
+		"water_panel_fall":
+			if audio_service != null and audio_service.has_method("play_sfx"):
+				audio_service.play_sfx("paper_flip")
+			show_toast("💧 Cascada Escondida (два суперчелленджа):\n1) Пробежка до водопада (в горку, на будущее);\n2) Большой круговой поход на 12 км частично в гору (только с основательной подготовкой!).")
 		"door_observatory":
 			audio_service.play_sfx("wood_thump")
 			if station_room.enter_room("observatory_annex"):

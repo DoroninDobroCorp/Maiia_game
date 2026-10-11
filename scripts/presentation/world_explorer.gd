@@ -182,8 +182,14 @@ func _build_expeditions_tab(state: Dictionary) -> Control:
 
 func _on_location_selected(location: Dictionary) -> void:
 	_play_paper()
+	var loc_id := str(location.get("id", ""))
 	if bool(location.get("unlocked", false)):
-		detail_label.text = "◎ %s — %s\n%s" % [str(location.get("title", "")), str(location.get("subtitle", "")), str(location.get("description", ""))]
+		if loc_id == "rio_azul":
+			detail_label.text = "◎ %s — %s\n🟢 Новая возможность (уже открыта):\n«Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега»." % [str(location.get("title", "")), str(location.get("subtitle", ""))]
+		elif loc_id == "waterfalls":
+			detail_label.text = "◎ %s — %s\n⚡ На новой локации открыты два суперчелленджа:\n1) Суперчеллендж: Пробежка до водопада (большое расстояние и частично в горку — это челлендж на ощутимое будущее).\n2) Суперчеллендж: Большой круговой поход от дома к водопаду на 12 км частично в гору (это уже очень серьёзный поход, в него можно идти только с основательной подготовкой!)." % [str(location.get("title", "")), str(location.get("subtitle", ""))]
+		else:
+			detail_label.text = "◎ %s — %s\n%s" % [str(location.get("title", "")), str(location.get("subtitle", "")), str(location.get("description", ""))]
 	else:
 		detail_label.text = "☁ %s — %s\nТуман войны. %s" % [str(location.get("title", "")), str(location.get("subtitle", "")), str(location.get("description", ""))]
 

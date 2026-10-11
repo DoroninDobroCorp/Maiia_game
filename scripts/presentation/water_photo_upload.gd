@@ -183,6 +183,7 @@ func _build_river_card(parent: Node) -> void:
 	var title_row := UI.row(card)
 	UI.label("🌊 Река · Río Azul", title_row, 18, UI.BRASS)
 	UI.label("Эль-Больсон", card, 12, UI.MUTED)
+	UI.label("🟢 Новая возможность (уже открыта):\n«Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега».", card, 13, UI.TEAL)
 
 	var photo_box := UI.column(card)
 	photo_box.add_theme_constant_override("separation", 8)
@@ -246,6 +247,9 @@ func _build_fall_card(parent: Node) -> void:
 	var title_row := UI.row(card)
 	UI.label("💧 Водопад · Cascada Escondida", title_row, 18, UI.BRASS)
 	UI.label("Мальин-Аогадо", card, 12, UI.MUTED)
+	UI.label("⚡ На новой локации открыты два суперчелленджа:", card, 13, UI.BRASS)
+	UI.label("1) Суперчеллендж: Пробежка до водопада (большое расстояние и частично в горку — это челлендж на ощутимое будущее).", card, 12, Color(1.0, 0.85, 0.50))
+	UI.label("2) Суперчеллендж: Большой круговой поход от дома к водопаду на 12 км частично в гору (очень серьёзный поход, только с основательной подготовкой!).", card, 12, Color(1.0, 0.85, 0.50))
 
 	var photo_box := UI.column(card)
 	photo_box.add_theme_constant_override("separation", 8)

@@ -18,9 +18,12 @@ const LOCATIONS: Array[Dictionary] = [
 	},
 	{
 		"id": "rio_azul",
-		"title": "Речка неподалёку",
+		"title": "Река Río Azul",
+		"marker_title": "Река Río Azul",
 		"subtitle": "Río Azul • совсем рядом",
 		"description": "Близкая речная точка. Пока видна только подпись сквозь туман войны.",
+		"unlocked_description": "Новая возможность (уже открыта):\n«Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега».",
+		"opportunity": "Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега",
 		"icon": "≈",
 		"map_position": Vector2(0.34, 0.63),
 		"distance": "near"
@@ -31,6 +34,11 @@ const LOCATIONS: Array[Dictionary] = [
 		"marker_title": "Ближайший водопад\nCascada Escondida",
 		"subtitle": "Cascada Escondida • ближняя долина",
 		"description": "Ближайший водопад рядом с Эль-Больсоном — Cascada Escondida (Скрытый водопад) в Мальин-Аогадо. Горный поток падает каскадом среди патагонского леса.",
+		"unlocked_description": "Горный каскад в Мальин-Аогадо. На новой локации открыты два суперчелленджа:\n\n⚡ Суперчеллендж 1: Пробежка до водопада\n(Большое расстояние и частично в горку — это челлендж на ощутимое будущее).\n\n⚡ Суперчеллендж 2: Большой круговой поход от дома к водопаду на 12 км частично в гору\n(Это уже очень серьёзный поход, в него можно идти только с основательной подготовкой!).",
+		"super_challenges": [
+			"Пробежка до водопада (большое расстояние и частично в горку — это челлендж на ощутимое будущее)",
+			"Большой круговой поход от дома к водопаду на 12 км частично в гору (это уже очень серьёзный поход, в него можно идти только с основательной подготовкой!)"
+		],
 		"icon": "≋",
 		"map_position": Vector2(0.35, 0.42),
 		"distance": "near"
@@ -120,7 +128,10 @@ static func list_locations(state: Dictionary) -> Array[Dictionary]:
 		var copy := location.duplicate(true)
 		if str(copy.get("id", "")) == "station":
 			copy["title"] = station_name
-		copy["unlocked"] = unlocked.has(str(copy.get("id", "")))
+		var is_unlocked := unlocked.has(str(copy.get("id", "")))
+		copy["unlocked"] = is_unlocked
+		if is_unlocked and copy.has("unlocked_description"):
+			copy["description"] = copy["unlocked_description"]
 		result.append(copy)
 	return result
 
