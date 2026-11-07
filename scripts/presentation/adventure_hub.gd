@@ -35,6 +35,10 @@ var page := 0
 var history_quest: Dictionary = {}
 ## The "remember past days" calendar of the 30-day challenge stays open between rebuilds.
 var calendar_open := false
+## The school report card keeps what is typed and its calendar open between rebuilds.
+var school_calendar_open := false
+var school_note := ""
+var school_word := ""
 
 func setup(game_state: Dictionary, audio_svc: Node = null) -> void:
 	state = game_state.duplicate(true)
@@ -132,6 +136,86 @@ func _build_now() -> void:
 			UI.label("Три истории готовы встретиться. Выбери название и свои работы в архиве: остальное сделают друзья.",finale)
 			UI.button("Собрать выставку главы",finale,func(): collection_requested.emit(),true)
 	_build_challenge_card(sc)
+	if preload("res://scripts/services/ritual_service.gd").school_visible(state):
+		_build_school_card(sc)
+
+## Clara's second mission: one tap per school day until 10 December, no streak to lose.
+func _build_school_card(parent: Node) -> void:
+	var Ritual = preload("res://scripts/services/ritual_service.gd")
+	var text := Guide.school()
+	var info := Ritual.school_state(state)
+	var done := bool(info.completed)
+	var box := UI.card(parent)
+	box.name = "SchoolCard"
+	var head := UI.row(box)
+	head.add_theme_constant_override("separation", 14)
+	var portrait_path := Guide.portrait_path("clara", "happy" if done or int(info.days) > 0 else "neutral")
+	if not portrait_path.is_empty():
+		UI.portrait(portrait_path, 130, head)
+	var intro := UI.column(head)
+	UI.label(str(text.label), intro, 16, UI.BRASS)
+	if done:
+		UI.label(str(text.finished), intro, 16, Color(1.0, 0.82, 0.40))
+	else:
+		UI.label("Школьных дней: %d · до 10 декабря осталось дней: %d" % [int(info.days), int(info.days_left)], intro, 16, Color(1.0, 0.65, 0.30))
+	UI.label(str(text.pitch), intro, 13, UI.MUTED)
+	UI.label(str(text.fear), intro, 13, Color(0.88, 0.82, 0.60))
+	var actions := UI.row(box)
+	if done:
+		var replay := UI.button("✦ Посмотреть финал репортажа", actions, func(): finale_requested.emit("school"), true)
+		replay.name = "SchoolFinaleReplay"
+		return
+	var today := Time.get_date_string_from_system()
+	if bool(info.today_done):
+		UI.label(str(text.today_done), actions, 14, Color(0.55, 0.95, 0.72))
+	else:
+		var go := UI.button(str(text.today_button), actions, func(): _send_school_day(today), true)
+		go.name = "SchoolToday"
+	var note := UI.input(box, str(text.note_hint), school_note)
+	note.name = "SchoolNote"
+	note.text_changed.connect(func(value: String): school_note = value)
+	var word := UI.input(box, str(text.word_hint), school_word)
+	word.name = "SchoolWord"
+	word.text_changed.connect(func(value: String): school_word = value)
+	if bool(info.today_done):
+		UI.button("Сохранить депешу и слово", box, func(): _send_school_day(today))
+	if bool(info.can_finish):
+		var finish := UI.button(str(text.finish), box, func(): command_requested.emit("complete_school", {}), true)
+		finish.name = "SchoolFinish"
+	var toggle := UI.button("📅 Закрыть календарь" if school_calendar_open else "📅 Вспомнить прошлые дни", box, func():
+		school_calendar_open = not school_calendar_open
+		_build())
+	toggle.name = "SchoolCalendarToggle"
+	if not school_calendar_open:
+		return
+	var panel := UI.card(box)
+	panel.name = "SchoolCalendar"
+	UI.label("Нажми на день, когда ты была в школе. Нажми ещё раз, чтобы снять отметку. Выходные пропускай: они ничего не ломают.", panel, 13, UI.MUTED)
+	var grid := GridContainer.new()
+	grid.columns = 7
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+	panel.add_child(grid)
+	for date in Ritual.school_dates():
+		var attended := bool(info.history.get(date, {}).get("attended", false))
+		var parts := date.split("-")
+		var day_button := Button.new()
+		day_button.name = "SchoolDay_" + date
+		day_button.text = "%d.%s%s" % [int(parts[2]), parts[1], " ✓" if attended else ""]
+		day_button.custom_minimum_size = Vector2(74, 38)
+		day_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		day_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		if attended:
+			day_button.add_theme_stylebox_override("normal", UI.style(Color("405b59"), UI.BRASS, 6))
+		var chosen_date: String = date
+		var chosen_attended := not attended
+		day_button.pressed.connect(func(): command_requested.emit("mark_school_day", {"date": chosen_date, "attended": chosen_attended}))
+		grid.add_child(day_button)
+
+func _send_school_day(date: String) -> void:
+	command_requested.emit("mark_school_day", {"date": date, "attended": true, "note": school_note, "word": school_word})
+	school_note = ""
+	school_word = ""
 
 func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> void:
 	var box := UI.card(parent)
@@ -440,7 +524,7 @@ func _build_map_tab() -> void:
 			UI.label("«Теперь пробежка доступна до реки — это отличная стартовая локация для первого уровня бега».", c_box, 13, UI.PAPER)
 		elif pt_str == "waterfalls":
 			var c_box := UI.card(points_box)
-			UI.label("💧 Ближайший водопад — Cascada Escondida (горный каскад)", c_box, 16, UI.BRASS)
+			UI.label("💧 Водопад Nahuel Pan (горный каскад)", c_box, 16, UI.BRASS)
 			UI.label("⚡ На новой локации открыты два суперчелленджа:", c_box, 13, UI.BRASS)
 			var ch1 := UI.column(c_box)
 			UI.label("🏃‍♀️ 1. Суперчеллендж: Пробежка до водопада", ch1, 13, Color(1.0, 0.85, 0.50))
@@ -482,7 +566,7 @@ func _build_chronicle() -> void:
 		{
 			"title": "Два голоса воды (Клара)",
 			"action": "Сделаны две реальные фотографии реки и водопада, проведено исследование их звучания для фоторепортажа.",
-			"impact": "На стене у Галереи появился латунный диптих с реальными фотографиями Майи. На карте атласа открыты Río Azul и Ближайший водопад (Cascada Escondida), а копия статьи Клары осталась в архиве.",
+			"impact": "На стене у Галереи появился латунный диптих с реальными фотографиями Майи. На карте атласа открыты Río Azul и Водопад Nahuel Pan, а копия статьи Клары осталась в архиве.",
 			"icon": "🌊",
 			"done": str(UI.instance_for(state, "FG08").get("status", "")) == "COMPLETED"
 		},

@@ -122,10 +122,10 @@ func _run_c01_c03() -> void:
 		if bool(location.get("unlocked", false)):
 			atlas_unlocked.append(atlas_id)
 	var atlas_required := ["station", "rio_azul", "waterfalls", "piltriquitron", "el_bolson_skatepark", "lago_puelo", "bariloche", "bariloche_skatepark", "chile", "whales", "ushuaia"]
-	var atlas_ok := atlas_locations.size() == 11 and atlas_unlocked == ["station"]
+	var atlas_ok := atlas_locations.size() == 12 and atlas_unlocked == ["station"]
 	for atlas_id in atlas_required:
 		atlas_ok = atlas_ok and atlas_ids.has(atlas_id)
-	_assert_true(atlas_ok, "C02a Атлас содержит 11 расширяемых точек, а на старте открыта только Лесная станция", JSON.stringify(atlas_unlocked))
+	_assert_true(atlas_ok, "C02a Атлас содержит 12 расширяемых точек, а на старте открыта только Лесная станция", JSON.stringify(atlas_unlocked))
 
 	var parent_catalog := ContentLibraryServiceScript.list_parent_templates(state)
 	var player_catalog := QuestServiceScript.list_player_quests(state)

@@ -289,7 +289,10 @@ func _test_app_flow() -> void:
 	check(bool(Save.load_game().adventures.progress[water_id].get("finale_seen", false)), "the scene is remembered across restarts")
 	controller._close_screen()
 	await settle()
-	check(controller.route == "hub", "closing the scene returns to the journal")
+	check(controller.route == "finale" and str(controller.route_context.finale_key) == "school_start", "Clara's first mission is followed by her school-report pitch")
+	controller._close_screen()
+	await settle()
+	check(controller.route == "hub", "closing the scenes returns to the journal")
 
 	# 2. Afterwards the ordinary mission page is shown, with a way to watch the scene again.
 	controller.open_quest("FG08")

@@ -99,11 +99,11 @@ func _build_atlas_tab(state: Dictionary) -> Control:
 
 	var intro := Label.new()
 	if unlocked_ids.has("rio_azul") and unlocked_ids.has("waterfalls"):
-		intro.text = "На карте открыты новые точки долины: станция «%s», 🌊 река Río Azul и 💧 водопад Cascada Escondida! До них уже можно бегать и планировать походы. Всё остальное пока видно сквозь туман войны: вершина Пилтрикитрон, скейт-парк и далёкие главы." % station_name
+		intro.text = "На карте открыты новые точки долины: станция «%s», 🌊 река Río Azul и 💧 водопад Nahuel Pan! До них уже можно бегать и планировать походы. Всё остальное пока видно сквозь туман войны: вершина Пилтрикитрон, скейт-парк и далёкие главы." % station_name
 	elif unlocked_ids.size() > 1:
 		intro.text = "На карте открыта станция «%s» и исследованные точки долины. Всё остальное пока видно сквозь туман войны: вершина, скейт-парк и далёкие главы." % station_name
 	else:
-		intro.text = "Открыта пока только станция «%s». Всё остальное уже видно на карте сквозь туман войны: близкая речка и ближайший водопад (Cascada Escondida), вершина и скейт-парк, дальше Лаго-Пуэло и Барилоче, а по краям — будущие далёкие главы." % station_name
+		intro.text = "Открыта пока только станция «%s». Всё остальное уже видно на карте сквозь туман войны: близкая речка и водопады (Nahuel Pan, Cascada Escondida), вершина и скейт-парк, дальше Лаго-Пуэло и Барилоче, а по краям — будущие далёкие главы." % station_name
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", 12)
 	intro.add_theme_color_override("font_color", Color(0.76, 0.78, 0.74))
@@ -119,7 +119,7 @@ func _build_atlas_tab(state: Dictionary) -> Control:
 
 	detail_label = Label.new()
 	if unlocked_ids.has("rio_azul") and unlocked_ids.has("waterfalls"):
-		detail_label.text = "◎ Открытые точки: %s, 🌊 Река Río Azul и 💧 Cascada Escondida. Нажми на метку реки или водопада, чтобы увидеть открытые возможности и суперчелленджи!" % station_name
+		detail_label.text = "◎ Открытые точки: %s, 🌊 Река Río Azul и 💧 Nahuel Pan. Нажми на метку реки или водопада, чтобы увидеть открытые возможности и суперчелленджи!" % station_name
 	elif unlocked_ids.size() > 1:
 		detail_label.text = "◎ %s и открытые точки на карте. Выбери любую метку: туман покажет, что ждёт дальше." % station_name
 	else:

@@ -323,7 +323,41 @@ func open_finale(key: String, instance_id: String = "") -> void:
 		context["instance_id"] = iid
 		if key == "FG08":
 			context["images"] = {"river": _find_stage_image_path(iid, "water_river"), "fall": _find_stage_image_path(iid, "water_fall")}
+	if key == "school":
+		context["extra_lines"] = _school_lines()
 	_show("finale", context)
+
+## Closing page of the school report: the number of days and the last dispatches.
+func _school_lines() -> Array:
+	var info: Dictionary = preload("res://scripts/services/ritual_service.gd").school_state(_state())
+	var lines: Array = ["Школьных дней в репортаже: %d" % int(info.days)]
+	var dates: Array = info.history.keys()
+	dates.sort()
+	var shown := 0
+	for date in dates.slice(maxi(0, dates.size() - 20)):
+		var entry: Dictionary = info.history[date]
+		var bits: Array[String] = []
+		if not str(entry.get("note", "")).is_empty():
+			bits.append("«" + str(entry.note) + "»")
+		if not str(entry.get("word", "")).is_empty():
+			bits.append("слово: " + str(entry.word))
+		if not bits.is_empty() and shown < 5:
+			var parts: PackedStringArray = str(date).split("-")
+			lines.append("%d.%s · %s" % [int(parts[2]), parts[1], " · ".join(PackedStringArray(bits))])
+			shown += 1
+	return lines
+
+## The finished report goes to the archive as Maya's own work.
+func _save_school_issue(candidate: Dictionary, info: Dictionary) -> void:
+	var dispatches: Array = []
+	for date in info.history.keys():
+		var entry: Dictionary = info.history[date]
+		if not str(entry.get("note", "")).is_empty() or not str(entry.get("word", "")).is_empty():
+			dispatches.append({"date": str(date), "note": str(entry.get("note", "")), "word": str(entry.get("word", ""))})
+	dispatches.sort_custom(func(a, b): return str(a.date) < str(b.date))
+	var made := Collections.create_work(candidate, {"work_id": "school_report:player_01", "title": "Корреспондент Майя: репортаж из школы", "kind": "album", "status": "COMPLETED", "authorship": {"category": "personal"}, "quest_ids": [], "content": {"school_days": int(info.days), "dispatches": dispatches}})
+	if bool(made.get("ok", false)):
+		Collections.create_exhibit(candidate, str(made.work_id), "frame")
 
 ## Every step of the mission is completed.
 func _mission_finished(inst: Dictionary) -> bool:
@@ -365,6 +399,15 @@ func _present_due_finale() -> bool:
 			_mark_finale_seen(inst)
 			open_finale(qid, str(inst.get("instance_id", "")))
 			return true
+	# Clara's second mission opens with her pitch, once, after the water mission is done.
+	var Ritual = preload("res://scripts/services/ritual_service.gd")
+	if Ritual.school_visible(app.game_state) and not bool(Ritual.school_state(app.game_state).pitched):
+		var candidate: Dictionary = app.game_state.duplicate(true)
+		Ritual.mark_school_pitched(candidate)
+		if Save.save_game(candidate):
+			app.game_state = candidate
+		open_finale("school_start")
+		return true
 	return false
 
 func _ensure_instance(qid: String, instance_id: String = "") -> Dictionary:
@@ -495,6 +538,10 @@ func refresh_world() -> void:
 		return
 	_initialise()
 	var view := {"awakened": bool(app.game_state.get("puzzle_solved", false)), "favourites": []}
+	var school_info: Dictionary = preload("res://scripts/services/ritual_service.gd").school_state(app.game_state)
+	view["school_visible"] = preload("res://scripts/services/ritual_service.gd").school_visible(app.game_state)
+	view["school_days"] = int(school_info.days)
+	view["school_done"] = bool(school_info.completed)
 	view["chapter_complete"] = bool(app.game_state.get("adventures", {}).get("chapters_by_profile", {}).get("player_01", {}).get("completed", false))
 	for inst in app.game_state.get("phase_b", {}).get("quest_instances", {}).values():
 		if str(inst.get("profile_id", "")) != "player_01":
@@ -602,7 +649,7 @@ func handle_prop(id: String) -> bool:
 		"water_panel_fall":
 			if app.audio_service != null:
 				app.audio_service.play_sfx("paper_flip")
-			app.show_toast("💧 Cascada Escondida (два суперчелленджа):\n1) Пробежка до водопада (в горку, на будущее);\n2) Большой круговой поход на 12 км частично в гору (только с основательной подготовкой!).")
+			app.show_toast("💧 Nahuel Pan (два суперчелленджа):\n1) Пробежка до водопада (в горку, на будущее);\n2) Большой круговой поход на 12 км частично в гору (только с основательной подготовкой!).")
 			return true
 		"bruno_alarm_clock":
 			if app.audio_service != null:
@@ -669,12 +716,17 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 			# Thirty days done: Bruno's ceremony, then the board and the flame on the wall.
 			app.audio_service.play_sfx("chime_solve")
 			call_deferred("open_finale", "challenge")
+		if operation == "mark_school_day" and bool(result.get("attended", false)):
+			app.audio_service.play_voice("clara", "happy")
+		if operation == "complete_school" and bool(result.get("applied", false)):
+			app.audio_service.play_sfx("chime_solve")
+			call_deferred("open_finale", "school")
 		if operation == "chapter_finale" and bool(result.get("applied", false)):
 			call_deferred("open_finale", "chapter")
 		if operation in ["stage_submit", "stage_review"] and bool(result.get("applied", false)) and not bool(result.get("awaiting_review", false)) and not bool(result.get("needs_revision", false)):
 			app.audio_service.play_sfx("chime_solve")
 			call_deferred("_present_pending")
-		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale", "toggle_challenge_item", "set_challenge_day"]:
+		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale", "toggle_challenge_item", "set_challenge_day", "mark_school_day", "complete_school"]:
 			if is_instance_valid(screen):
 				screen.setup(_view(route_context), app.audio_service)
 				_result(result)
@@ -741,6 +793,15 @@ func _mutate(candidate: Dictionary, operation: String, payload: Dictionary) -> D
 		"toggle_challenge_item":
 			var Ritual = preload("res://scripts/services/ritual_service.gd")
 			return Ritual.toggle_challenge_item(candidate, str(payload.get("item_key", "")))
+		"mark_school_day":
+			var Ritual = preload("res://scripts/services/ritual_service.gd")
+			return Ritual.mark_school_day(candidate, str(payload.get("date", "")), bool(payload.get("attended", true)), str(payload.get("note", "")), str(payload.get("word", "")))
+		"complete_school":
+			var Ritual = preload("res://scripts/services/ritual_service.gd")
+			var finished: Dictionary = Ritual.complete_school(candidate)
+			if bool(finished.get("applied", false)):
+				_save_school_issue(candidate, Ritual.school_state(candidate))
+			return finished
 		"set_challenge_day":
 			var Ritual = preload("res://scripts/services/ritual_service.gd")
 			return Ritual.set_past_day(candidate, str(payload.get("date", "")), bool(payload.get("done", true)))
@@ -985,7 +1046,7 @@ func _attach_water_photo(payload: Dictionary) -> void:
 
 func _process_water_photo(target: String, path: String, payload: Dictionary) -> void:
 	var candidate: Dictionary = app.game_state.duplicate(true)
-	var title := "Фото реки Río Azul · Майя" if target == "river" else "Фото водопада Cascada Escondida · Майя"
+	var title := "Фото реки Río Azul · Майя" if target == "river" else "Фото водопада Nahuel Pan · Майя"
 	var imported := Artifacts.import_local_image(candidate, path, title)
 	if bool(imported.get("ok", false)):
 		var artifact_id: String = imported.artifact.artifact_id

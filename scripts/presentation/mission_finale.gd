@@ -22,6 +22,8 @@ var audio_service: Node
 var finale_key := ""
 var data: Dictionary = {}
 var images: Dictionary = {}
+## Extra lines for the last page (e.g. the dispatches of the school report).
+var extra_lines: Array = []
 var page := 0
 var sparks: Control
 var page_box: VBoxContainer
@@ -69,6 +71,7 @@ func setup(game_state: Dictionary, audio_svc: Node = null) -> void:
 	var ctx := UI.context(state)
 	finale_key = str(ctx.get("finale_key", ""))
 	images = ctx.get("images", {})
+	extra_lines = ctx.get("extra_lines", [])
 	data = Guide.finale(finale_key)
 	page = clampi(int(ctx.get("page", 0)), 0, _beats().size())
 	_build()
@@ -220,11 +223,16 @@ func _build_summary() -> void:
 	var column := UI.column(head)
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	UI.label("✦  " + str(data.get("title", "")), column, 26, UI.BRASS)
-	UI.label("ЧТО ИЗМЕНИЛОСЬ НА СТАНЦИИ", column, 12, UI.TEAL)
+	UI.label(str(data.get("summary_label", "ЧТО ИЗМЕНИЛОСЬ НА СТАНЦИИ")), column, 12, UI.TEAL)
 	var list := UI.column(card)
 	list.name = "FinaleChanges"
 	for line in data.get("changes", []):
 		UI.label("✦  " + str(line), list, 17)
+	if not extra_lines.is_empty():
+		var extra := UI.card(left)
+		extra.name = "FinaleExtra"
+		for line in extra_lines:
+			UI.label(str(line), extra, 15, UI.PAPER)
 	var last := str(data.get("last", ""))
 	if not last.is_empty():
 		var quote := UI.card(left, true)
@@ -256,7 +264,7 @@ func _closing_hero() -> String:
 ## The real photos of the river and the waterfall (FG08 only); empty when there are none.
 func _photo_items() -> Array[Dictionary]:
 	var shown: Array[Dictionary] = []
-	for pair in [["river", "Río Azul · река"], ["fall", "Cascada Escondida · водопад"]]:
+	for pair in [["river", "Río Azul · река"], ["fall", "Nahuel Pan · водопад"]]:
 		var path := str(images.get(pair[0], ""))
 		var tex := UI.texture(path, 640) if not path.is_empty() else null
 		if tex != null:

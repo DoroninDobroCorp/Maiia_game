@@ -4,7 +4,7 @@ extends Control
 ## Dedicated screen for Maya's river and waterfall photo upload.
 ##
 ## Narrative context:
-## Maya has returned from her family outings to both Río Azul and Cascada Escondida.
+## Maya has returned from her family outings to both Río Azul and Nahuel Pan.
 ## Clara (photojournalist from El Bolsón) welcomes Maya, gathers her photos and observations
 ## for the newspaper reportage, places them on the station's brass diptych, and heads
 ## to the darkroom to develop the film. Clara does NOT give a next mission yet —
@@ -43,7 +43,7 @@ var clara_portrait_view: TextureRect
 var submit_button: Button
 var voiced := false
 
-const CLARA_SPEECH_PENDING := "Майя, ты вернулась! Какая радость!\nТы побывала и на реке Río Azul, и на водопаде Cascada Escondida! Я так ждала твоих кадров для нашего фоторепортажа в газете Эль-Больсона. Давай загрузим сюда твои снимки: один с реки и один с водопада. Они сразу займут почётное место в латунном диптихе на стене станции!\n\nА я возьму снимки с собой в редакцию, чтобы проявить плёнку, отобрать лучшие ракурсы и сверстать полосу. Новую миссию я тебе пока не даю: мне нужно время хорошенько поработать в фотолаборатории! Я обязательно загляну к тебе на станцию позже, и мы продолжим наши приключения! До скорой встречи!"
+const CLARA_SPEECH_PENDING := "Майя, ты вернулась! Какая радость!\nТы побывала и на реке Río Azul, и на водопаде Nahuel Pan! Я так ждала твоих кадров для нашего фоторепортажа в газете Эль-Больсона. Давай загрузим сюда твои снимки: один с реки и один с водопада. Они сразу займут почётное место в латунном диптихе на стене станции!\n\nА я возьму снимки с собой в редакцию, чтобы проявить плёнку, отобрать лучшие ракурсы и сверстать полосу. Новую миссию я тебе пока не даю: мне нужно время хорошенько поработать в фотолаборатории! Я обязательно загляну к тебе на станцию позже, и мы продолжим наши приключения! До скорой встречи!"
 
 const CLARA_SPEECH_SUBMITTED := "Клара бережно укладывает снимки в альбом:\n«Майя, какие чудесные кадры! Вода на них просто живая! Твой диптих уже красуется на стене у Галереи станции!\n\nА я забираю снимки в редакцию — проявлять плёнку, подбирать цвета и верстать полосу для газеты Эль-Больсона. Новую миссию я тебе пока не даю: мне нужно время на аккуратную работу в тёмной комнате! Я обязательно появлюсь на станции позже — с готовым номером газеты и новыми историями.\n\nА ты пока любуйся своим диптихом на стене станции. До встречи, напарница!»"
 
@@ -245,8 +245,8 @@ func _build_fall_card(parent: Node) -> void:
 	card.custom_minimum_size = Vector2(320, 0)
 
 	var title_row := UI.row(card)
-	UI.label("💧 Водопад · Cascada Escondida", title_row, 18, UI.BRASS)
-	UI.label("Мальин-Аогадо", card, 12, UI.MUTED)
+	UI.label("💧 Водопад · Nahuel Pan", title_row, 18, UI.BRASS)
+	UI.label("окрестности Эль-Больсона", card, 12, UI.MUTED)
 	UI.label("⚡ На новой локации открыты два суперчелленджа:", card, 13, UI.BRASS)
 	UI.label("1) Суперчеллендж: Пробежка до водопада (большое расстояние и частично в горку — это челлендж на ощутимое будущее).", card, 12, Color(1.0, 0.85, 0.50))
 	UI.label("2) Суперчеллендж: Большой круговой поход от дома к водопаду на 12 км частично в гору (очень серьёзный поход, только с основательной подготовкой!).", card, 12, Color(1.0, 0.85, 0.50))
@@ -280,7 +280,7 @@ func _build_fall_card(parent: Node) -> void:
 		placeholder.add_theme_stylebox_override("panel", UI.style(Color("16242c"), UI.MUTED, 8))
 		photo_box.add_child(placeholder)
 		var p_label := Label.new()
-		p_label.text = "📷 Здесь появится снимок Cascada Escondida\nНажми кнопку ниже, чтобы выбрать файл"
+		p_label.text = "📷 Здесь появится снимок Nahuel Pan\nНажми кнопку ниже, чтобы выбрать файл"
 		p_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		p_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		p_label.add_theme_color_override("font_color", UI.MUTED)

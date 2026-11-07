@@ -164,8 +164,10 @@ func _init() -> void:
 	var AtlasService = preload("res://scripts/services/atlas_service.gd")
 	var wf_loc: Array = AtlasService.LOCATIONS.filter(func(l): return l.get("id", "") == "waterfalls")
 	assert(wf_loc.size() == 1, "waterfalls location exists in atlas")
-	assert(wf_loc[0].title.contains("Ближайший водопад") and wf_loc[0].title.contains("Cascada Escondida"), "Nearest waterfall Cascada Escondida is titled in atlas")
-	assert(wf_loc[0].subtitle.contains("Cascada Escondida"), "Nearest waterfall Cascada Escondida is subtitled in atlas")
+	assert(wf_loc[0].title.contains("Nahuel Pan") and not wf_loc[0].title.contains("Escondida"), "The visited waterfall Nahuel Pan is titled in atlas")
+	assert(wf_loc[0].subtitle.contains("Nahuel Pan"), "The visited waterfall Nahuel Pan is subtitled in atlas")
+	var escondida: Array = AtlasService.LOCATIONS.filter(func(l): return l.id == "cascada_escondida")
+	assert(escondida.size() == 1 and not AtlasService.DEFAULT_UNLOCKED.has("cascada_escondida") and not wf_loc[0].description.contains("Escondida"), "Cascada Escondida is a separate point that stays closed")
 
 	# Clara's avatar tail has no ovals and no circles
 	var clara_svg := FileAccess.get_file_as_string("res://assets/characters/clara_neutral.svg")
@@ -182,7 +184,7 @@ func _init() -> void:
 	var WaterPhotoUpload = preload("res://scripts/presentation/water_photo_upload.gd")
 	var wpu := WaterPhotoUpload.new()
 	wpu.setup(state)
-	assert(wpu.clara_speech_label.text.contains("Río Azul") and wpu.clara_speech_label.text.contains("Cascada Escondida"), "Photo upload form acknowledges Maya visited both river and waterfall")
+	assert(wpu.clara_speech_label.text.contains("Río Azul") and wpu.clara_speech_label.text.contains("Nahuel Pan"), "Photo upload form acknowledges Maya visited both river and waterfall")
 	assert(wpu.clara_speech_label.text.contains("Новую миссию я тебе пока не даю"), "Narratively explains that no next mission is given right now")
 	assert(wpu.clara_speech_label.text.contains("обязательно загляну к тебе на станцию позже") or wpu.clara_speech_label.text.contains("позже"), "Clara will appear again later")
 	wpu.show_clara_submission_success()

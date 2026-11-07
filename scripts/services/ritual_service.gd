@@ -14,6 +14,13 @@ const CHALLENGE_ID := "maya_30_streak"
 const CHALLENGE_TARGET_DAYS := 30
 const CHALLENGE_UNLOCK_EFFECT := "challenge_30_board"
 const CHALLENGE_UNLOCK_LIGHT := "challenge_30_light"
+## Репортаж из школы (вторая миссия Клары): школьные дни до этой даты, без сброса серии.
+const SCHOOL_ID := "school_reporter"
+const SCHOOL_END_DATE := "2026-12-10"
+## Рабочая дата окончания; тесты могут её сдвинуть, чтобы проверить сдачу выпуска.
+static var school_end := SCHOOL_END_DATE
+## Сколько последних дней (включая сегодняшний) можно отметить как школьные.
+const SCHOOL_WINDOW_DAYS := 45
 ## Сколько последних дней можно вспомнить задним числом.
 const BACKFILL_WINDOW_DAYS := 35
 const CHALLENGE_ITEMS: Array[String] = [
@@ -307,6 +314,117 @@ static func gift_alarm_clock(state: Dictionary) -> Dictionary:
 	phase_c["rituals"] = rituals
 	state["phase_c"] = phase_c
 	return c
+
+# ---------------------------------------------------------------- репортаж из школы
+
+## Клара даёт это задание, когда Майя закончила её первую миссию (воду, FG08).
+static func school_visible(state: Dictionary) -> bool:
+	for instance in state.get("phase_b", {}).get("quest_instances", {}).values():
+		if str(instance.get("quest_id", "")) == "FG08" and str(instance.get("profile_id", "player_01")) == "player_01" and str(instance.get("status", "")) == "COMPLETED":
+			return true
+	return false
+
+static func ensure_school(state: Dictionary) -> Dictionary:
+	var phase_c: Dictionary = state.get("phase_c", {})
+	var rituals: Dictionary = phase_c.get("rituals", {})
+	var c: Dictionary = rituals.get(SCHOOL_ID, {})
+	if bool(state.get("read_only", false)):
+		return c.duplicate(true)
+	for key in ["history"]:
+		if not c.has(key): c[key] = {}
+	for key in ["pitched", "completed"]:
+		if not c.has(key): c[key] = false
+	if not c.has("completed_at"): c["completed_at"] = ""
+	c["end_date"] = school_end
+	rituals[SCHOOL_ID] = c
+	phase_c["rituals"] = rituals
+	state["phase_c"] = phase_c
+	return c
+
+## Сводка для экрана: дни, осталось до даты, можно ли сдать выпуск.
+static func school_state(state: Dictionary) -> Dictionary:
+	var c: Dictionary = state.get("phase_c", {}).get("rituals", {}).get(SCHOOL_ID, {})
+	var today := Time.get_date_string_from_system()
+	var history: Dictionary = c.get("history", {})
+	var days := 0
+	for d in history.keys():
+		if bool(history[d].get("attended", false)):
+			days += 1
+	var left := days_between(today, school_end)
+	return {
+		"days": days,
+		"history": history.duplicate(true),
+		"end_date": school_end,
+		"days_left": maxi(0, left),
+		"today_done": bool(history.get(today, {}).get("attended", false)),
+		"completed": bool(c.get("completed", false)),
+		"pitched": bool(c.get("pitched", false)),
+		"can_finish": not bool(c.get("completed", false)) and days > 0 and left <= 0
+	}
+
+## Дни, которые можно отметить: от самого раннего до сегодняшнего.
+static func school_dates(today: String = "") -> Array[String]:
+	var now := today if not today.is_empty() else Time.get_date_string_from_system()
+	var result: Array[String] = []
+	for back in range(SCHOOL_WINDOW_DAYS - 1, -1, -1):
+		var d := shift_date(now, -back)
+		if not d.is_empty():
+			result.append(d)
+	return result
+
+## Отметить школьный день (сегодняшний или прошедший). Повторная отметка того же дня
+## только обновляет депешу и слово; снять отметку можно, пока выпуск не сдан.
+static func mark_school_day(state: Dictionary, date_string: String, attended: bool, note: String = "", word: String = "") -> Dictionary:
+	if bool(state.get("read_only", false)):
+		return {"ok": false, "reason": "read_only"}
+	var date := date_string.strip_edges()
+	var age := days_between(date, Time.get_date_string_from_system())
+	if not _is_valid_date_format(date) or age < 0 or age >= SCHOOL_WINDOW_DAYS:
+		return {"ok": false, "reason": "date_out_of_range"}
+	var c := ensure_school(state)
+	if bool(c.get("completed", false)):
+		return {"ok": false, "reason": "already_completed"}
+	var history: Dictionary = c.get("history", {})
+	if attended:
+		var previous: Dictionary = history.get(date, {})
+		var entry := {"attended": true, "marked_at": str(previous.get("marked_at", Time.get_datetime_string_from_system())),
+			"note": note.strip_edges().left(240) if not note.strip_edges().is_empty() else str(previous.get("note", "")),
+			"word": word.strip_edges().left(60) if not word.strip_edges().is_empty() else str(previous.get("word", ""))}
+		if age > 0:
+			entry["backfilled"] = true
+		history[date] = entry
+	else:
+		history.erase(date)
+	c["history"] = history
+	_store_school(state, c)
+	return {"ok": true, "date": date, "attended": attended, "days": school_state(state).days}
+
+static func mark_school_pitched(state: Dictionary) -> void:
+	var c := ensure_school(state)
+	c["pitched"] = true
+	_store_school(state, c)
+
+## Сдать выпуск: возможно с даты окончания, когда есть хотя бы один отмеченный день.
+static func complete_school(state: Dictionary) -> Dictionary:
+	if bool(state.get("read_only", false)):
+		return {"ok": false, "reason": "read_only"}
+	var summary := school_state(state)
+	if bool(summary.completed):
+		return {"ok": true, "applied": false, "days": summary.days}
+	if not bool(summary.can_finish):
+		return {"ok": false, "reason": "too_early", "message": "Выпуск можно сдать %s, когда в пресс-карте будет хотя бы один день." % school_end}
+	var c := ensure_school(state)
+	c["completed"] = true
+	c["completed_at"] = Time.get_datetime_string_from_system()
+	_store_school(state, c)
+	return {"ok": true, "applied": true, "days": summary.days}
+
+static func _store_school(state: Dictionary, c: Dictionary) -> void:
+	var phase_c: Dictionary = state.get("phase_c", {})
+	var rituals: Dictionary = phase_c.get("rituals", {})
+	rituals[SCHOOL_ID] = c
+	phase_c["rituals"] = rituals
+	state["phase_c"] = phase_c
 
 static func has_alarm_clock(state: Dictionary) -> bool:
 	return bool(state.get("phase_c", {}).get("rituals", {}).get(CHALLENGE_ID, {}).get("has_alarm_clock", false))

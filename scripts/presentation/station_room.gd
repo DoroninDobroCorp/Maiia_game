@@ -42,6 +42,10 @@ var challenge_board_light: OmniLight3D
 var challenge_flame: Node3D
 var challenge_flame_mesh: MeshInstance3D
 var flame_time := 0.0
+## Пресс-карта «Репортаж из школы» на задней стене слева от окна; после сдачи выпуска на её месте первая полоса газеты.
+var school_card_marker: Node3D
+var school_card_label: Label3D
+const SCHOOL_CARD_POSITION := Vector3(-1.62, 1.45, -0.785)
 var alarm_clock_mesh: Node3D
 var valley_map_notes: Label3D
 var adventure_props: StationAdventureProps
@@ -59,7 +63,7 @@ var is_stage_2: bool = false
 var reduce_motion: bool = false
 const CHALLENGE_LIGHT_ENERGY := 0.95
 ## Свободный участок левой стены между картой долины и окном, над столом.
-const CHALLENGE_BOARD_POSITION := Vector3(-2.31, 1.42, -0.62)
+const CHALLENGE_BOARD_POSITION := Vector3(-2.31, 1.42, -0.40)
 var hovered_prop_id: String = ""
 var target_cam_offset := Vector3.ZERO
 var current_cam_offset := Vector3.ZERO
@@ -89,6 +93,7 @@ func _ready() -> void:
 	_setup_lighting()
 	_setup_props()
 	_setup_phase_b_effects()
+	_setup_school_card()
 	adventure_props = preload("res://scripts/presentation/station_adventure_props.gd").new()
 	add_child(adventure_props)
 	adventure_props.prop_clicked.connect(func(id: String): prop_clicked.emit(id))
@@ -100,16 +105,17 @@ func apply_adventure_view(view: Dictionary) -> void:
 		adventure_props.apply_view(view)
 	if alarm_clock_mesh != null:
 		alarm_clock_mesh.visible = bool(view.get("awakened", false)) and bool(view.get("has_alarm_clock", false))
+	_apply_school_card(view)
 	if valley_map_notes != null:
 		var has_river: bool = bool(view.get("river_unlocked", false))
 		var has_fall: bool = bool(view.get("fall_unlocked", false))
 		if has_river and has_fall:
-			valley_map_notes.text = "🌊 р. Рио Асуль • [ОТКРЫТА]\n💧 Cascada Escondida • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
+			valley_map_notes.text = "🌊 р. Рио Асуль • [ОТКРЫТА]\n💧 Nahuel Pan • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
 			valley_map_notes.modulate = Color(0.18, 0.38, 0.28)
 		elif has_river:
 			valley_map_notes.text = "🌊 р. Рио Асуль • [ОТКРЫТА]\n▲ Пилтрикитрон • [ТУМАН]"
 		elif has_fall:
-			valley_map_notes.text = "💧 Cascada Escondida • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
+			valley_map_notes.text = "💧 Nahuel Pan • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
 
 func _process(delta: float) -> void:
 	_update_navigation(delta)
@@ -121,6 +127,36 @@ func _process(delta: float) -> void:
 	else:
 		camera.position = player_position
 	camera.rotation_degrees = Vector3(base_camera_rot.x, player_yaw, 0.0)
+
+func _setup_school_card() -> void:
+	school_card_marker = Node3D.new()
+	school_card_marker.position = SCHOOL_CARD_POSITION
+	school_card_marker.scale = Vector3.ONE * 1.5
+	school_card_marker.visible = false
+	add_child(school_card_marker)
+	var paper := StandardMaterial3D.new()
+	paper.albedo_color = Color(0.93, 0.87, 0.70)
+	paper.roughness = 0.9
+	var sheet := _create_box(Vector3(0.48, 0.26, 0.012), paper)
+	school_card_marker.add_child(sheet)
+	school_card_label = Label3D.new()
+	school_card_label.position = Vector3(0.0, 0.0, 0.009)
+	school_card_label.font_size = 18
+	school_card_label.pixel_size = 0.0016
+	school_card_label.modulate = Color(0.16, 0.12, 0.08)
+	school_card_label.outline_size = 0
+	school_card_marker.add_child(school_card_label)
+	_make_interactive_area(sheet, "school_card", "Пресс-карта Майи • репортаж из школы", Vector3(0.52, 0.30, 0.12))
+
+## Пресс-карта появляется, когда отмечен первый школьный день.
+func _apply_school_card(view: Dictionary) -> void:
+	if school_card_marker == null:
+		return
+	var days := int(view.get("school_days", 0))
+	var done := bool(view.get("school_done", false))
+	var text: Dictionary = preload("res://scripts/presentation/mission_guide.gd").school()
+	school_card_marker.visible = bool(view.get("school_visible", false)) and (days > 0 or done)
+	school_card_label.text = (str(text.card_done) if done else str(text.card_started)) % days
 
 ## Плавно поворачивает взгляд к Доске Чемпиона (после церемонии Бруно).
 func focus_challenge_board() -> void:

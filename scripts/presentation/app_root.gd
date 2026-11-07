@@ -361,6 +361,11 @@ func _on_prop_clicked(prop_id: String) -> void:
 		"challenge_board":
 			audio_service.play_sfx("chime_solve")
 			show_toast("✨ Памятная доска стойкости Майи: 30 дней чемпионского ритма! Каждое усилие оставляет след на станции.")
+		"school_card":
+			audio_service.play_sfx("paper_flip")
+			var school_info: Dictionary = preload("res://scripts/services/ritual_service.gd").school_state(game_state)
+			var school_text: Dictionary = preload("res://scripts/presentation/mission_guide.gd").school()
+			show_toast(str(school_text.done_toast if bool(school_info.completed) else school_text.card_toast) % int(school_info.days))
 		"bruno_alarm_clock":
 			if audio_service != null and audio_service.has_method("play_sfx"):
 				audio_service.play_sfx("chime_solve")
@@ -374,7 +379,7 @@ func _on_prop_clicked(prop_id: String) -> void:
 		"water_panel_fall":
 			if audio_service != null and audio_service.has_method("play_sfx"):
 				audio_service.play_sfx("paper_flip")
-			show_toast("💧 Cascada Escondida (два суперчелленджа):\n1) Пробежка до водопада (в горку, на будущее);\n2) Большой круговой поход на 12 км частично в гору (только с основательной подготовкой!).")
+			show_toast("💧 Nahuel Pan (два суперчелленджа):\n1) Пробежка до водопада (в горку, на будущее);\n2) Большой круговой поход на 12 км частично в гору (только с основательной подготовкой!).")
 		"door_observatory":
 			audio_service.play_sfx("wood_thump")
 			if station_room.enter_room("observatory_annex"):
