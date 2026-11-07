@@ -16,6 +16,7 @@ signal weather_requested
 signal secret_requested(secret_id: String)
 signal hub_requested
 signal water_photos_requested
+signal finale_requested(key: String)
 
 var state: Dictionary = {}
 var audio_service: Node
@@ -198,6 +199,11 @@ func _build_actions(footer: Control, guide: Dictionary, instance: Dictionary, st
 		if qid == "FG01":
 			UI.button("Отметки на шкале", footer, func(): secret_requested.emit("radio_reply"))
 			UI.button("Погода Эль-Больсона", footer, func(): weather_requested.emit())
+		if qid == "FG08":
+			UI.button("Фоторепортаж Клары 📷", footer, func(): water_photos_requested.emit())
+		if not Guide.finale(qid).is_empty():
+			var replay := UI.button("✦ Посмотреть финал", footer, func(): finale_requested.emit(qid))
+			replay.name = "MissionFinaleReplay"
 		var results := UI.button("Мои работы →", footer, func(): collection_requested.emit(), true)
 		results.name = "MissionPrimaryAction"
 		return

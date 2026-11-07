@@ -138,7 +138,8 @@ func _show(kind: String, extra: Dictionary = {}) -> void:
 		"collection": "res://scripts/presentation/collection_browser.gd",
 		"editor": "res://scripts/presentation/adventure_editor.gd",
 		"family": "res://scripts/presentation/family_adventure_tools.gd",
-		"water_photos": "res://scripts/presentation/water_photo_upload.gd"
+		"water_photos": "res://scripts/presentation/water_photo_upload.gd",
+		"finale": "res://scripts/presentation/mission_finale.gd"
 	}
 	var script: Script = load(str(paths[kind]))
 	screen = script.new()
@@ -179,6 +180,8 @@ func _connect_screen(node: Node) -> void:
 		node.connect("water_photos_requested", func(): open_water_photos())
 	if node.has_signal("hub_requested"):
 		node.connect("hub_requested", open_hub)
+	if node.has_signal("finale_requested"):
+		node.connect("finale_requested", func(key: String): open_finale(key))
 	if node.has_signal("weather_requested"):
 		node.connect("weather_requested", func():
 			app._close_modals()
@@ -199,7 +202,17 @@ func _close_screen() -> void:
 		var context := preview_return_context.duplicate(true)
 		preview_return_context = {}
 		_show(target, context)
-	elif route in ["episode", "mission"]:
+	elif route in ["episode", "mission", "finale"]:
+		# A mission that was just completed ends with its closing scene, once.
+		if _present_due_finale():
+			return
+		if route == "finale" and str(route_context.get("finale_key", "")) == "challenge" and not is_in_gallery():
+			# After Bruno's ceremony the room shows its payoff: the view turns to the new board.
+			app._close_modals()
+			screen = null
+			refresh_navigation()
+			app.station_room.focus_challenge_board()
+			return
 		if _opened_from_room:
 			app._close_modals()
 			screen = null
@@ -293,7 +306,66 @@ func open_water_photos(instance_id: String = "") -> void:
 
 func _show_mission(qid: String, inst: Dictionary) -> void:
 	_briefed[qid] = true
+	if not preview_active and not _read_only and _mission_finished(inst) and not _finale_seen(inst):
+		_mark_finale_seen(inst)
+		open_finale(qid, str(inst.get("instance_id", "")))
+		return
 	_show("mission", {"instance_id": str(inst.get("instance_id", "")), "quest": inst.get("quest_snapshot", {})})
+
+## Closing scene of a mission ("FG01" | "FG11" | "FG08"), of the 30-day challenge
+## ("challenge") or of the whole chapter ("chapter"). Replayable at any time.
+func open_finale(key: String, instance_id: String = "") -> void:
+	if Guide.finale(key).is_empty():
+		return
+	var context := {"finale_key": key, "instance_id": instance_id}
+	if CURRENT_STORY_QUEST_IDS.has(key):
+		var iid := instance_id if not instance_id.is_empty() else str(UI.instance_for(_state(), key).get("instance_id", ""))
+		context["instance_id"] = iid
+		if key == "FG08":
+			context["images"] = {"river": _find_stage_image_path(iid, "water_river"), "fall": _find_stage_image_path(iid, "water_fall")}
+	_show("finale", context)
+
+## Every step of the mission is completed.
+func _mission_finished(inst: Dictionary) -> bool:
+	var iid := str(inst.get("instance_id", ""))
+	var stages: Array = inst.get("quest_snapshot", {}).get("adventure", {}).get("stages", [])
+	if stages.is_empty():
+		return false
+	for stage in stages:
+		if str(UI.stage_progress(_state(), iid, str(stage.get("stage_id", ""))).get("status", "")) != "COMPLETED":
+			return false
+	return true
+
+func _finale_seen(inst: Dictionary) -> bool:
+	return bool(_state().get("adventures", {}).get("progress", {}).get(str(inst.get("instance_id", "")), {}).get("finale_seen", false))
+
+func _mark_finale_seen(inst: Dictionary) -> void:
+	if _read_only or preview_active:
+		return
+	var iid := str(inst.get("instance_id", ""))
+	var candidate: Dictionary = app.game_state.duplicate(true)
+	var progress: Dictionary = candidate.get("adventures", {}).get("progress", {}).get(iid, {})
+	if progress.is_empty():
+		return
+	progress["finale_seen"] = true
+	candidate.adventures.progress[iid] = progress
+	# A failed save only means the scene can appear once more; nothing is lost.
+	if Save.save_game(candidate):
+		app.game_state = candidate
+
+## Shows the closing scene of the first finished mission that has not had one yet.
+func _present_due_finale() -> bool:
+	if _read_only or preview_active or not bool(app.game_state.get("puzzle_solved", false)):
+		return false
+	for qid in CURRENT_STORY_QUEST_IDS:
+		var inst := UI.instance_for(app.game_state, qid)
+		if inst.is_empty() or not inst.get("quest_snapshot", {}).has("adventure"):
+			continue
+		if _mission_finished(inst) and not _finale_seen(inst):
+			_mark_finale_seen(inst)
+			open_finale(qid, str(inst.get("instance_id", "")))
+			return true
+	return false
 
 func _ensure_instance(qid: String, instance_id: String = "") -> Dictionary:
 	if CURRENT_STORY_QUEST_IDS.has(qid):
@@ -593,10 +665,16 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 				app.audio_service.play_voice("bruno", "greet")
 			else:
 				app.audio_service.play_sfx("click_dial")
+		if operation in ["toggle_challenge_item", "set_challenge_day"] and bool(result.get("newly_unlocked", false)):
+			# Thirty days done: Bruno's ceremony, then the board and the flame on the wall.
+			app.audio_service.play_sfx("chime_solve")
+			call_deferred("open_finale", "challenge")
+		if operation == "chapter_finale" and bool(result.get("applied", false)):
+			call_deferred("open_finale", "chapter")
 		if operation in ["stage_submit", "stage_review"] and bool(result.get("applied", false)) and not bool(result.get("awaiting_review", false)) and not bool(result.get("needs_revision", false)):
 			app.audio_service.play_sfx("chime_solve")
 			call_deferred("_present_pending")
-		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale", "toggle_challenge_item"]:
+		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale", "toggle_challenge_item", "set_challenge_day"]:
 			if is_instance_valid(screen):
 				screen.setup(_view(route_context), app.audio_service)
 				_result(result)
@@ -663,6 +741,9 @@ func _mutate(candidate: Dictionary, operation: String, payload: Dictionary) -> D
 		"toggle_challenge_item":
 			var Ritual = preload("res://scripts/services/ritual_service.gd")
 			return Ritual.toggle_challenge_item(candidate, str(payload.get("item_key", "")))
+		"set_challenge_day":
+			var Ritual = preload("res://scripts/services/ritual_service.gd")
+			return Ritual.set_past_day(candidate, str(payload.get("date", "")), bool(payload.get("done", true)))
 	var core := load("res://scripts/services/adventure_service.gd")
 	return core.dispatch(candidate, operation, payload, "player_01", _launcher().inspect_entry)
 

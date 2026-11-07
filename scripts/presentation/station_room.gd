@@ -38,6 +38,10 @@ var movement_ritual_marker: Node3D
 var movement_ritual_light: OmniLight3D
 var challenge_board_marker: Node3D
 var challenge_board_light: OmniLight3D
+## Вечный Огонь стойкости: маленькое пламя в латунной чаше над Доской Чемпиона.
+var challenge_flame: Node3D
+var challenge_flame_mesh: MeshInstance3D
+var flame_time := 0.0
 var alarm_clock_mesh: Node3D
 var valley_map_notes: Label3D
 var adventure_props: StationAdventureProps
@@ -53,6 +57,9 @@ var mat_power_on: StandardMaterial3D
 # Состояние
 var is_stage_2: bool = false
 var reduce_motion: bool = false
+const CHALLENGE_LIGHT_ENERGY := 0.95
+## Свободный участок левой стены между картой долины и окном, над столом.
+const CHALLENGE_BOARD_POSITION := Vector3(-2.31, 1.42, -0.62)
 var hovered_prop_id: String = ""
 var target_cam_offset := Vector3.ZERO
 var current_cam_offset := Vector3.ZERO
@@ -106,6 +113,7 @@ func apply_adventure_view(view: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	_update_navigation(delta)
+	_flicker_flame(delta)
 	if not reduce_motion:
 		current_cam_offset = current_cam_offset.lerp(target_cam_offset, delta * 4.0)
 		var right := Vector3(cos(deg_to_rad(player_yaw)), 0.0, sin(deg_to_rad(player_yaw)))
@@ -113,6 +121,29 @@ func _process(delta: float) -> void:
 	else:
 		camera.position = player_position
 	camera.rotation_degrees = Vector3(base_camera_rot.x, player_yaw, 0.0)
+
+## Плавно поворачивает взгляд к Доске Чемпиона (после церемонии Бруно).
+func focus_challenge_board() -> void:
+	if challenge_board_marker == null or not challenge_board_marker.visible:
+		return
+	var delta := CHALLENGE_BOARD_POSITION - player_position
+	var target := rad_to_deg(atan2(-delta.x, -delta.z))
+	var start := player_yaw
+	if reduce_motion:
+		player_yaw = target
+		return
+	var tween := create_tween()
+	tween.tween_method(func(t: float): player_yaw = lerp_angle(deg_to_rad(start), deg_to_rad(target), t) * 180.0 / PI, 0.0, 1.0, 1.4).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+## Пламя Вечного Огня слегка мерцает; при «меньше движения» горит ровно.
+func _flicker_flame(delta: float) -> void:
+	if challenge_flame == null or not challenge_flame.visible:
+		return
+	flame_time += delta
+	var wobble := 0.0 if reduce_motion else 0.5 * sin(flame_time * 9.0) + 0.3 * sin(flame_time * 17.0 + 1.3)
+	challenge_flame_mesh.scale = Vector3(1.0 + 0.08 * wobble, 1.0 + 0.18 * wobble, 1.0 + 0.08 * wobble)
+	if challenge_board_light != null:
+		challenge_board_light.light_energy = CHALLENGE_LIGHT_ENERGY * (1.0 + 0.07 * wobble)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and not reduce_motion:
@@ -278,8 +309,10 @@ func apply_phase_b_world_effects(effect_ids: Array) -> void:
 		movement_ritual_light.light_energy = 1.1 if effect_ids.has("movement_ritual_light") else 0.0
 	if challenge_board_marker != null:
 		challenge_board_marker.visible = effect_ids.has("challenge_30_board")
+	if challenge_flame != null:
+		challenge_flame.visible = effect_ids.has("challenge_30_board")
 	if challenge_board_light != null:
-		challenge_board_light.light_energy = 1.3 if effect_ids.has("challenge_30_board") else 0.0
+		challenge_board_light.light_energy = CHALLENGE_LIGHT_ENERGY if effect_ids.has("challenge_30_board") else 0.0
 
 func _setup_phase_b_effects() -> void:
 	phase_b_unlock_panel = Node3D.new()
@@ -327,8 +360,9 @@ func _setup_phase_b_effects() -> void:
 
 	# Памятная латунная доска челленджа 30 дней
 	challenge_board_marker = Node3D.new()
-	challenge_board_marker.position = Vector3(-1.72, 1.18, 0.55)
+	challenge_board_marker.position = CHALLENGE_BOARD_POSITION
 	challenge_board_marker.rotation_degrees.y = 90
+	challenge_board_marker.scale = Vector3.ONE * 1.4
 	challenge_board_marker.visible = false
 	add_child(challenge_board_marker)
 	var board_mat := StandardMaterial3D.new()
@@ -349,10 +383,38 @@ func _setup_phase_b_effects() -> void:
 
 	_make_interactive_area(board_mesh, "challenge_board", "Доска почёта • 30 дней чемпионского ритма", Vector3(0.46, 0.30, 0.12))
 
+	# Вечный Огонь: латунная чаша и пламя над доской. Свет стоит чуть дальше и выше,
+	# чтобы тёплое сияние ложилось на латунь, а не выжигало гравировку.
+	challenge_flame = Node3D.new()
+	challenge_flame.position = CHALLENGE_BOARD_POSITION + Vector3(0.03, 0.36, 0.0)
+	challenge_flame.visible = false
+	add_child(challenge_flame)
+	var bowl := MeshInstance3D.new()
+	var bowl_mesh := CylinderMesh.new()
+	bowl_mesh.top_radius = 0.07
+	bowl_mesh.bottom_radius = 0.035
+	bowl_mesh.height = 0.06
+	bowl.mesh = bowl_mesh
+	bowl.material_override = board_mat
+	challenge_flame.add_child(bowl)
+	challenge_flame_mesh = MeshInstance3D.new()
+	var flame_mesh := SphereMesh.new()
+	flame_mesh.radius = 0.04
+	flame_mesh.height = 0.14
+	challenge_flame_mesh.mesh = flame_mesh
+	challenge_flame_mesh.position = Vector3(0.0, 0.08, 0.0)
+	var flame_mat := StandardMaterial3D.new()
+	flame_mat.albedo_color = Color(1.0, 0.72, 0.28)
+	flame_mat.emission_enabled = true
+	flame_mat.emission = Color(1.0, 0.55, 0.15)
+	flame_mat.emission_energy_multiplier = 2.6
+	challenge_flame_mesh.material_override = flame_mat
+	challenge_flame.add_child(challenge_flame_mesh)
+
 	challenge_board_light = OmniLight3D.new()
-	challenge_board_light.position = Vector3(-1.48, 1.25, 0.55)
-	challenge_board_light.omni_range = 1.8
-	challenge_board_light.light_color = Color(1.0, 0.82, 0.42)
+	challenge_board_light.position = CHALLENGE_BOARD_POSITION + Vector3(0.62, 0.33, 0.0)
+	challenge_board_light.omni_range = 1.7
+	challenge_board_light.light_color = Color(1.0, 0.8, 0.42)
 	challenge_board_light.light_energy = 0.0
 	add_child(challenge_board_light)
 	phase_b_unlock_label.outline_modulate = Color(0.05, 0.035, 0.025, 0.95)

@@ -17,6 +17,7 @@ signal editor_requested
 signal family_requested
 signal legacy_journal_requested
 signal water_photos_requested
+signal finale_requested(key: String)
 
 var state: Dictionary = {}
 var audio_service: Node
@@ -32,6 +33,8 @@ var solo_only := false
 var favorites_only := false
 var page := 0
 var history_quest: Dictionary = {}
+## The "remember past days" calendar of the 30-day challenge stays open between rebuilds.
+var calendar_open := false
 
 func setup(game_state: Dictionary, audio_svc: Node = null) -> void:
 	state = game_state.duplicate(true)
@@ -118,9 +121,16 @@ func _build_now() -> void:
 			done += 1
 	if done == 3:
 		var finale := UI.card(sc)
-		UI.label("Вечер открытой станции",finale,24,UI.BRASS)
-		UI.label("Три истории готовы встретиться. Выбери название и свои работы в архиве.",finale)
-		UI.button("Собрать выставку главы",finale,func(): collection_requested.emit(),true)
+		if bool(state.get("adventures", {}).get("chapters_by_profile", {}).get("player_01", {}).get("completed", false)):
+			UI.label("✦ Вечер открытой станции состоялся",finale,24,UI.BRASS)
+			UI.label("Радио, игра и вода собраны в одном альбоме главы. Станция ждёт следующего письма.",finale)
+			var again := UI.row(finale)
+			UI.button("Посмотреть финал главы",again,func(): finale_requested.emit("chapter"),true)
+			UI.button("Мои работы",again,func(): collection_requested.emit())
+		else:
+			UI.label("Вечер открытой станции",finale,24,UI.BRASS)
+			UI.label("Три истории готовы встретиться. Выбери название и свои работы в архиве: остальное сделают друзья.",finale)
+			UI.button("Собрать выставку главы",finale,func(): collection_requested.emit(),true)
 	_build_challenge_card(sc)
 
 func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> void:
@@ -158,7 +168,8 @@ func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> 
 	else:
 		UI.label("Миссия выполнена" if finished else "Шаг %d из %d" % [mini(done+1,stages.size()),stages.size()] if done > 0 else "Новая миссия",box,14,UI.TEAL)
 	UI.label(str(quest.get("story_title",quest.get("title", "Приключение"))),box,21)
-	var is_water_submitted := qid == "FG08" and bool(state.get("adventures", {}).get("progress", {}).get(str(inst.get("instance_id", "")), {}).get("water_photos_submitted", false))
+	# Once the mission is finished its card leads to the closing scene, not to Clara's waiting screen.
+	var is_water_submitted := qid == "FG08" and not finished and bool(state.get("adventures", {}).get("progress", {}).get(str(inst.get("instance_id", "")), {}).get("water_photos_submitted", false))
 	if guide.is_empty():
 		UI.label(str(next.get("title",quest.get("summary", "Выбери первое действие"))),box)
 	else:
@@ -352,6 +363,58 @@ func _build_challenge_card(parent: Node) -> void:
 		UI.label(str(bruno.get("all_done", "")), status_row, 14, Color(0.55, 0.95, 0.72))
 	else:
 		UI.label("Сегодня выполнено: %d из 6 дел. %s" % [done_count, str(bruno.get("waiting", ""))], status_row, 13, UI.TEAL)
+	_build_challenge_footer(box, c, unlocked)
+
+## Under the daily checklist: the ceremony replay once the challenge is won, otherwise
+## a calendar for days that were done in life but not ticked in the game.
+func _build_challenge_footer(box: Node, c: Dictionary, unlocked: bool) -> void:
+	var Ritual = preload("res://scripts/services/ritual_service.gd")
+	var actions := UI.row(box)
+	if unlocked:
+		var ceremony := UI.button("✦ Посмотреть церемонию Бруно", actions, func(): finale_requested.emit("challenge"), true)
+		ceremony.name = "ChallengeCeremony"
+		return
+	var toggle := UI.button("📅 Закрыть календарь" if calendar_open else "📅 Вспомнить прошедшие дни", actions, func():
+		calendar_open = not calendar_open
+		_build())
+	toggle.name = "ChallengeCalendarToggle"
+	if not calendar_open:
+		return
+	var history: Dictionary = c.get("history", {})
+	var panel := UI.card(box)
+	panel.name = "ChallengeCalendar"
+	UI.label("Не каждый день получалось отметить в игре, и это нормально. Нажми на день, в который вы правда сделали все шесть дел: пробежку, растяжку и четыре подхода испанского. Отмечайте только честные дни: так Доска Чемпиона будет настоящей.", panel, 13, UI.MUTED)
+	var grid := GridContainer.new()
+	grid.columns = 7
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+	panel.add_child(grid)
+	var backfilled := 0
+	for date in Ritual.backfill_dates():
+		var record: Dictionary = history.get(date, {})
+		var done := bool(record.get("completed", false))
+		var added_later := bool(record.get("backfilled", false))
+		if added_later:
+			backfilled += 1
+		var parts := date.split("-")
+		var day_button := Button.new()
+		day_button.name = "Day_" + date
+		day_button.text = "%d.%s%s" % [int(parts[2]), parts[1], " ✓" if done else ""]
+		day_button.custom_minimum_size = Vector2(74, 38)
+		day_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		day_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		if done:
+			day_button.add_theme_stylebox_override("normal", UI.style(Color("405b59"), UI.BRASS, 6))
+		# A day ticked live in the game stays as it was; only a day added here can be taken back.
+		day_button.disabled = done and not added_later
+		var chosen_date: String = date
+		var chosen_done := not done
+		day_button.pressed.connect(func(): command_requested.emit("set_challenge_day", {"date": chosen_date, "done": chosen_done}))
+		grid.add_child(day_button)
+	var note := "Подряд сейчас: %d · лучший ряд: %d из 30." % [int(c.get("current_streak", 0)), int(c.get("max_streak", 0))]
+	if backfilled > 0:
+		note += " Вспомнили вместе: %d." % backfilled
+	UI.label(note, panel, 14, UI.TEAL)
 
 func _build_map_tab() -> void:
 	var sc := UI.scroll(content)

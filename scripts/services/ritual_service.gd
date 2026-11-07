@@ -14,6 +14,8 @@ const CHALLENGE_ID := "maya_30_streak"
 const CHALLENGE_TARGET_DAYS := 30
 const CHALLENGE_UNLOCK_EFFECT := "challenge_30_board"
 const CHALLENGE_UNLOCK_LIGHT := "challenge_30_light"
+## Сколько последних дней можно вспомнить задним числом.
+const BACKFILL_WINDOW_DAYS := 35
 const CHALLENGE_ITEMS: Array[String] = [
 	"morning_run",
 	"evening_stretch",
@@ -165,18 +167,8 @@ static func toggle_challenge_item(state: Dictionary, item_key: String) -> Dictio
 			c["history"] = history
 
 			if int(c["current_streak"]) >= int(c.get("target_days", CHALLENGE_TARGET_DAYS)) and not bool(c.get("unlocked", false)):
-				c["unlocked"] = true
-				c["unlocked_at"] = Time.get_datetime_string_from_system()
+				award = _unlock_challenge(state, c)
 				newly_unlocked = true
-				award = ProgressServiceScript.apply_award(
-					state,
-					"player_01",
-					"ritual:maya_30_streak:unlock",
-					"ritual:maya_30_streak",
-					0,
-					{},
-					[CHALLENGE_UNLOCK_EFFECT, CHALLENGE_UNLOCK_LIGHT]
-				)
 	else:
 		# Если сегодня было завершено, а теперь пункт снят
 		if history.has(today) and bool(history[today].get("completed", false)):
@@ -203,6 +195,108 @@ static func toggle_challenge_item(state: Dictionary, item_key: String) -> Dictio
 		"has_alarm_clock": bool(c.get("has_alarm_clock", false)),
 		"award": award
 	}
+
+## Выдаёт награду челленджа один раз: доска почёта, Вечный Огонь, жетон «30 DÍAS».
+static func _unlock_challenge(state: Dictionary, c: Dictionary) -> Dictionary:
+	c["unlocked"] = true
+	c["unlocked_at"] = Time.get_datetime_string_from_system()
+	return ProgressServiceScript.apply_award(
+		state,
+		"player_01",
+		"ritual:maya_30_streak:unlock",
+		"ritual:maya_30_streak",
+		0,
+		{},
+		[CHALLENGE_UNLOCK_EFFECT, CHALLENGE_UNLOCK_LIGHT]
+	)
+
+## Календарная дата на `offset` дней раньше/позже `date_string` (YYYY-MM-DD).
+static func shift_date(date_string: String, offset: int) -> String:
+	if not _is_valid_date_format(date_string.strip_edges()):
+		return ""
+	var unix := Time.get_unix_time_from_datetime_string(date_string.strip_edges().left(10) + "T00:00:00")
+	return Time.get_date_string_from_unix_time(int(unix) + offset * 86400)
+
+## Дни, которые можно отметить задним числом: от самого раннего до вчерашнего.
+## Окно — последние BACKFILL_WINDOW_DAYS дней; сегодняшний день отмечается обычным чек-листом.
+static func backfill_dates(today: String = "") -> Array[String]:
+	var now := today if not today.is_empty() else Time.get_date_string_from_system()
+	var result: Array[String] = []
+	for back in range(BACKFILL_WINDOW_DAYS, 0, -1):
+		var d := shift_date(now, -back)
+		if not d.is_empty():
+			result.append(d)
+	return result
+
+## Взрослый и Майя вместе вспомнили: в этот день все шесть дел были сделаны.
+## Такой день записывается с пометкой `backfilled`; отмечать можно только прошедшие дни,
+## а убрать можно только ту отметку, которую поставили задним числом.
+## Серия и рекорд всегда пересчитываются по истории, правило «пропуск обнуляет серию» не меняется.
+static func set_past_day(state: Dictionary, date_string: String, done: bool) -> Dictionary:
+	if bool(state.get("read_only", false)):
+		return {"ok": false, "reason": "read_only"}
+	var date := date_string.strip_edges()
+	var today := Time.get_date_string_from_system()
+	var age := days_between(date, today)
+	if not _is_valid_date_format(date) or age < 1 or age > BACKFILL_WINDOW_DAYS:
+		return {"ok": false, "reason": "date_out_of_range"}
+	var c := ensure_challenge(state)
+	var history: Dictionary = c.get("history", {})
+	if done:
+		if not history.has(date) or not bool(history[date].get("completed", false)):
+			var items: Dictionary = {}
+			for item in CHALLENGE_ITEMS:
+				items[item] = true
+			history[date] = {"completed": true, "items": items, "completed_at": Time.get_datetime_string_from_system(), "backfilled": true}
+	elif history.has(date):
+		if not bool(history[date].get("backfilled", false)):
+			return {"ok": false, "reason": "logged_on_the_day"}
+		history.erase(date)
+	c["history"] = history
+	var runs := _recompute_streaks(c, today)
+	if int(runs.max_run) >= 3 or history.size() >= 2:
+		c["has_alarm_clock"] = true
+	var newly_unlocked := false
+	var award: Dictionary = {}
+	if int(runs.max_run) >= int(c.get("target_days", CHALLENGE_TARGET_DAYS)) and not bool(c.get("unlocked", false)):
+		award = _unlock_challenge(state, c)
+		newly_unlocked = true
+	var phase_c: Dictionary = state.get("phase_c", {})
+	var rituals: Dictionary = phase_c.get("rituals", {})
+	rituals[CHALLENGE_ID] = c
+	phase_c["rituals"] = rituals
+	state["phase_c"] = phase_c
+	return {
+		"ok": true,
+		"date": date,
+		"done": done,
+		"current_streak": c.get("current_streak", 0),
+		"max_streak": c.get("max_streak", 0),
+		"unlocked": bool(c.get("unlocked", false)),
+		"newly_unlocked": newly_unlocked,
+		"award": award
+	}
+
+## Пересчёт по истории: самая длинная серия подряд и текущая (она жива, только если
+## последний закрытый день — сегодня или вчера).
+static func _recompute_streaks(c: Dictionary, today: String) -> Dictionary:
+	var days: Array[String] = []
+	for d in c.get("history", {}).keys():
+		if bool(c.history[d].get("completed", false)):
+			days.append(str(d))
+	days.sort()
+	var max_run := 0
+	var run := 0
+	var previous := ""
+	for d in days:
+		run = run + 1 if not previous.is_empty() and days_between(previous, d) == 1 else 1
+		max_run = maxi(max_run, run)
+		previous = d
+	var last: String = "" if days.is_empty() else days.back()
+	c["last_completed_date"] = last
+	c["max_streak"] = max_run
+	c["current_streak"] = run if not last.is_empty() and days_between(last, today) <= 1 else 0
+	return {"max_run": max_run, "run": run}
 
 static func gift_alarm_clock(state: Dictionary) -> Dictionary:
 	var c := ensure_challenge(state)

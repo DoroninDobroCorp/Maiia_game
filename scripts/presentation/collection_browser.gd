@@ -377,11 +377,15 @@ func _chapter() -> void:
 	var title := UI.input(sc,"Название выставки", "Станция на связи")
 	var selections: Dictionary = {}
 	var complete := true
+	var story_names := {"FG01": "Радио Норы: выбери работу эфира", "FG11": "Мастерская Тео: выбери версию игры", "FG08": "Полевой альбом Клары: выбери водный диптих"}
 	for qid in ["FG01","FG11","FG08"]:
 		var works: Array = Collections.list_works(state).filter(func(w): return w.get("quest_ids", []).has(qid))
 		var names: Array = ["Выбрать работу…"]
 		for work in works: names.append(str(work.get("title", "")))
-		var pick := UI.option(sc,names)
+		UI.label(str(story_names[qid]),sc,14,UI.MUTED)
+		# The newest work of each story is ready chosen: most evenings are one tap.
+		var pick := UI.option(sc,names,works.size())
+		if not works.is_empty(): selections[qid] = str(works.back().get("work_id", ""))
 		pick.item_selected.connect(func(i):
 			if i > 0: selections[qid] = str(works[i-1].get("work_id", ""))
 			else: selections.erase(qid))
