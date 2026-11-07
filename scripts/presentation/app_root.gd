@@ -361,6 +361,16 @@ func _on_prop_clicked(prop_id: String) -> void:
 		"challenge_board":
 			audio_service.play_sfx("chime_solve")
 			show_toast("✨ Памятная доска стойкости Майи: 30 дней чемпионского ритма! Каждое усилие оставляет след на станции.")
+		"teo_lighthouse":
+			audio_service.play_sfx("wood_thump")
+			show_toast("🏮 Маячок Майи: первая поделка из дерева. Если выключить свет, фонарь мигнёт три раза, как старый маяк в долине. Тео клянётся, что он тут ни при чём.")
+		"cipher_strip":
+			audio_service.play_sfx("click_dial")
+			var c2_view: Dictionary = preload("res://scripts/services/chapter2_service.gd").station_view(game_state)
+			var heard: Array[String] = []
+			for part in c2_view.nora_parts:
+				heard.append("%s (%s)" % [str(part.es), str(part.ru)])
+			show_toast("📻 Шкала шифра Норы: %d из 6 ключей. Услышано: %s" % [int(c2_view.nora_lamps), " ".join(PackedStringArray(heard))])
 		"school_card":
 			audio_service.play_sfx("paper_flip")
 			var school_info: Dictionary = preload("res://scripts/services/ritual_service.gd").school_state(game_state)

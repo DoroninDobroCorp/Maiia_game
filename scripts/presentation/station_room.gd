@@ -45,6 +45,18 @@ var flame_time := 0.0
 ## Пресс-карта «Репортаж из школы» на задней стене слева от окна; после сдачи выпуска на её месте первая полоса газеты.
 var school_card_marker: Node3D
 var school_card_label: Label3D
+## Глава 2: деревянный маячок Тео, шкала шифра Норы, огонёк старого маяка в окне.
+var lighthouse_model: Node3D
+var lighthouse_lamp: MeshInstance3D
+var lighthouse_light: OmniLight3D
+var lighthouse_photo: MeshInstance3D
+var cipher_lamps: Array[MeshInstance3D] = []
+var cipher_strip: Node3D
+var window_beacon: MeshInstance3D
+var beacon_time := 0.0
+var valley_map_default := ""
+var cipher_mat_on: StandardMaterial3D
+var cipher_mat_off: StandardMaterial3D
 const SCHOOL_CARD_POSITION := Vector3(-1.62, 1.45, -0.785)
 var alarm_clock_mesh: Node3D
 var valley_map_notes: Label3D
@@ -94,6 +106,7 @@ func _ready() -> void:
 	_setup_props()
 	_setup_phase_b_effects()
 	_setup_school_card()
+	_setup_chapter2_props()
 	adventure_props = preload("res://scripts/presentation/station_adventure_props.gd").new()
 	add_child(adventure_props)
 	adventure_props.prop_clicked.connect(func(id: String): prop_clicked.emit(id))
@@ -106,20 +119,29 @@ func apply_adventure_view(view: Dictionary) -> void:
 	if alarm_clock_mesh != null:
 		alarm_clock_mesh.visible = bool(view.get("awakened", false)) and bool(view.get("has_alarm_clock", false))
 	_apply_school_card(view)
+	_apply_chapter2(view)
 	if valley_map_notes != null:
+		if valley_map_default.is_empty():
+			valley_map_default = valley_map_notes.text
 		var has_river: bool = bool(view.get("river_unlocked", false))
 		var has_fall: bool = bool(view.get("fall_unlocked", false))
+		var map_text := valley_map_default
 		if has_river and has_fall:
-			valley_map_notes.text = "🌊 р. Рио Асуль • [ОТКРЫТА]\n💧 Nahuel Pan • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
+			map_text = "🌊 р. Рио Асуль • [ОТКРЫТА]\n💧 Nahuel Pan • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
 			valley_map_notes.modulate = Color(0.18, 0.38, 0.28)
 		elif has_river:
-			valley_map_notes.text = "🌊 р. Рио Асуль • [ОТКРЫТА]\n▲ Пилтрикитрон • [ТУМАН]"
+			map_text = "🌊 р. Рио Асуль • [ОТКРЫТА]\n▲ Пилтрикитрон • [ТУМАН]"
 		elif has_fall:
-			valley_map_notes.text = "💧 Nahuel Pan • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
+			map_text = "💧 Nahuel Pan • [ОТКРЫТ]\n▲ Пилтрикитрон • [ТУМАН]"
+		var c2: Dictionary = view.get("c2", {})
+		if int(c2.get("bruno_done", 0)) > 0:
+			map_text += "\n🚩 Тропа Бруно: %d из %d" % [int(c2.bruno_done), int(c2.get("bruno_total", 7))]
+		valley_map_notes.text = map_text
 
 func _process(delta: float) -> void:
 	_update_navigation(delta)
 	_flicker_flame(delta)
+	_update_beacons(delta)
 	if not reduce_motion:
 		current_cam_offset = current_cam_offset.lerp(target_cam_offset, delta * 4.0)
 		var right := Vector3(cos(deg_to_rad(player_yaw)), 0.0, sin(deg_to_rad(player_yaw)))
@@ -127,6 +149,152 @@ func _process(delta: float) -> void:
 	else:
 		camera.position = player_position
 	camera.rotation_degrees = Vector3(base_camera_rot.x, player_yaw, 0.0)
+
+## Три вспышки раз в четыре секунды: ритм старого маяка.
+func _beacon_level() -> float:
+	if reduce_motion:
+		return 0.7
+	var phase := fmod(beacon_time, 4.0)
+	for start in [0.0, 0.5, 1.0]:
+		if phase >= start and phase < start + 0.25:
+			return 1.0
+	return 0.1
+
+func _update_beacons(delta: float) -> void:
+	beacon_time += delta
+	var level := _beacon_level()
+	if lighthouse_model != null and lighthouse_model.visible and lighthouse_lamp != null:
+		var lit := lighthouse_light.has_meta("lit") and bool(lighthouse_light.get_meta("lit"))
+		var mat := lighthouse_lamp.material_override as StandardMaterial3D
+		mat.emission_energy_multiplier = (0.4 + 3.2 * level) if lit else 0.15
+		lighthouse_light.light_energy = (0.9 * level) if lit else 0.0
+	if window_beacon != null and window_beacon.visible:
+		(window_beacon.material_override as StandardMaterial3D).emission_energy_multiplier = 0.5 + 4.0 * level
+
+func _make_mat(color: Color, emission: bool = false, rough: float = 0.8) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.roughness = rough
+	if emission:
+		mat.emission_enabled = true
+		mat.emission = color
+		mat.emission_energy_multiplier = 1.0
+	return mat
+
+func _setup_chapter2_props() -> void:
+	# Деревянный маячок Тео на задней полке слева от будильника.
+	lighthouse_model = Node3D.new()
+	lighthouse_model.position = Vector3(-1.02, 1.12, 0.22)
+	lighthouse_model.visible = false
+	add_child(lighthouse_model)
+	var wood := _make_mat(Color(0.80, 0.64, 0.42), false, 0.7)
+	var white := _make_mat(Color(0.93, 0.90, 0.82), false, 0.7)
+	var base := _create_cylinder(0.06, 0.03, wood)
+	base.position.y = 0.015
+	lighthouse_model.add_child(base)
+	var tower := MeshInstance3D.new()
+	var tower_mesh := CylinderMesh.new()
+	tower_mesh.top_radius = 0.026
+	tower_mesh.bottom_radius = 0.044
+	tower_mesh.height = 0.20
+	tower.mesh = tower_mesh
+	tower.material_override = white
+	tower.position.y = 0.13
+	lighthouse_model.add_child(tower)
+	var stripe := MeshInstance3D.new()
+	var stripe_mesh := CylinderMesh.new()
+	stripe_mesh.top_radius = 0.0335
+	stripe_mesh.bottom_radius = 0.0375
+	stripe_mesh.height = 0.04
+	stripe.mesh = stripe_mesh
+	stripe.material_override = _make_mat(Color(0.75, 0.28, 0.22))
+	stripe.position.y = 0.135
+	lighthouse_model.add_child(stripe)
+	var gallery := _create_cylinder(0.04, 0.012, wood)
+	gallery.position.y = 0.236
+	lighthouse_model.add_child(gallery)
+	lighthouse_lamp = _create_cylinder(0.022, 0.04, _make_mat(Color(1.0, 0.82, 0.45), true))
+	lighthouse_lamp.position.y = 0.262
+	lighthouse_model.add_child(lighthouse_lamp)
+	var roof := MeshInstance3D.new()
+	var roof_mesh := CylinderMesh.new()
+	roof_mesh.top_radius = 0.002
+	roof_mesh.bottom_radius = 0.034
+	roof_mesh.height = 0.04
+	roof.mesh = roof_mesh
+	roof.material_override = _make_mat(Color(0.75, 0.28, 0.22))
+	roof.position.y = 0.302
+	lighthouse_model.add_child(roof)
+	lighthouse_light = OmniLight3D.new()
+	lighthouse_light.position = Vector3(0.0, 0.27, 0.0)
+	lighthouse_light.omni_range = 0.9
+	lighthouse_light.light_color = Color(1.0, 0.8, 0.45)
+	lighthouse_light.light_energy = 0.0
+	lighthouse_model.add_child(lighthouse_light)
+	_make_interactive_area(base, "teo_lighthouse", "Маячок Майи • первая поделка из дерева", Vector3(0.16, 0.62, 0.16))
+	# Фото настоящей поделки в маленькой рамке рядом.
+	lighthouse_photo = MeshInstance3D.new()
+	var photo_mesh := QuadMesh.new()
+	photo_mesh.size = Vector2(0.14, 0.10)
+	lighthouse_photo.mesh = photo_mesh
+	lighthouse_photo.position = Vector3(0.14, 0.06, 0.07)
+	lighthouse_photo.rotation_degrees = Vector3(-8, -12, 0)
+	lighthouse_photo.material_override = _make_mat(Color(0.86, 0.77, 0.59))
+	lighthouse_photo.visible = false
+	lighthouse_model.add_child(lighthouse_photo)
+	# Шкала шифра Норы: шесть лампочек над радио.
+	cipher_strip = Node3D.new()
+	cipher_strip.visible = false
+	add_child(cipher_strip)
+	cipher_mat_off = _make_mat(Color(0.25, 0.20, 0.12))
+	cipher_mat_on = _make_mat(Color(1.0, 0.78, 0.35), true)
+	cipher_mat_on.emission_energy_multiplier = 2.4
+	var plate := _create_box(Vector3(0.40, 0.045, 0.012), _make_mat(Color(0.10, 0.07, 0.05)))
+	plate.position = Vector3(0.85, 1.272, 0.668)
+	cipher_strip.add_child(plate)
+	for i in range(6):
+		var lamp := _create_box(Vector3(0.04, 0.026, 0.012), cipher_mat_off)
+		lamp.position = Vector3(0.85 - 0.16 + i * 0.064, 1.272, 0.676)
+		cipher_strip.add_child(lamp)
+		cipher_lamps.append(lamp)
+	_make_interactive_area(plate, "cipher_strip", "Шкала шифра Норы • шифровки маяка", Vector3(0.44, 0.09, 0.10))
+	# Далёкий огонёк старого маяка в окне станции.
+	window_beacon = MeshInstance3D.new()
+	var beacon_mesh := SphereMesh.new()
+	beacon_mesh.radius = 0.016
+	beacon_mesh.height = 0.032
+	window_beacon.mesh = beacon_mesh
+	window_beacon.material_override = _make_mat(Color(1.0, 0.82, 0.45), true)
+	window_beacon.position = Vector3(-0.70, 1.60, -1.84)
+	window_beacon.visible = false
+	add_child(window_beacon)
+
+func _apply_chapter2(view: Dictionary) -> void:
+	if lighthouse_model == null:
+		return
+	var c2: Dictionary = view.get("c2", {})
+	var awake := bool(view.get("awakened", false))
+	lighthouse_model.visible = awake and bool(c2.get("teo_model", false))
+	lighthouse_light.set_meta("lit", bool(c2.get("teo_lit", false)))
+	var photo_path := str(c2.get("teo_photo", ""))
+	var texture := _texture_for_c2(photo_path)
+	lighthouse_photo.visible = texture != null
+	if texture != null:
+		var mat := _make_mat(Color.WHITE)
+		mat.albedo_texture = texture
+		lighthouse_photo.material_override = mat
+	cipher_strip.visible = awake and int(c2.get("nora_lamps", 0)) > 0
+	for i in range(cipher_lamps.size()):
+		cipher_lamps[i].material_override = cipher_mat_on if i < int(c2.get("nora_lamps", 0)) else cipher_mat_off
+	window_beacon.visible = awake and bool(c2.get("chapter_done", false))
+
+func _texture_for_c2(path: String) -> Texture2D:
+	if path.is_empty() or not FileAccess.file_exists(path):
+		return null
+	var image := Image.new()
+	if image.load(path) != OK or image.get_width() > 8192 or image.get_height() > 8192:
+		return null
+	return ImageTexture.create_from_image(image)
 
 func _setup_school_card() -> void:
 	school_card_marker = Node3D.new()

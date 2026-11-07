@@ -18,6 +18,7 @@ signal family_requested
 signal legacy_journal_requested
 signal water_photos_requested
 signal finale_requested(key: String)
+signal step_mission_requested(mid: String)
 
 var state: Dictionary = {}
 var audio_service: Node
@@ -138,6 +139,40 @@ func _build_now() -> void:
 	_build_challenge_card(sc)
 	if preload("res://scripts/services/ritual_service.gd").school_visible(state):
 		_build_school_card(sc)
+	_build_chapter2(sc)
+
+## Chapter 2: the missions of Teo, Bruno and Nora open one by one after the heroes' first missions.
+func _build_chapter2(parent: Node) -> void:
+	var C2 = preload("res://scripts/services/chapter2_service.gd")
+	var C2G = preload("res://scripts/presentation/chapter2_guide.gd")
+	if not C2.any_unlocked(state):
+		return
+	UI.label("ГЛАВА 2 · СВЕТ В МАЯКЕ", parent, 15, UI.BRASS)
+	for mid in C2.ids():
+		if not C2.unlocked(state, mid):
+			continue
+		var def: Dictionary = C2G.mission(mid)
+		var info: Dictionary = C2.mission_state(state, mid)
+		var box := UI.card(parent)
+		box.name = "C2Card_" + str(mid)
+		var head := UI.row(box)
+		head.add_theme_constant_override("separation", 14)
+		var portrait := Guide.portrait_path(str(def.hero), "happy" if bool(info.completed) else "neutral")
+		if not portrait.is_empty():
+			UI.portrait(portrait, 110, head)
+		var text := UI.column(head)
+		UI.label(str(def.label), text, 13, UI.TEAL)
+		UI.label(str(def.title), text, 21)
+		UI.label(str(def.goal), text, 13, UI.MUTED)
+		UI.label("✦ Миссия выполнена" if bool(info.completed) else "Шагов сделано: %d из %d" % [int(info.done), int(info.total)], text, 14, Color(1.0, 0.82, 0.40) if bool(info.completed) else Color(1.0, 0.65, 0.30))
+		var actions := UI.row(box)
+		var mission_id: String = str(mid)
+		var open_label := "Открыть →" if bool(info.completed) else ("Продолжить →" if int(info.done) > 0 else "Начать →")
+		var open := UI.button(open_label, actions, func(): step_mission_requested.emit(mission_id), not bool(info.completed))
+		open.name = "C2Open_" + mission_id
+		if bool(info.completed):
+			var finale_key: String = str(def.finale_key)
+			UI.button("✦ Посмотреть финал", actions, func(): finale_requested.emit(finale_key))
 
 ## Clara's second mission: one tap per school day until 10 December, no streak to lose.
 func _build_school_card(parent: Node) -> void:

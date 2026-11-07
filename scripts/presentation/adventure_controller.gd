@@ -11,6 +11,8 @@ const Artifacts = preload("res://scripts/services/artifact_service.gd")
 const Collections = preload("res://scripts/services/collection_service.gd")
 const UI = preload("res://scripts/presentation/adventure_ui.gd")
 const Guide = preload("res://scripts/presentation/mission_guide.gd")
+const C2 = preload("res://scripts/services/chapter2_service.gd")
+const C2G = preload("res://scripts/presentation/chapter2_guide.gd")
 const CURRENT_STORY_QUEST_IDS := ["FG01", "FG11", "FG08"]
 
 var app: Node
@@ -139,7 +141,8 @@ func _show(kind: String, extra: Dictionary = {}) -> void:
 		"editor": "res://scripts/presentation/adventure_editor.gd",
 		"family": "res://scripts/presentation/family_adventure_tools.gd",
 		"water_photos": "res://scripts/presentation/water_photo_upload.gd",
-		"finale": "res://scripts/presentation/mission_finale.gd"
+		"finale": "res://scripts/presentation/mission_finale.gd",
+		"step_mission": "res://scripts/presentation/step_mission.gd"
 	}
 	var script: Script = load(str(paths[kind]))
 	screen = script.new()
@@ -180,6 +183,8 @@ func _connect_screen(node: Node) -> void:
 		node.connect("water_photos_requested", func(): open_water_photos())
 	if node.has_signal("hub_requested"):
 		node.connect("hub_requested", open_hub)
+	if node.has_signal("step_mission_requested"):
+		node.connect("step_mission_requested", func(mission_id: String): open_step_mission(mission_id))
 	if node.has_signal("finale_requested"):
 		node.connect("finale_requested", func(key: String): open_finale(key))
 	if node.has_signal("weather_requested"):
@@ -202,11 +207,11 @@ func _close_screen() -> void:
 		var context := preview_return_context.duplicate(true)
 		preview_return_context = {}
 		_show(target, context)
-	elif route in ["episode", "mission", "finale"]:
+	elif route in ["episode", "mission", "finale", "step_mission"]:
 		# A mission that was just completed ends with its closing scene, once.
 		if _present_due_finale():
 			return
-		if route == "finale" and str(route_context.get("finale_key", "")) == "challenge" and not is_in_gallery():
+		if route == "finale" and str(route_context.get("finale_key", "")) in ["challenge", "ch2_bruno_start"] and not is_in_gallery():
 			# After Bruno's ceremony the room shows its payoff: the view turns to the new board.
 			app._close_modals()
 			screen = null
@@ -245,6 +250,9 @@ func open_hub() -> void:
 		return
 	_opened_from_room = false
 	_ensure_current_story_chapter()
+	# New missions are introduced when the journal is opened, even if their first scene was missed.
+	if _present_due_finale(false):
+		return
 	_show("hub")
 
 func open_collection(extra: Dictionary = {}) -> void:
@@ -325,7 +333,128 @@ func open_finale(key: String, instance_id: String = "") -> void:
 			context["images"] = {"river": _find_stage_image_path(iid, "water_river"), "fall": _find_stage_image_path(iid, "water_fall")}
 	if key == "school":
 		context["extra_lines"] = _school_lines()
+	if key.begins_with("ch2_"):
+		context.merge(_c2_context(key), true)
 	_show("finale", context)
+
+func open_step_mission(mission_id: String) -> void:
+	if not C2.unlocked(_state(), mission_id):
+		return
+	_opened_from_room = false
+	_show("step_mission", {"mid": mission_id})
+
+## Extra material for the closing pages of chapter 2: photos, names, dispatches.
+func _c2_context(key: String) -> Dictionary:
+	var state := _state()
+	var context: Dictionary = {}
+	var lines: Array = []
+	match key:
+		"ch2_teo":
+			var names := _c2_names(state)
+			if not names.is_empty():
+				lines.append("Имена инструментов: " + ", ".join(PackedStringArray(names)))
+			var photo := C2.photo_path(state, "teo2", "t_carve")
+			if not photo.is_empty():
+				context["photo_list"] = [{"path": photo, "caption": "Маячок Майи"}]
+				context["photos_title"] = "ПЕРВАЯ ПОДЕЛКА · ФОТО: МАЙЯ"
+		"ch2_bruno":
+			var first: Dictionary = C2.mission_state(state, "bruno2").steps[0].record.get("fields", {})
+			if not str(first.get("minutes", "")).is_empty():
+				lines.append("Первый замер: %s мин без остановки." % str(first.minutes))
+			var photo := C2.photo_path(state, "bruno2", "b_run")
+			if not photo.is_empty():
+				context["photo_list"] = [{"path": photo, "caption": "Вид с водопада Nahuel Pan"}]
+				context["photos_title"] = "ВИД С ТРОПЫ · ФОТО: МАЙЯ"
+		"ch2_nora":
+			var parts: Array = C2.station_view(state).nora_parts
+			var spanish: Array[String] = []
+			for part in parts:
+				spanish.append(str(part.es))
+			lines.append("Сообщение маяка: " + " ".join(PackedStringArray(spanish)))
+			var reply := str(C2.mission_state(state, "nora2").steps.back().record.get("fields", {}).get("reply", ""))
+			if not reply.is_empty():
+				lines.append("Твой ответ: «" + reply + "»")
+	if not lines.is_empty():
+		context["extra_lines"] = lines
+	return context
+
+func _c2_names(state: Dictionary) -> Array[String]:
+	var names: Array[String] = []
+	var fields: Dictionary = C2.mission_state(state, "teo2").steps[0].record.get("fields", {})
+	for key in ["tool_1", "tool_2", "tool_3"]:
+		if not str(fields.get(key, "")).is_empty():
+			names.append(str(fields[key]))
+	return names
+
+## Finished missions of chapter 2 go to the archive as Maya's own works.
+func _save_c2_work(candidate: Dictionary, mid: String) -> void:
+	var info: Dictionary = C2.mission_state(candidate, mid)
+	var work: Dictionary = {}
+	match mid:
+		"teo2":
+			var content := {"tool_names": _c2_names(candidate)}
+			var artifact := str(info.steps[4].record.get("artifact_id", ""))
+			if not artifact.is_empty():
+				content["artifact_id"] = artifact
+			work = {"work_id": "ch2_teo:player_01", "title": "Первая стружка: маячок из дерева", "kind": "sculpture", "content": content}
+		"bruno2":
+			var ladder: Array = []
+			for row in info.steps:
+				var fields: Dictionary = row.record.get("fields", {})
+				ladder.append({"step": str(row.id), "minutes": str(fields.get("minutes", "")), "meters": str(fields.get("meters", ""))})
+			work = {"work_id": "ch2_bruno:player_01", "title": "Тропа Бруно: лестница к водопаду", "kind": "note", "content": {"ladder": ladder}}
+		"nora2":
+			var examples: Array = []
+			var reply := ""
+			for row in info.steps:
+				var fields: Dictionary = row.record.get("fields", {})
+				if fields.has("own"):
+					examples.append({"step": str(row.id), "example": str(fields.own), "school": str(fields.get("school", ""))})
+				if fields.has("reply"):
+					reply = str(fields.reply)
+			work = {"work_id": "ch2_nora:player_01", "title": "Шифровки маяка: мои правила и ответ", "kind": "note", "content": {"examples": examples, "reply": reply}}
+	if work.is_empty():
+		return
+	work["status"] = "COMPLETED"
+	work["authorship"] = {"category": "personal"}
+	work["quest_ids"] = []
+	var made := Collections.create_work(candidate, work)
+	if bool(made.get("ok", false)):
+		Collections.create_exhibit(candidate, str(made.work_id), "frame")
+
+## Photo window of chapter 2 steps: file dialog, import, draft of the step.
+func _c2_attach_photo(payload: Dictionary) -> void:
+	var dialog := FileDialog.new()
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Изображения"])
+	var downloads := OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS)
+	if not downloads.is_empty() and DirAccess.dir_exists_absolute(downloads):
+		dialog.current_dir = downloads
+	app.add_child(dialog)
+	dialog.file_selected.connect(func(path: String):
+		_c2_store_photo(payload, path)
+		dialog.queue_free())
+	dialog.canceled.connect(func(): dialog.queue_free())
+	dialog.popup_centered_ratio(0.8)
+
+func _c2_store_photo(payload: Dictionary, path: String) -> void:
+	var mid := str(payload.get("mid", ""))
+	var sid := str(payload.get("sid", ""))
+	var candidate: Dictionary = app.game_state.duplicate(true)
+	var imported := Artifacts.import_local_image(candidate, path, "%s · фото Майи" % str(C2G.mission(mid).get("title", "Миссия")))
+	if not bool(imported.get("ok", false)):
+		_result(imported)
+		return
+	var saved: Dictionary = C2.set_draft(candidate, mid, sid, {"artifact_id": str(imported.artifact.artifact_id)})
+	if bool(saved.get("ok", false)) and Save.save_game(candidate):
+		app.game_state = candidate
+		refresh_world()
+		if route == "step_mission" and is_instance_valid(screen):
+			screen.setup(_view(route_context), app.audio_service)
+		_result({"ok": true, "message": "Фотография сохранена ✓"})
+	else:
+		_result({"ok": false, "message": "Не удалось сохранить фотографию."})
 
 ## Closing page of the school report: the number of days and the last dispatches.
 func _school_lines() -> Array:
@@ -388,10 +517,12 @@ func _mark_finale_seen(inst: Dictionary) -> void:
 		app.game_state = candidate
 
 ## Shows the closing scene of the first finished mission that has not had one yet.
-func _present_due_finale() -> bool:
+func _present_due_finale(include_first_chapter: bool = true) -> bool:
 	if _read_only or preview_active or not bool(app.game_state.get("puzzle_solved", false)):
 		return false
 	for qid in CURRENT_STORY_QUEST_IDS:
+		if not include_first_chapter:
+			break
 		var inst := UI.instance_for(app.game_state, qid)
 		if inst.is_empty() or not inst.get("quest_snapshot", {}).has("adventure"):
 			continue
@@ -407,6 +538,15 @@ func _present_due_finale() -> bool:
 		if Save.save_game(candidate):
 			app.game_state = candidate
 		open_finale("school_start")
+		return true
+	# Chapter 2: pitches, finales of Teo, Bruno and Nora, and the final scene of the chapter.
+	var scene: Dictionary = C2.next_scene(app.game_state)
+	if not scene.is_empty():
+		var marked: Dictionary = app.game_state.duplicate(true)
+		C2.mark_scene(marked, scene)
+		if Save.save_game(marked):
+			app.game_state = marked
+		open_finale(str(scene.key))
 		return true
 	return false
 
@@ -542,6 +682,7 @@ func refresh_world() -> void:
 	view["school_visible"] = preload("res://scripts/services/ritual_service.gd").school_visible(app.game_state)
 	view["school_days"] = int(school_info.days)
 	view["school_done"] = bool(school_info.completed)
+	view["c2"] = C2.station_view(app.game_state)
 	view["chapter_complete"] = bool(app.game_state.get("adventures", {}).get("chapters_by_profile", {}).get("player_01", {}).get("completed", false))
 	for inst in app.game_state.get("phase_b", {}).get("quest_instances", {}).values():
 		if str(inst.get("profile_id", "")) != "player_01":
@@ -681,7 +822,7 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 	if operation == "preview_adventure":
 		_preview_quest(payload.get("quest", {}))
 		return
-	if operation in ["prepare_learning_project", "open_learning_project", "open_starter_project", "register_game", "launch_work", "backup_export", "backup_import", "restore_local_snapshot", "attach_stage_media", "import_image", "migration_preview", "attach_water_photo", "submit_water_photos", "open_water_photos"]:
+	if operation in ["prepare_learning_project", "open_learning_project", "open_starter_project", "register_game", "launch_work", "backup_export", "backup_import", "restore_local_snapshot", "attach_stage_media", "import_image", "migration_preview", "attach_water_photo", "submit_water_photos", "open_water_photos", "c2_attach_photo"]:
 		_external_command(operation, payload)
 		return
 	var result := _run_command(operation, payload)
@@ -716,6 +857,10 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 			# Thirty days done: Bruno's ceremony, then the board and the flame on the wall.
 			app.audio_service.play_sfx("chime_solve")
 			call_deferred("open_finale", "challenge")
+		if operation == "c2_step_done" and bool(result.get("applied", false)):
+			app.audio_service.play_sfx("chime_solve")
+			if bool(result.get("completed", false)):
+				call_deferred("_present_due_finale")
 		if operation == "mark_school_day" and bool(result.get("attended", false)):
 			app.audio_service.play_voice("clara", "happy")
 		if operation == "complete_school" and bool(result.get("applied", false)):
@@ -726,7 +871,7 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 		if operation in ["stage_submit", "stage_review"] and bool(result.get("applied", false)) and not bool(result.get("awaiting_review", false)) and not bool(result.get("needs_revision", false)):
 			app.audio_service.play_sfx("chime_solve")
 			call_deferred("_present_pending")
-		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale", "toggle_challenge_item", "set_challenge_day", "mark_school_day", "complete_school"]:
+		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale", "toggle_challenge_item", "set_challenge_day", "mark_school_day", "complete_school", "c2_step_done"]:
 			if is_instance_valid(screen):
 				screen.setup(_view(route_context), app.audio_service)
 				_result(result)
@@ -793,6 +938,11 @@ func _mutate(candidate: Dictionary, operation: String, payload: Dictionary) -> D
 		"toggle_challenge_item":
 			var Ritual = preload("res://scripts/services/ritual_service.gd")
 			return Ritual.toggle_challenge_item(candidate, str(payload.get("item_key", "")))
+		"c2_step_done":
+			var step_result: Dictionary = C2.complete_step(candidate, str(payload.get("mid", "")), str(payload.get("sid", "")), payload.get("data", {}), bool(payload.get("adult", false)))
+			if bool(step_result.get("applied", false)) and bool(step_result.get("completed", false)):
+				_save_c2_work(candidate, str(payload.get("mid", "")))
+			return step_result
 		"mark_school_day":
 			var Ritual = preload("res://scripts/services/ritual_service.gd")
 			return Ritual.mark_school_day(candidate, str(payload.get("date", "")), bool(payload.get("attended", true)), str(payload.get("note", "")), str(payload.get("word", "")))
@@ -894,6 +1044,8 @@ func _external_command(operation: String, payload: Dictionary) -> void:
 		_result({"ok": false, "message": "Сохранение доступно только для чтения."})
 		return
 	match operation:
+		"c2_attach_photo":
+			_c2_attach_photo(payload)
 		"prepare_learning_project":
 			_result(_launcher().prepare_starter_project())
 		"open_learning_project", "open_starter_project":

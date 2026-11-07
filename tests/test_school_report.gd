@@ -203,6 +203,12 @@ func _test_app() -> void:
 	Ritual.school_end = Ritual.shift_date(Time.get_date_string_from_system(), 0)
 	controller.open_hub()
 	await settle()
+	if controller.route == "finale":
+		# Winning the 30 days earlier opened Bruno's pitch first.
+		controller._close_screen()
+		await settle()
+		controller.open_hub()
+		await settle()
 	var finish := _find_button(controller.screen, "SchoolFinish")
 	check(finish != null, "the hand-in button appears on the end date")
 	finish.pressed.emit()

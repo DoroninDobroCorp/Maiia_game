@@ -657,7 +657,7 @@ static func school() -> Dictionary:
 
 ## A closing scene by key ("FG01", "FG11", "FG08", "challenge", "chapter") or {}.
 static func finale(key: String) -> Dictionary:
-	return FINALES.get(key, {})
+	return FINALES.get(key, preload("res://scripts/presentation/chapter2_guide.gd").FINALES.get(key, {}))
 
 static func mission(quest_id: String) -> Dictionary:
 	return MISSIONS.get(quest_id, {})

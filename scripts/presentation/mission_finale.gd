@@ -24,6 +24,9 @@ var data: Dictionary = {}
 var images: Dictionary = {}
 ## Extra lines for the last page (e.g. the dispatches of the school report).
 var extra_lines: Array = []
+## Photos for the last page: [{path, caption}] and the heading above them.
+var photo_list: Array = []
+var photos_title := "ДИПТИХ «ДВА ГОЛОСА ВОДЫ» · ФОТО: МАЙЯ"
 var page := 0
 var sparks: Control
 var page_box: VBoxContainer
@@ -72,6 +75,8 @@ func setup(game_state: Dictionary, audio_svc: Node = null) -> void:
 	finale_key = str(ctx.get("finale_key", ""))
 	images = ctx.get("images", {})
 	extra_lines = ctx.get("extra_lines", [])
+	photo_list = ctx.get("photo_list", [])
+	photos_title = str(ctx.get("photos_title", photos_title))
 	data = Guide.finale(finale_key)
 	page = clampi(int(ctx.get("page", 0)), 0, _beats().size())
 	_build()
@@ -264,8 +269,14 @@ func _closing_hero() -> String:
 ## The real photos of the river and the waterfall (FG08 only); empty when there are none.
 func _photo_items() -> Array[Dictionary]:
 	var shown: Array[Dictionary] = []
-	for pair in [["river", "Río Azul · река"], ["fall", "Nahuel Pan · водопад"]]:
-		var path := str(images.get(pair[0], ""))
+	var pairs: Array = []
+	for item in photo_list:
+		pairs.append([str(item.get("path", "")), str(item.get("caption", ""))])
+	if pairs.is_empty():
+		for pair in [["river", "Río Azul · река"], ["fall", "Nahuel Pan · водопад"]]:
+			pairs.append([str(images.get(pair[0], "")), pair[1]])
+	for pair in pairs:
+		var path := str(pair[0])
 		var tex := UI.texture(path, 640) if not path.is_empty() else null
 		if tex != null:
 			shown.append({"tex": tex, "caption": pair[1]})
@@ -273,7 +284,7 @@ func _photo_items() -> Array[Dictionary]:
 
 func _build_photos(parent: Node, shown: Array[Dictionary]) -> void:
 	var card := UI.card(parent)
-	UI.label("ДИПТИХ «ДВА ГОЛОСА ВОДЫ» · ФОТО: МАЙЯ", card, 12, UI.TEAL)
+	UI.label(photos_title, card, 12, UI.TEAL)
 	var column := UI.column(card)
 	column.name = "FinalePhotos"
 	column.add_theme_constant_override("separation", 10)

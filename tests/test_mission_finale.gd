@@ -318,7 +318,10 @@ func _test_app_flow() -> void:
 	check(controller.route == "finale" and str(controller.route_context.finale_key) == "FG11", "closing the last step opens the closing scene")
 	controller._close_screen()
 	await settle()
-	check(app.modal_container.get_child_count() == 0 and controller.route == "finale", "after the scene a mission started from the room returns to the room")
+	check(controller.route == "finale" and str(controller.route_context.finale_key) == "ch2_teo_start", "the game's finale is followed by Teo's carving pitch")
+	controller._close_screen()
+	await settle()
+	check(app.modal_container.get_child_count() == 0 and controller.route == "finale", "after the scenes a mission started from the room returns to the room")
 
 	# 4. The chapter card in the journal.
 	controller.open_quest("FG01")
@@ -377,8 +380,11 @@ func _test_app_flow() -> void:
 	check(app.station_room.challenge_board_marker.visible and app.station_room.challenge_board_light.light_energy > 0.0, "the Champion board and the flame appear on the station wall")
 	check(Ritual.get_challenge_state(Save.load_game()).unlocked, "the unlock is saved")
 	controller._close_screen()
+	await settle()
+	check(controller.route == "finale" and str(controller.route_context.finale_key) == "ch2_bruno_start", "the ceremony is followed by Bruno's waterfall pitch")
+	controller._close_screen()
 	await create_timer(1.8).timeout
-	check(app.modal_container.get_child_count() == 0, "closing the ceremony returns to the room")
+	check(app.modal_container.get_child_count() == 0, "closing the scenes returns to the room")
 	var room = app.station_room
 	var to_board: Vector3 = room.CHALLENGE_BOARD_POSITION - room.player_position
 	var expected_yaw := rad_to_deg(atan2(-to_board.x, -to_board.z))
