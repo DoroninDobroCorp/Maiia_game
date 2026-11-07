@@ -460,6 +460,9 @@ func _c2_store_photo(payload: Dictionary, path: String) -> void:
 func _school_lines() -> Array:
 	var info: Dictionary = preload("res://scripts/services/ritual_service.gd").school_state(_state())
 	var lines: Array = ["Школьных дней в репортаже: %d" % int(info.days)]
+	var glossary_size: int = preload("res://scripts/services/ritual_service.gd").school_glossary(_state()).size()
+	if glossary_size > 0:
+		lines.append("Слов в глоссарии корреспондента: %d" % glossary_size)
 	var dates: Array = info.history.keys()
 	dates.sort()
 	var shown := 0
@@ -945,7 +948,7 @@ func _mutate(candidate: Dictionary, operation: String, payload: Dictionary) -> D
 			return step_result
 		"mark_school_day":
 			var Ritual = preload("res://scripts/services/ritual_service.gd")
-			return Ritual.mark_school_day(candidate, str(payload.get("date", "")), bool(payload.get("attended", true)), str(payload.get("note", "")), str(payload.get("word", "")))
+			return Ritual.mark_school_day(candidate, str(payload.get("date", "")), bool(payload.get("attended", true)), str(payload.get("note", "")), str(payload.get("word", "")), str(payload.get("mood", "")))
 		"complete_school":
 			var Ritual = preload("res://scripts/services/ritual_service.gd")
 			var finished: Dictionary = Ritual.complete_school(candidate)

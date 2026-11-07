@@ -121,6 +121,7 @@ func _draw() -> void:
 			draw_line(station, point, Color(0.70, 0.65, 0.47, alpha), 1.0, true)
 			_draw_fog(point, str(location.get("distance", "near")))
 
+	_draw_bruno_trail(station)
 	draw_circle(station, 18.0, Color(0.95, 0.70, 0.22, 0.13))
 	draw_arc(station, 22.0, 0.0, TAU, 48, Color(0.98, 0.77, 0.32, 0.78), 2.0, true)
 	draw_rect(rect, Color(0.75, 0.62, 0.34, 0.64), false, 2.0)
@@ -134,3 +135,34 @@ func _draw_fog(point: Vector2, distance: String) -> void:
 	draw_circle(point + Vector2(-18, 5), radius, Color(0.33, 0.40, 0.41, 0.15))
 	draw_circle(point + Vector2(24, -9), radius * 0.78, Color(0.39, 0.44, 0.45, 0.12))
 	draw_circle(point + Vector2(4, 22), radius * 0.66, Color(0.42, 0.47, 0.47, 0.10))
+
+## Тропа Бруно к водопаду: семь флажков вдоль пути, красные у пройденных ступенек.
+func _draw_bruno_trail(station: Vector2) -> void:
+	var chapter2 = preload("res://scripts/services/chapter2_service.gd")
+	if not chapter2.unlocked(state_ref, "bruno2"):
+		return
+	var waterfall := AtlasServiceScript.get_location(state_ref, "waterfalls")
+	if waterfall.is_empty():
+		return
+	var target := _point_for(waterfall)
+	var info: Dictionary = chapter2.mission_state(state_ref, "bruno2")
+	var total := int(info.total)
+	# The trail bulges to the side, clear of the markers sitting on the straight line.
+	var direction := (target - station).normalized()
+	var side := Vector2(direction.y, -direction.x)
+	if side.y > 0.0:
+		side = -side
+	var bulge := minf(size.y * 0.16, 70.0)
+	var points := PackedVector2Array()
+	for i in range(total + 2):
+		var t := float(i) / float(total + 1)
+		points.append(station.lerp(target, t) + side * sin(PI * t) * bulge)
+	draw_polyline(points, Color(0.88, 0.60, 0.30, 0.45), 1.5, true)
+	for i in range(total):
+		var pos := points[i + 1]
+		var reached := i < int(info.done)
+		var color := Color(0.92, 0.25, 0.20, 1.0) if reached else Color(0.70, 0.70, 0.66, 0.75)
+		draw_circle(pos, 3.0, color)
+		draw_line(pos, pos + Vector2(0, -18), color, 2.0, true)
+		draw_colored_polygon(PackedVector2Array([pos + Vector2(0, -18), pos + Vector2(13, -13), pos + Vector2(0, -8)]), color)
+	draw_string(ThemeDB.fallback_font, Vector2(16, size.y - 14), "Тропа Бруно: %d из %d" % [int(info.done), total], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.95, 0.82, 0.60, 0.95))

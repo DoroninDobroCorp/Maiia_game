@@ -374,7 +374,7 @@ static func school_dates(today: String = "") -> Array[String]:
 
 ## Отметить школьный день (сегодняшний или прошедший). Повторная отметка того же дня
 ## только обновляет депешу и слово; снять отметку можно, пока выпуск не сдан.
-static func mark_school_day(state: Dictionary, date_string: String, attended: bool, note: String = "", word: String = "") -> Dictionary:
+static func mark_school_day(state: Dictionary, date_string: String, attended: bool, note: String = "", word: String = "", mood: String = "") -> Dictionary:
 	if bool(state.get("read_only", false)):
 		return {"ok": false, "reason": "read_only"}
 	var date := date_string.strip_edges()
@@ -385,11 +385,15 @@ static func mark_school_day(state: Dictionary, date_string: String, attended: bo
 	if bool(c.get("completed", false)):
 		return {"ok": false, "reason": "already_completed"}
 	var history: Dictionary = c.get("history", {})
+	var was_marked := bool(history.get(date, {}).get("attended", false))
+	var texts: Dictionary = preload("res://scripts/presentation/mission_guide.gd").school()
+	var mood_key := mood if texts.moods.has(mood) else ""
 	if attended:
 		var previous: Dictionary = history.get(date, {})
 		var entry := {"attended": true, "marked_at": str(previous.get("marked_at", Time.get_datetime_string_from_system())),
 			"note": note.strip_edges().left(240) if not note.strip_edges().is_empty() else str(previous.get("note", "")),
-			"word": word.strip_edges().left(60) if not word.strip_edges().is_empty() else str(previous.get("word", ""))}
+			"word": word.strip_edges().left(60) if not word.strip_edges().is_empty() else str(previous.get("word", "")),
+			"mood": mood_key if not mood_key.is_empty() else str(previous.get("mood", ""))}
 		if age > 0:
 			entry["backfilled"] = true
 		history[date] = entry
@@ -397,7 +401,27 @@ static func mark_school_day(state: Dictionary, date_string: String, attended: bo
 		history.erase(date)
 	c["history"] = history
 	_store_school(state, c)
-	return {"ok": true, "date": date, "attended": attended, "days": school_state(state).days}
+	var days := int(school_state(state).days)
+	var result := {"ok": true, "date": date, "attended": attended, "days": days}
+	# Clara answers: a milestone first, otherwise the mood of the day.
+	if attended and not was_marked and texts.milestones.has(days):
+		result["milestone"] = days
+		result["message"] = "Клара: «%s»" % str(texts.milestones[days])
+	elif attended and not mood_key.is_empty():
+		result["message"] = "Клара: «%s»" % str(texts.moods[mood_key].clara)
+	return result
+
+## Слова из депеш, от старых к новым: глоссарий корреспондента.
+static func school_glossary(state: Dictionary) -> Array[Dictionary]:
+	var history: Dictionary = state.get("phase_c", {}).get("rituals", {}).get(SCHOOL_ID, {}).get("history", {})
+	var dates: Array = history.keys()
+	dates.sort()
+	var words: Array[Dictionary] = []
+	for date in dates:
+		var word := str(history[date].get("word", "")).strip_edges()
+		if not word.is_empty():
+			words.append({"date": str(date), "word": word, "note": str(history[date].get("note", ""))})
+	return words
 
 static func mark_school_pitched(state: Dictionary) -> void:
 	var c := ensure_school(state)

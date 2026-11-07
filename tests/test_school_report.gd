@@ -92,6 +92,23 @@ func _test_rules() -> void:
 	check(not bool(Ritual.mark_school_day(state, "nonsense", true).ok), "garbage dates are refused")
 	Ritual.mark_school_day(state, _day(-3), false)
 	check(int(Ritual.school_state(state).days) == 2 and not Ritual.school_state(state).history.has(_day(-3)), "a mark can be taken back")
+	# Mood, milestones and glossary.
+	var fresh := _fake_water(true)
+	var first := Ritual.mark_school_day(fresh, _day(0), true, "", "tarea", "rain")
+	check(int(first.get("milestone", 0)) == 1 and str(first.message).contains("Клара"), "the first day brings Clara's first-day line")
+	check(str(Ritual.school_state(fresh).history[_day(0)].mood) == "rain", "the mood of the day is saved")
+	check(not Ritual.mark_school_day(fresh, _day(0), true).has("milestone"), "re-marking the same day repeats no milestone")
+	var mood_only := Ritual.mark_school_day(fresh, _day(-1), true, "", "", "sun")
+	check(not mood_only.has("milestone") and str(mood_only.message).contains("Солнечный"), "a plain day gets Clara's line for its mood")
+	check(not Ritual.mark_school_day(fresh, _day(-2), true, "", "", "tornado").has("message") and str(Ritual.school_state(fresh).history[_day(-2)].mood) == "", "an unknown mood is ignored")
+	var milestone_days: Array[int] = []
+	for n in range(3, 12):
+		var step_result := Ritual.mark_school_day(fresh, _day(-n), true)
+		if step_result.has("milestone"):
+			milestone_days.append(int(step_result.milestone))
+	check(milestone_days == [5, 10], "milestones come exactly at 5 and 10 days")
+	var gloss := Ritual.school_glossary(fresh)
+	check(gloss.size() == 1 and str(gloss[0].word) == "tarea", "the glossary lists only days with a word")
 	# No streak to lose: a gap changes nothing.
 	check(int(Ritual.school_state(state).days) == 2, "gaps never reset the count")
 	# Finishing
@@ -170,11 +187,20 @@ func _test_app() -> void:
 	note.text_changed.emit(note.text)
 	word.text = "tarea"
 	word.text_changed.emit(word.text)
+	check(controller.screen.find_child("SchoolMood_rain", true, false) != null, "the mood buttons are on today's card")
+	_find_button(controller.screen, "SchoolMood_rain").pressed.emit()
+	await settle()
+	note = controller.screen.find_child("SchoolNote", true, false)
+	word = controller.screen.find_child("SchoolWord", true, false)
 	check(not controller.screen.find_child("SchoolFinish", true, false) != null, "no hand-in button before the date")
 	_find_button(controller.screen, "SchoolToday").pressed.emit()
 	await settle(4)
 	var info := Ritual.school_state(Save.load_game())
 	check(int(info.days) == 1 and str(info.history[_day(0)].note).contains("tarea") and str(info.history[_day(0)].word) == "tarea", "the first school day is saved with dispatch and word")
+	check(str(info.history[_day(0)].mood) == "rain", "the chosen mood reaches the save")
+	_find_button(controller.screen, "SchoolGlossaryToggle").pressed.emit()
+	await settle()
+	check(controller.screen.find_child("SchoolGlossary", true, false) != null and "tarea" in controller.screen.find_child("SchoolGlossary", true, false).find_children("*", "Label", true, false).map(func(l): return l.text).reduce(func(a, b): return a + " " + b, ""), "the glossary shows the word")
 	check(_find_button(controller.screen, "SchoolToday") == null, "today's button gives way to the confirmation")
 	check(app.station_room.school_card_marker.visible and app.station_room.school_card_label.text.contains("1"), "the press card appears on the wall")
 	_find_button(controller.screen, "SchoolCalendarToggle").pressed.emit()

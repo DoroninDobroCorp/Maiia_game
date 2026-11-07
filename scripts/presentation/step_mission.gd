@@ -168,6 +168,15 @@ func _build_fields(parent: Node, sid: String, step: Dictionary) -> void:
 		if bool(field.get("numeric", false)) and not str(field.get("unit", "")).is_empty():
 			label += " (" + str(field.unit) + ")"
 		UI.label(label + (" *" if bool(field.get("required", false)) else ""), parent, 13, UI.MUTED)
+		if fid == "school" and mid == "nora2":
+			# The words from Maya's school dispatches are raw material for Nora's catches.
+			var glossary: Array[Dictionary] = preload("res://scripts/services/ritual_service.gd").school_glossary(state)
+			if not glossary.is_empty():
+				var words: Array[String] = []
+				for entry in glossary.slice(maxi(0, glossary.size() - 8)):
+					words.append(str(entry.word))
+				var hint := UI.label("Твои слова из школы: " + ", ".join(PackedStringArray(words)), parent, 13, UI.TEAL)
+				hint.name = "SchoolWordsHint"
 		if bool(field.get("multiline", false)):
 			var area := UI.text_input(parent, "", str(inputs.get(key, "")), 80)
 			area.name = "StepField_" + fid

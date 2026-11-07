@@ -40,6 +40,8 @@ var calendar_open := false
 var school_calendar_open := false
 var school_note := ""
 var school_word := ""
+var school_mood := ""
+var school_glossary_open := false
 
 func setup(game_state: Dictionary, audio_svc: Node = null) -> void:
 	state = game_state.duplicate(true)
@@ -206,6 +208,18 @@ func _build_school_card(parent: Node) -> void:
 	else:
 		var go := UI.button(str(text.today_button), actions, func(): _send_school_day(today), true)
 		go.name = "SchoolToday"
+	if not bool(info.today_done):
+		UI.label(str(text.mood_hint), box, 13, UI.MUTED)
+		var moods := UI.row(box)
+		moods.name = "SchoolMoods"
+		for key in ["sun", "cloud", "rain"]:
+			var mood_key: String = key
+			var mood: Dictionary = text.moods[key]
+			var mood_button := UI.button("%s %s" % [str(mood.icon), str(mood.label)], moods, func():
+				school_mood = "" if school_mood == mood_key else mood_key
+				_build(), school_mood == key)
+			mood_button.name = "SchoolMood_" + mood_key
+			mood_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var note := UI.input(box, str(text.note_hint), school_note)
 	note.name = "SchoolNote"
 	note.text_changed.connect(func(value: String): school_note = value)
@@ -217,6 +231,19 @@ func _build_school_card(parent: Node) -> void:
 	if bool(info.can_finish):
 		var finish := UI.button(str(text.finish), box, func(): command_requested.emit("complete_school", {}), true)
 		finish.name = "SchoolFinish"
+	var glossary: Array[Dictionary] = Ritual.school_glossary(state)
+	var glossary_button := UI.button("%s · %d" % [str(text.glossary_title), glossary.size()], box, func():
+		school_glossary_open = not school_glossary_open
+		_build())
+	glossary_button.name = "SchoolGlossaryToggle"
+	if school_glossary_open:
+		var gloss := UI.card(box)
+		gloss.name = "SchoolGlossary"
+		if glossary.is_empty():
+			UI.label(str(text.glossary_empty), gloss, 13, UI.MUTED)
+		for entry in glossary:
+			var parts: PackedStringArray = str(entry.date).split("-")
+			UI.label("%d.%s · %s" % [int(parts[2]), parts[1], str(entry.word)], gloss, 15)
 	var toggle := UI.button("📅 Закрыть календарь" if school_calendar_open else "📅 Вспомнить прошлые дни", box, func():
 		school_calendar_open = not school_calendar_open
 		_build())
@@ -248,9 +275,10 @@ func _build_school_card(parent: Node) -> void:
 		grid.add_child(day_button)
 
 func _send_school_day(date: String) -> void:
-	command_requested.emit("mark_school_day", {"date": date, "attended": true, "note": school_note, "word": school_word})
+	command_requested.emit("mark_school_day", {"date": date, "attended": true, "note": school_note, "word": school_word, "mood": school_mood})
 	school_note = ""
 	school_word = ""
+	school_mood = ""
 
 func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> void:
 	var box := UI.card(parent)

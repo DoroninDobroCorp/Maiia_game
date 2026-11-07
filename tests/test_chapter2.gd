@@ -296,9 +296,11 @@ func _test_app() -> void:
 	await settle()
 	check(controller.route == "finale" and str(controller.route_context.finale_key) == "ch2_nora_start", "Nora's pitch appears once the radio is finished")
 	_close_scenes()
+	Ritual.mark_school_day(app.game_state, Time.get_date_string_from_system(), true, "", "tarea")
 	controller.open_step_mission("nora2")
 	await settle()
 	screen = controller.screen
+	check(screen.find_child("SchoolWordsHint", true, false) != null and screen.find_child("SchoolWordsHint", true, false).text.contains("tarea"), "Nora's school catch shows the words from the school glossary")
 	var key_one: Dictionary = C2G.mission("nora2").steps[0]
 	# A wrong choice is pointed at and nothing is saved.
 	var item0: Dictionary = key_one.quiz.items[0]
@@ -341,6 +343,12 @@ func _test_app() -> void:
 	_send("c2_step_done", {"mid": "bruno2", "sid": "b_measure", "adult": false, "data": {"fields": {"minutes": "3", "meters": ""}}})
 	await settle(3)
 	check(C2.mission_state(app.game_state, "bruno2").done == 1 and "1 из 7" in app.station_room.valley_map_notes.text, "the first rung is written on the wall map")
+	app._close_modals()
+	app.open_world_explorer()
+	await settle(3)
+	check(app.modal_container.get_child(0).find_children("*", "Control", true, false).any(func(n): return n.get_script() != null and str(n.get_script().resource_path).ends_with("atlas_map.gd")), "the atlas draws Bruno's trail")
+	await capture("ch2_atlas_trail")
+	app._close_modals()
 	for sid in ["b_pace", "b_1km", "b_2km", "b_hill", "b_recon", "b_run"]:
 		_send("c2_step_done", {"mid": "bruno2", "sid": sid, "adult": true, "data": {"fields": {"minutes": ""}}})
 		await settle(2)
