@@ -65,7 +65,7 @@ func _test_content() -> void:
 			if ids.has(step.id) or str(step.get("say", "")).length() < 30 or str(step.get("task", "")).length() < 30 or str(step.get("done", "")).length() < 10:
 				ok = false
 			ids[step.id] = true
-			if str(step.kind) not in ["check", "names", "number", "text", "quiz"]:
+			if str(step.kind) not in ["check", "names", "number", "text", "story"]:
 				ok = false
 		check(ok, "%s: steps have unique ids, speech, task and reaction" % mid)
 		for key in [def.pitch_key, def.finale_key]:
@@ -77,21 +77,22 @@ func _test_content() -> void:
 		spoken[str(beat.who)] = true
 	check(spoken.has("nora") and spoken.has("teo") and spoken.has("clara") and spoken.has("bruno"), "all four heroes speak in the chapter finale")
 	# Nora's grammar
-	var quiz_ok := true
+	var story_ok := true
 	var message: Array[String] = []
 	var keys := 0
 	for step in C2G.mission("nora2").steps:
-		if str(step.kind) != "quiz":
+		if str(step.kind) != "story":
 			continue
 		keys += 1
-		var quiz: Dictionary = step.quiz
-		message.append(str(quiz.reveal.es))
-		if quiz.items.size() != 5 or int(quiz.rule.answer) >= quiz.rule.options.size() or quiz.rule.options.size() < 3:
-			quiz_ok = false
-		for item in quiz.items:
-			if str(item.es).count("___") != 1 or not item.options.has(item.answer) or item.options.size() < 2 or str(item.ru).is_empty():
-				quiz_ok = false
-	check(keys == 6 and quiz_ok, "Nora has six keys, each with five gap sentences and a rule question")
+		message.append(str(step.reveal.es))
+		if step.choice.options.size() < 3 or not bool(step.get("confirm", false)):
+			story_ok = false
+		for option in step.choice.options:
+			if str(option.reaction).length() < 15 or str(option.text).is_empty():
+				story_ok = false
+		if step.has("quiz"):
+			story_ok = false
+	check(keys == 6 and story_ok, "Nora has six story intercepts with three flavored choices each, confirmed by the adult, and no quizzes")
 	check(" ".join(PackedStringArray(message)) == "Hola, ¿estás ahí? Sigo aquí, en el faro. Hay una luz para ti.", "the six fragments assemble the lighthouse message")
 	check(C2G.mission("bruno2").steps.size() == 7 and C2G.mission("teo2").steps.size() == 6 and C2G.mission("nora2").steps.size() == 7, "step counts match the design")
 
@@ -107,11 +108,8 @@ func _state_with(quests: Array, challenge: bool = false) -> Dictionary:
 		state.phase_c.rituals = {Ritual.CHALLENGE_ID: {"unlocked": true}}
 	return state
 
-func _correct(step: Dictionary) -> Dictionary:
-	var answers: Array = []
-	for item in step.quiz.items:
-		answers.append(str(item.answer))
-	return {"fields": {"own": "La casa es pequeña", "school": ""}, "answers": answers, "rule_choice": int(step.quiz.rule.answer)}
+func _story_data(step: Dictionary) -> Dictionary:
+	return {"fields": {"catch": ""}, "choice": str(step.choice.options[0].id)}
 
 func _test_rules() -> void:
 	var fresh := Save.get_default_state()
@@ -147,23 +145,33 @@ func _test_rules() -> void:
 	var nora_state := _state_with(["FG01"])
 	var steps: Array = C2G.mission("nora2").steps
 	var first: Dictionary = steps[0]
-	var data := _correct(first)
-	data.answers[2] = first.quiz.items[2].options[0] if first.quiz.items[2].options[0] != first.quiz.items[2].answer else first.quiz.items[2].options[1]
-	var wrong := C2.complete_step(nora_state, "nora2", "n_gender", data, false)
-	check(str(wrong.get("reason", "")) == "quiz_incorrect" and wrong.wrong_items == [2] and bool(wrong.rule_ok), "one wrong gap is pointed at")
-	var bad_rule := _correct(first)
-	bad_rule.rule_choice = 1
-	check(not bool(C2.complete_step(nora_state, "nora2", "n_gender", bad_rule, false).ok), "a wrong rule is refused")
-	var own_missing := _correct(first)
-	own_missing.fields.own = ""
-	check(str(C2.complete_step(nora_state, "nora2", "n_gender", own_missing, false).get("reason", "")) == "field_required", "her own example is required")
+	check(str(C2.complete_step(nora_state, "nora2", "n_gender", {"fields": {"catch": ""}, "choice": ""}, false).get("reason", "")) == "choice_required", "a choice is required, nothing else is checked")
+	check(str(C2.complete_step(nora_state, "nora2", "n_gender", {"fields": {"catch": ""}, "choice": "nope"}, false).get("reason", "")) == "choice_required", "an unknown choice is refused")
+	var heard := C2.complete_step(nora_state, "nora2", "n_gender", _story_data(first), false)
+	check(bool(heard.ok) and str(heard.reaction).contains(str(first.choice.options[0].reaction).left(12)), "the intercept answers with the hero's reaction to the choice")
+	check(not bool(C2.mission_state(nora_state, "nora2").confirmed.get("n_gender", false)), "hearing a topic does not confirm it")
 	for step in steps:
-		if str(step.kind) == "quiz":
-			check(bool(C2.complete_step(nora_state, "nora2", str(step.id), _correct(step), false).ok), "key %s opens with the right answers" % str(step.id))
-	check(int(C2.station_view(nora_state).nora_lamps) == 6, "six keys light six lamps")
+		if str(step.kind) == "story" and str(step.id) != "n_gender":
+			check(bool(C2.complete_step(nora_state, "nora2", str(step.id), _story_data(step), false).ok), "intercept %s plays without any exercise" % str(step.id))
+	check(int(C2.station_view(nora_state).nora_lamps) == 6, "six intercepts light six lamps")
 	check(str(C2.complete_step(nora_state, "nora2", "n_reply", {"fields": {"reply": "Hola"}}, false).get("reason", "")) == "too_short", "a one-word reply is too short")
 	var done := C2.complete_step(nora_state, "nora2", "n_reply", {"fields": {"reply": "Hola, estoy aquí"}}, false)
-	check(bool(done.ok) and bool(done.completed) and bool(C2.mission_state(nora_state, "nora2").completed), "the reply completes the mission")
+	var waiting := C2.mission_state(nora_state, "nora2")
+	check(bool(done.ok) and not bool(done.completed) and not bool(waiting.completed) and bool(waiting.awaiting_adult), "everything heard: the mission waits for the adult, not for more exercises")
+	check(C2.confirm_items(nora_state).size() == 6, "the adult confirms six topics")
+	check(not bool(C2.confirm_step(nora_state, "nora2", "n_reply").ok), "only topics can be confirmed")
+	check(bool(C2.confirm_step(nora_state, "nora2", "n_gender").ok) and not bool(C2.mission_state(nora_state, "nora2").completed), "one confirmed topic does not finish the mission")
+	check(not bool(C2.confirm_step(nora_state, "nora2", "n_gender").get("applied", true)), "confirming twice changes nothing")
+	var all_confirmed := C2.confirm_all(nora_state, "nora2")
+	check(bool(all_confirmed.ok) and int(all_confirmed.confirmed_count) == 5 and bool(all_confirmed.completed) and bool(C2.mission_state(nora_state, "nora2").completed), "«all at once» confirms the rest and completes the mission")
+	# The adult may confirm ahead of the story: the mission finishes when the story is heard.
+	var ahead := _state_with(["FG01"])
+	check(bool(C2.confirm_all(ahead, "nora2").ok) and not bool(C2.mission_state(ahead, "nora2").completed), "topics confirmed ahead do not finish the mission without the story")
+	for step in steps:
+		if str(step.kind) == "story":
+			C2.complete_step(ahead, "nora2", str(step.id), _story_data(step), false)
+	check(not bool(C2.mission_state(ahead, "nora2").completed), "the reply is still hers to write")
+	check(bool(C2.complete_step(ahead, "nora2", "n_reply", {"fields": {"reply": "Hola, estoy aquí"}}, false).completed), "after the reply the mission completes at once")
 
 	# Scenes
 	var scenes := _state_with(["FG11", "FG01"], true)
@@ -302,29 +310,21 @@ func _test_app() -> void:
 	screen = controller.screen
 	check(screen.find_child("SchoolWordsHint", true, false) != null and screen.find_child("SchoolWordsHint", true, false).text.contains("tarea"), "Nora's school catch shows the words from the school glossary")
 	var key_one: Dictionary = C2G.mission("nora2").steps[0]
-	# A wrong choice is pointed at and nothing is saved.
-	var item0: Dictionary = key_one.quiz.items[0]
-	var wrong_option: String = item0.options[0] if item0.options[0] != item0.answer else item0.options[1]
-	for i in range(key_one.quiz.items.size()):
-		var it: Dictionary = key_one.quiz.items[i]
-		var pick: String = wrong_option if i == 0 else str(it.answer)
-		_button(screen, "QuizOption_%d_%s" % [i, pick]).pressed.emit()
-		await settle()
-		screen = controller.screen
-	_button(screen, "QuizRule_%d" % int(key_one.quiz.rule.answer)).pressed.emit()
-	await settle()
-	screen = controller.screen
-	(screen.find_child("StepField_own", true, false) as TextEdit).text = "La luz es amarilla"
-	screen.inputs["n_gender:own"] = "La luz es amarilla"
+	check(screen.find_child("StoryChoices", true, false) != null and screen.find_child("QuizOption_0_x", true, false) == null, "the intercept offers a story choice, not a test")
 	_button(screen, "StepSubmit").pressed.emit()
-	await settle(3)
-	check(C2.mission_state(app.game_state, "nora2").done == 0 and controller.screen.wrong_items == [0], "the wrong gap is marked and the key stays shut")
-	await capture("ch2_nora_wrong")
-	_button(controller.screen, "QuizOption_0_%s" % str(item0.answer)).pressed.emit()
+	await settle(2)
+	check(C2.mission_state(app.game_state, "nora2").done == 0, "without a choice the intercept stays shut")
+	var option_id := str(key_one.choice.options[1].id)
+	_button(controller.screen, "StoryOption_" + option_id).pressed.emit()
 	await settle()
+	check(controller.screen.find_child("StoryChoiceReaction", true, false) != null, "the hero's reaction to the choice is visible at once")
+	screen = controller.screen
+	(screen.find_child("StepField_catch", true, false) as TextEdit).text = "La casa es pequeña"
+	screen.inputs["n_gender:catch"] = "La casa es pequeña"
+	await capture("ch2_nora_wrong")
 	_button(controller.screen, "StepSubmit").pressed.emit()
 	await settle(4)
-	check(C2.mission_state(app.game_state, "nora2").done == 1, "with the right answers the first key opens")
+	check(C2.mission_state(app.game_state, "nora2").done == 1, "the first intercept opens")
 	check(app.station_room.cipher_strip.visible and int(C2.station_view(app.game_state).nora_lamps) == 1, "the first lamp lights on the radio")
 	await capture("ch2_nora_after_key1")
 
@@ -360,11 +360,14 @@ func _test_app() -> void:
 	# The rest of Nora and the school bring the chapter finale and the beacon.
 	for step in steps_after_first():
 		var sid_n := str(step.id)
-		if str(step.kind) == "quiz":
-			_send("c2_step_done", {"mid": "nora2", "sid": sid_n, "adult": false, "data": _correct(step)})
+		if str(step.kind) == "story":
+			_send("c2_step_done", {"mid": "nora2", "sid": sid_n, "adult": false, "data": _story_data(step)})
 		else:
 			_send("c2_step_done", {"mid": "nora2", "sid": sid_n, "adult": false, "data": {"fields": {"reply": "Hola, estoy aquí"}}})
 		await settle(2)
+	check(not C2.mission_state(app.game_state, "nora2").completed and C2.mission_state(app.game_state, "nora2").awaiting_adult, "Nora's story is heard, the adult's confirmation is still needed")
+	_send("c2_confirm_all", {"mid": "nora2"})
+	await settle(3)
 	check(C2.mission_state(app.game_state, "nora2").completed, "Nora's mission completes")
 	_close_scenes()
 	check(not bool(C2.station_view(app.game_state).chapter_done) and not app.station_room.window_beacon.visible, "the beacon waits for the school report")

@@ -272,6 +272,11 @@ static func instance_for(state: Dictionary, id: String) -> Dictionary:
 static func quest_for(instance: Dictionary) -> Dictionary:
 	return instance.get("frozen_quest", instance.get("quest_snapshot", instance.get("snapshot", {})))
 
+## Испанская миссия (FG01) для Майи закончена, когда прослушаны и письма Норы: этапы отмечает взрослый,
+## а сюжет идёт свободно. Пока письма не дослушаны, финал не показывается.
+static func story_pending(state: Dictionary, quest_id: String) -> bool:
+	return quest_id == "FG01" and not preload("res://scripts/services/story_service.gd").finished(state, "fg01")
+
 static func stages(quest: Dictionary) -> Array:
 	return records(quest.get("adventure", {}).get("stages", []))
 

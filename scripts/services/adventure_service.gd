@@ -653,6 +653,20 @@ static func dispatch(state: Dictionary, operation: String, payload: Dictionary, 
 			if bool(payload.get("pinned", true)):
 				ids.append(qid)
 			return set_pinned(state, ids, profile_id)
+		"attest_stage", "attest_all":
+			var attest = load("res://scripts/services/activity_commit_service.gd")
+			var keep := func(_candidate: Dictionary) -> bool: return true
+			var note := str(payload.get("note", ""))
+			if operation == "attest_stage":
+				return attest.attest_stage(state, iid, sid, note, "parent_local", keep)
+			var stages_done := 0
+			for stage in Rules.stages(get_instance(state, iid).get("quest_snapshot", {})):
+				var attested: Dictionary = attest.attest_stage(state, iid, str(stage.stage_id), note, "parent_local", keep)
+				if not bool(attested.get("ok", false)):
+					return {"ok": false, "reason": "attest_all_stopped", "stage_id": str(stage.stage_id), "detail": attested, "attested_count": stages_done}
+				if bool(attested.get("applied", false)):
+					stages_done += 1
+			return {"ok": true, "applied": stages_done > 0, "attested_count": stages_done}
 		"discover_secret":
 			return discover_secret(state, str(payload.get("secret_id", "")), profile_id)
 		"chapter_finale":

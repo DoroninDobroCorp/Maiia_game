@@ -8,6 +8,7 @@ extends Control
 const UI = preload("res://scripts/presentation/adventure_ui.gd")
 const Art = preload("res://scripts/presentation/adventure_art.gd")
 const Guide = preload("res://scripts/presentation/mission_guide.gd")
+const Story = preload("res://scripts/services/story_service.gd")
 signal closed
 signal command_requested(operation: String, payload: Dictionary)
 signal episode_requested(instance_id: String, stage_id: String)
@@ -17,6 +18,7 @@ signal secret_requested(secret_id: String)
 signal hub_requested
 signal water_photos_requested
 signal finale_requested(key: String)
+signal story_requested(series: String)
 
 var state: Dictionary = {}
 var audio_service: Node
@@ -69,7 +71,7 @@ func _build() -> void:
 	var instance := UI.instance_for(state, instance_id)
 	var stages: Array = UI.stages(quest)
 	var done := _completed_count(stages)
-	var finished := not stages.is_empty() and done >= stages.size()
+	var finished := not stages.is_empty() and done >= stages.size() and not UI.story_pending(state, qid)
 	var subtitle := str(guide.get("speaker", "")) + (" · " + str(guide.get("role", "")) if not str(guide.get("role", "")).is_empty() else "")
 	var s := UI.shell(self, state, str(quest.get("story_title", quest.get("title", "Миссия"))), subtitle, func(): closed.emit(), true)
 	feedback = s.feedback
@@ -147,6 +149,10 @@ func _build_path(parent: Node, stages: Array, done: int, finished: bool) -> void
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(bar)
+	if str(quest.get("quest_id", "")) == "FG01":
+		var heard := Story.progress(state, "fg01")
+		var note := UI.label("Письма Норы: %d из %d. Этапы отмечает взрослый в «Вместе · P».%s" % [int(heard.done), int(heard.total), " Эфир прослушан, осталось отметить прогресс." if bool(heard.finished) and done < stages.size() else ""], parent, 13, UI.TEAL)
+		note.name = "StoryProgressNote"
 	var current := _next_stage(stages)
 	for i in range(stages.size()):
 		_step_row(parent, i + 1, stages[i], str(stages[i].get("stage_id", "")) == str(current.get("stage_id", "")) and not finished)
@@ -211,6 +217,15 @@ func _build_actions(footer: Control, guide: Dictionary, instance: Dictionary, st
 		var resume := UI.button("Вернуться к миссии", footer, func(): command_requested.emit("resume_adventure", {"instance_id": instance_id}), true)
 		resume.name = "MissionPrimaryAction"
 		return
+	if qid == "FG01":
+		# After the first contact the radio opens the letters: a story, not exercises.
+		var open_stage := _next_stage(stages)
+		if open_stage.is_empty() or str(open_stage.get("stage_id", "")) != "es_intro":
+			var heard := Story.progress(state, "fg01")
+			var story_label := "Слушать эфир →" if int(heard.done) == 0 else ("Журнал эфира →" if bool(heard.finished) else "Продолжить эфир →")
+			var story_go := UI.button(story_label, footer, func(): story_requested.emit("fg01"), true)
+			story_go.name = "MissionPrimaryAction"
+			return
 	if qid == "FG08":
 		var inst_prog: Dictionary = state.get("adventures", {}).get("progress", {}).get(instance_id, {})
 		var photos_submitted := bool(inst_prog.get("water_photos_submitted", false))

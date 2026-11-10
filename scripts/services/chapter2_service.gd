@@ -59,9 +59,19 @@ static func mission_state(state: Dictionary, mid: String) -> Dictionary:
 		else:
 			done += 1
 		rows.append({"id": sid, "status": status, "record": done_steps.get(sid, {})})
+	var confirmed: Dictionary = rec.get("confirmed", {})
+	var confirm_total := 0
+	var confirm_done := 0
+	for step in def.get("steps", []):
+		if bool(step.get("confirm", false)):
+			confirm_total += 1
+			if bool(confirmed.get(str(step.id), false)):
+				confirm_done += 1
 	return {"steps": rows, "done": done, "total": rows.size(), "completed": bool(rec.get("completed", false)),
 		"pitched": bool(rec.get("pitched", false)), "finale_seen": bool(rec.get("finale_seen", false)),
-		"drafts": rec.get("drafts", {}).duplicate(true)}
+		"drafts": rec.get("drafts", {}).duplicate(true), "confirmed": confirmed.duplicate(true),
+		"confirm_total": confirm_total, "confirm_done": confirm_done,
+		"awaiting_adult": confirm_total > 0 and done >= rows.size() and confirm_done < confirm_total}
 
 static func current_step_id(state: Dictionary, mid: String) -> String:
 	for row in mission_state(state, mid).steps:
@@ -91,18 +101,6 @@ static func photo_path(state: Dictionary, mid: String, sid: String) -> String:
 	if artifact_id.is_empty():
 		return ""
 	return preload("res://scripts/services/artifact_service.gd").media_path_for(state, artifact_id)
-
-## Неверные пункты теста: индексы предложений и признак неверного правила.
-static func check_quiz(step: Dictionary, answers: Array, rule_choice: int) -> Dictionary:
-	var quiz: Dictionary = step.get("quiz", {})
-	var items: Array = quiz.get("items", [])
-	var wrong: Array[int] = []
-	for i in range(items.size()):
-		var given := str(answers[i]) if i < answers.size() else ""
-		if given != str(items[i].answer):
-			wrong.append(i)
-	var rule_ok := rule_choice == int(quiz.get("rule", {}).get("answer", 0))
-	return {"wrong_items": wrong, "rule_ok": rule_ok, "ok": wrong.is_empty() and rule_ok}
 
 ## Сдать текущий шаг. data: {fields:{id:text}, answers:[…], rule_choice:int}; adult: взрослый рядом.
 static func complete_step(state: Dictionary, mid: String, sid: String, data: Dictionary, adult: bool) -> Dictionary:
@@ -134,12 +132,16 @@ static func complete_step(state: Dictionary, mid: String, sid: String, data: Dic
 			return {"ok": false, "reason": "too_short", "field": fid, "message": "Напиши хотя бы два слова: маяк ждёт ответа."}
 		values[fid] = text.left(500)
 	var record := {"done_at": Time.get_datetime_string_from_system(), "fields": values, "adult": adult}
-	if str(step.kind) == "quiz":
-		var checked := check_quiz(step, data.get("answers", []), int(data.get("rule_choice", -1)))
-		if not bool(checked.ok):
-			return {"ok": false, "reason": "quiz_incorrect", "wrong_items": checked.wrong_items, "rule_ok": checked.rule_ok,
-				"message": "Почти! Посмотри на отмеченные предложения и правило: радио любит перепроверять."}
-		record["answers"] = data.get("answers", [])
+	var reaction := ""
+	if str(step.kind) == "story":
+		var found := false
+		for option in step.get("choice", {}).get("options", []):
+			if str(option.id) == str(data.get("choice", "")):
+				found = true
+				reaction = str(option.reaction)
+				record["choice"] = str(option.id)
+		if not found:
+			return {"ok": false, "reason": "choice_required", "message": "Выбери, как настроить приёмник: от этого зависит сигнал."}
 	var photo_mode := str(step.get("photo", ""))
 	var draft_artifact := str(_read(state, mid).get("drafts", {}).get(sid, {}).get("artifact_id", ""))
 	if photo_mode == "required" and draft_artifact.is_empty():
@@ -150,12 +152,66 @@ static func complete_step(state: Dictionary, mid: String, sid: String, data: Dic
 	var steps: Dictionary = rec.get("steps", {})
 	steps[sid] = record
 	rec["steps"] = steps
-	var finished: bool = steps.size() >= (Guide.mission(mid).get("steps", []) as Array).size()
-	if finished:
+	_write(state, mid, rec)
+	var finished := _recompute_completed(state, mid)
+	var line := str(step.get("done", "Шаг отмечен."))
+	if not reaction.is_empty():
+		line = reaction + " " + line
+	return {"ok": true, "applied": true, "completed": finished, "message": line, "reaction": line}
+
+## Миссия закончена, когда сделаны все шаги и, если темы отмечает взрослый, подтверждены все темы.
+static func _recompute_completed(state: Dictionary, mid: String) -> bool:
+	var info := mission_state(state, mid)
+	var ready: bool = int(info.done) >= int(info.total) and int(info.confirm_done) >= int(info.confirm_total)
+	if ready and not bool(info.completed):
+		var rec := _read(state, mid).duplicate(true)
 		rec["completed"] = true
 		rec["completed_at"] = Time.get_datetime_string_from_system()
+		_write(state, mid, rec)
+	return ready
+
+## Взрослый отмечает тему: «Майя это знает». Можно отметить заранее, до перехвата.
+static func confirm_step(state: Dictionary, mid: String, sid: String) -> Dictionary:
+	if bool(state.get("read_only", false)):
+		return {"ok": false, "reason": "read_only"}
+	var step := Guide.step_def(mid, sid)
+	if step.is_empty() or not bool(step.get("confirm", false)) or not unlocked(state, mid):
+		return {"ok": false, "reason": "not_confirmable"}
+	var rec := _read(state, mid).duplicate(true)
+	var confirmed: Dictionary = rec.get("confirmed", {})
+	if bool(confirmed.get(sid, false)):
+		return {"ok": true, "applied": false}
+	confirmed[sid] = true
+	rec["confirmed"] = confirmed
 	_write(state, mid, rec)
-	return {"ok": true, "applied": true, "completed": finished, "message": str(step.get("done", "Шаг отмечен.")), "reaction": str(step.get("done", ""))}
+	return {"ok": true, "applied": true, "completed": _recompute_completed(state, mid)}
+
+static func confirm_all(state: Dictionary, mid: String) -> Dictionary:
+	var count := 0
+	for step in Guide.mission(mid).get("steps", []):
+		if bool(step.get("confirm", false)):
+			var result := confirm_step(state, mid, str(step.id))
+			if not bool(result.get("ok", false)):
+				return result
+			if bool(result.get("applied", false)):
+				count += 1
+	return {"ok": true, "applied": count > 0, "confirmed_count": count, "completed": bool(mission_state(state, mid).completed)}
+
+## Темы, которые отмечает взрослый (для панели «Вместе · P»).
+static func confirm_items(state: Dictionary) -> Array[Dictionary]:
+	var items: Array[Dictionary] = []
+	for mid in Guide.IDS:
+		if not unlocked(state, mid):
+			continue
+		var info := mission_state(state, mid)
+		for step in Guide.mission(mid).get("steps", []):
+			if bool(step.get("confirm", false)):
+				var heard := false
+				for row in info.steps:
+					if str(row.id) == str(step.id) and str(row.status) == "DONE":
+						heard = true
+				items.append({"mid": mid, "sid": str(step.id), "title": str(step.title), "heard": heard, "confirmed": bool(info.confirmed.get(str(step.id), false))})
+	return items
 
 # ---------------------------------------------------------------- сцены и финалы
 
@@ -201,8 +257,8 @@ static func station_view(state: Dictionary) -> Dictionary:
 		if str(row.status) != "DONE":
 			continue
 		for step in steps:
-			if str(step.id) == str(row.id) and step.has("quiz"):
-				parts.append(step.quiz.reveal)
+			if str(step.id) == str(row.id) and step.has("reveal"):
+				parts.append(step.reveal)
 	return {
 		"teo_visible": bool(teo.pitched) or int(teo.done) > 0,
 		"teo_model": int(teo.done) >= 5,

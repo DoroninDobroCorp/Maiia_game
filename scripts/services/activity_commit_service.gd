@@ -100,6 +100,48 @@ static func review_stage(state: Dictionary, instance_id: String, stage_id: Strin
 		return finished
 	return _persist(state, candidate, finished, persist)
 
+## Подтверждение взрослым: «Майя это знает». Игра отслеживает обучение, а не учит, поэтому
+## для этапов испанской миссии (FG01) упражнения не нужны. Слова до этого этапа записываются
+## как узнанные, этап платит ровно свой бюджет, работа попадает в архив. Остальные правила
+## (порядок этапов, снимок квеста, бюджет) работают как обычно; снять отметку нельзя.
+static func attest_stage(state: Dictionary, instance_id: String, stage_id: String, note: String = "", actor_id: String = "parent_local", persist: Callable = Callable()) -> Dictionary:
+	if bool(state.get("read_only", false)):
+		return {"ok": false, "reason": "read_only"}
+	if actor_id not in ["parent_local", "family_joint"]:
+		return {"ok": false, "reason": "parent_required"}
+	var candidate := state.duplicate(true)
+	var checked := Adventures.context(candidate, instance_id, stage_id, true)
+	if not bool(checked.ok):
+		return checked
+	if str(checked.current.status) == "COMPLETED":
+		return {"ok": true, "applied": false, "reason": "already_completed"}
+	if str(checked.instance.get("quest_id", "")) != "FG01":
+		return {"ok": false, "reason": "attestation_not_supported"}
+	var lexeme_ids: Array = []
+	for channel in checked.quest.get("adventure", {}).get("channels", []):
+		var channel_id := str(channel.get("channel_id", ""))
+		var stage_index := ["es_channel_01", "es_channel_02", "es_channel_03", "es_channel_04", "es_final"].find(stage_id)
+		var channel_index := ["es_channel_01", "es_channel_02", "es_channel_03", "es_channel_04"].find(channel_id)
+		if stage_id == "es_intro":
+			if channel_index == 0:
+				lexeme_ids.append_array(channel.get("lexeme_ids", []).slice(0, 5))
+		elif channel_index >= 0 and channel_index <= (stage_index if stage_index < 4 else 3):
+			lexeme_ids.append_array(channel.get("lexeme_ids", []))
+	if not lexeme_ids.is_empty():
+		var recorded := Adventures.record_lexemes(candidate, instance_id, lexeme_ids, "recognized", "parent_attested")
+		if not bool(recorded.get("ok", false)):
+			return recorded
+	var evidence := {"note": note.strip_edges() if not note.strip_edges().is_empty() else "Взрослый подтвердил прогресс", "parent_attested": true}
+	var current: Dictionary = candidate.adventures.progress[instance_id].stages[stage_id]
+	current.submitted_by = actor_id
+	current.submitted_at = Time.get_datetime_string_from_system()
+	var finished := _finish(candidate, instance_id, stage_id, evidence, actor_id)
+	if not bool(finished.ok):
+		return finished
+	candidate.adventures.progress[instance_id].stages[stage_id]["confirmation_mode"] = "parent_attest"
+	finished["attested"] = true
+	return _persist(state, candidate, finished, persist)
+
 static func _validate_completion(checked: Dictionary, evidence: Dictionary, launch_verifier: Callable = Callable()) -> Dictionary:
 	var policy := str(checked.stage.get("completion_policy", ""))
 	if policy == "self_attest" and not bool(evidence.get("attested", false)):

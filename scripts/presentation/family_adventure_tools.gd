@@ -3,6 +3,8 @@ extends Control
 
 const UI = preload("res://scripts/presentation/adventure_ui.gd")
 const Content = preload("res://scripts/services/adventure_content.gd")
+const Guide = preload("res://scripts/presentation/mission_guide.gd")
+const C2 = preload("res://scripts/services/chapter2_service.gd")
 signal closed
 signal command_requested(operation: String, payload: Dictionary)
 signal editor_requested
@@ -14,6 +16,8 @@ var state: Dictionary = {}
 var feedback: Label
 var content: VBoxContainer
 var tab := 0
+## Первое нажатие «Подтвердить» только взводит кнопку, второе отправляет.
+var attest_armed := ""
 var registration_title: LineEdit
 var registration_work: OptionButton
 var registration_work_ids: Array[String] = [""]
@@ -35,9 +39,9 @@ func _build() -> void:
 	var shell := UI.shell(self, state, "Делаем станцию вместе", "Содержание открывает взрослый. Результаты смотрим вместе — в удобном для семьи темпе.", func(): closed.emit())
 	feedback = shell.feedback
 	var row := UI.row(shell.content)
-	for i in range(4):
+	for i in range(5):
 		var chosen := i
-		UI.button(["Новая глава", "Посмотрим вместе", "Мастерская игры", "Копии и перенос"][i], row, func():
+		UI.button(["Новая глава", "Посмотрим вместе", "Мастерская игры", "Копии и перенос", "Испанский"][i], row, func():
 			tab = chosen
 			_build(), tab == i)
 	content = UI.scroll(shell.content)
@@ -46,6 +50,72 @@ func _build() -> void:
 		1: _reviews()
 		2: _learning()
 		3: _backups()
+		4: _spanish()
+
+## Испанский: игра не учит, а следит за тем, что Майя узнаёт в жизни. Здесь отмечает взрослый.
+func _spanish() -> void:
+	var intro := UI.card(content)
+	UI.label("Испанский: отмечаете вы", intro, 24, UI.BRASS)
+	UI.label("Игра не учит испанскому: она превращает в приключение то, что Майя узнаёт в жизни. Когда вы видите, что она знает слова или тему, отметьте это здесь. Сюжет Майя слушает свободно и не ждёт отметок. Подтверждение нельзя отменить, поэтому кнопки спрашивают второй раз.", intro, 14, UI.MUTED)
+	_spanish_radio()
+	_spanish_cipher()
+
+func _arm_button(parent: Node, label: String, key: String, payload_op: String, payload: Dictionary, primary: bool = false) -> Button:
+	var armed := attest_armed == key
+	var button := UI.button("Да, подтверждаю ✓" if armed else label, parent, func():
+		if attest_armed == key:
+			attest_armed = ""
+			command_requested.emit(payload_op, payload)
+		else:
+			attest_armed = key
+			_build(), primary or armed)
+	button.name = "Arm_" + key
+	return button
+
+func _spanish_radio() -> void:
+	var inst := UI.instance_for(state, "FG01")
+	var box := UI.card(content)
+	UI.label("Радио Норы · «Письма Южного Маяка»", box, 20, UI.BRASS)
+	if inst.is_empty():
+		UI.label("Миссия ещё не начата: она появится, когда Майя впервые нажмёт на радио.", box, 14, UI.MUTED)
+		return
+	var iid := str(inst.get("instance_id", ""))
+	var first_open := ""
+	for stage in UI.stages(UI.quest_for(inst)):
+		var sid := str(stage.get("stage_id", ""))
+		var status := str(UI.stage_progress(state, iid, sid).get("status", ""))
+		var info: Dictionary = Guide.step(sid)
+		var row := UI.row(box)
+		UI.label(("✓ " if status == "COMPLETED" else "○ ") + str(info.get("title", stage.get("title", ""))) + " · " + str(info.get("task", stage.get("summary", ""))).left(80), row, 14, UI.TEAL if status == "COMPLETED" else UI.PAPER)
+		if status != "COMPLETED" and first_open.is_empty():
+			first_open = sid
+			var confirm := _arm_button(row, "Подтвердить этап", "stage_" + sid, "attest_stage", {"instance_id": iid, "stage_id": sid, "note": "Взрослый подтвердил прогресс"})
+			confirm.size_flags_horizontal = Control.SIZE_SHRINK_END
+	if first_open.is_empty():
+		UI.label("Все этапы отмечены.", box, 14, UI.TEAL)
+	else:
+		var all_button := _arm_button(box, "Подтвердить всё сразу", "all", "attest_all", {"instance_id": iid, "note": "Взрослый подтвердил прогресс"}, true)
+		all_button.name = "AttestAll"
+
+func _spanish_cipher() -> void:
+	var items := C2.confirm_items(state)
+	if items.is_empty():
+		return
+	var box := UI.card(content)
+	UI.label("Шифровки Южного Маяка · глава 2", box, 20, UI.BRASS)
+	UI.label("Темы испанского, которые Майя ловит в жизни. Отметьте те, что она уверенно узнаёт.", box, 14, UI.MUTED)
+	var pending := false
+	var mission_id := ""
+	for item in items:
+		mission_id = str(item.mid)
+		var row := UI.row(box)
+		UI.label(("✓ " if bool(item.confirmed) else "○ ") + str(item.title) + (" · услышала в сюжете" if bool(item.heard) else ""), row, 14, UI.TEAL if bool(item.confirmed) else UI.PAPER)
+		if not bool(item.confirmed):
+			pending = true
+			_arm_button(row, "Подтвердить", "cipher_" + str(item.sid), "c2_confirm_step", {"mid": item.mid, "sid": item.sid})
+	if pending:
+		var all_cipher := _arm_button(box, "Подтвердить все темы сразу", "cipher_all", "c2_confirm_all", {"mid": mission_id}, true)
+		all_cipher.name = "ConfirmAllCipher"
 
 func _chapter() -> void:
 	var intro := UI.card(content)

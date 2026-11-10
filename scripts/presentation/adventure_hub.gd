@@ -166,7 +166,10 @@ func _build_chapter2(parent: Node) -> void:
 		UI.label(str(def.label), text, 13, UI.TEAL)
 		UI.label(str(def.title), text, 21)
 		UI.label(str(def.goal), text, 13, UI.MUTED)
-		UI.label("✦ Миссия выполнена" if bool(info.completed) else "Шагов сделано: %d из %d" % [int(info.done), int(info.total)], text, 14, Color(1.0, 0.82, 0.40) if bool(info.completed) else Color(1.0, 0.65, 0.30))
+		var progress_text := "Шагов сделано: %d из %d" % [int(info.done), int(info.total)]
+		if int(info.confirm_total) > 0:
+			progress_text += " · темы отметил взрослый: %d из %d" % [int(info.confirm_done), int(info.confirm_total)]
+		UI.label("✦ Миссия выполнена" if bool(info.completed) else progress_text, text, 14, Color(1.0, 0.82, 0.40) if bool(info.completed) else Color(1.0, 0.65, 0.30))
 		var actions := UI.row(box)
 		var mission_id: String = str(mid)
 		var open_label := "Открыть →" if bool(info.completed) else ("Продолжить →" if int(info.done) > 0 else "Начать →")
@@ -309,7 +312,7 @@ func _quest_card(parent: Node, quest: Dictionary, illustrated: bool = false) -> 
 	for stage in stages:
 		if str(UI.stage_progress(state,str(inst.get("instance_id", "")),str(stage.get("stage_id", ""))).get("status", "")) == "COMPLETED":
 			done += 1
-	var finished := not inst.is_empty() and not stages.is_empty() and done >= stages.size()
+	var finished := not inst.is_empty() and not stages.is_empty() and done >= stages.size() and not UI.story_pending(state, qid)
 	if guide.is_empty():
 		UI.label(UI.status_text(str(inst.get("status", "AVAILABLE"))),box,14,UI.TEAL)
 	else:

@@ -11,6 +11,7 @@ const Artifacts = preload("res://scripts/services/artifact_service.gd")
 const Collections = preload("res://scripts/services/collection_service.gd")
 const UI = preload("res://scripts/presentation/adventure_ui.gd")
 const Guide = preload("res://scripts/presentation/mission_guide.gd")
+const Story = preload("res://scripts/services/story_service.gd")
 const C2 = preload("res://scripts/services/chapter2_service.gd")
 const C2G = preload("res://scripts/presentation/chapter2_guide.gd")
 const CURRENT_STORY_QUEST_IDS := ["FG01", "FG11", "FG08"]
@@ -142,7 +143,8 @@ func _show(kind: String, extra: Dictionary = {}) -> void:
 		"family": "res://scripts/presentation/family_adventure_tools.gd",
 		"water_photos": "res://scripts/presentation/water_photo_upload.gd",
 		"finale": "res://scripts/presentation/mission_finale.gd",
-		"step_mission": "res://scripts/presentation/step_mission.gd"
+		"step_mission": "res://scripts/presentation/step_mission.gd",
+		"story": "res://scripts/presentation/story_reader.gd"
 	}
 	var script: Script = load(str(paths[kind]))
 	screen = script.new()
@@ -183,6 +185,8 @@ func _connect_screen(node: Node) -> void:
 		node.connect("water_photos_requested", func(): open_water_photos())
 	if node.has_signal("hub_requested"):
 		node.connect("hub_requested", open_hub)
+	if node.has_signal("story_requested"):
+		node.connect("story_requested", func(series_id: String): open_story(series_id))
 	if node.has_signal("step_mission_requested"):
 		node.connect("step_mission_requested", func(mission_id: String): open_step_mission(mission_id))
 	if node.has_signal("finale_requested"):
@@ -207,7 +211,7 @@ func _close_screen() -> void:
 		var context := preview_return_context.duplicate(true)
 		preview_return_context = {}
 		_show(target, context)
-	elif route in ["episode", "mission", "finale", "step_mission"]:
+	elif route in ["episode", "mission", "finale", "step_mission", "story"]:
 		# A mission that was just completed ends with its closing scene, once.
 		if _present_due_finale():
 			return
@@ -268,6 +272,10 @@ func open_episode(instance_id: String, stage_id: String) -> void:
 	var inst: Dictionary = _state().get("phase_b", {}).get("quest_instances", {}).get(instance_id, {})
 	if inst.is_empty():
 		app.show_toast("Это прохождение не найдено.")
+		return
+	# The Spanish letters are a story, not exercises: after the first contact the radio opens the letters.
+	if str(inst.get("quest_id", "")) == "FG01" and stage_id != "es_intro" and not preview_active:
+		open_story("fg01")
 		return
 	_show("episode", {"instance_id": instance_id, "stage_id": stage_id, "quest": inst.get("quest_snapshot", {})})
 
@@ -337,6 +345,10 @@ func open_finale(key: String, instance_id: String = "") -> void:
 		context.merge(_c2_context(key), true)
 	_show("finale", context)
 
+## Сюжетная серия (письма Южного Маяка). view "journal" открывает журнал эфира.
+func open_story(series_id: String, view: String = "") -> void:
+	_show("story", {"series": series_id, "view": view})
+
 func open_step_mission(mission_id: String) -> void:
 	if not C2.unlocked(_state(), mission_id):
 		return
@@ -385,6 +397,17 @@ func _c2_names(state: Dictionary) -> Array[String]:
 		if not str(fields.get(key, "")).is_empty():
 			names.append(str(fields[key]))
 	return names
+
+## The finished letters go to the archive: the journal of the air and Maya's own broadcast.
+func _save_story_work(candidate: Dictionary, series_id: String) -> void:
+	var entries := Story.journal(candidate, series_id)
+	var lines: Array = []
+	for entry in entries:
+		lines.append({"scene": str(entry.title), "choice": str(entry.choice), "replies": entry.replies})
+	var tokens := Story.tokens(candidate, series_id)
+	var made := Collections.create_work(candidate, {"work_id": "story_%s:player_01" % series_id, "title": "Журнал эфира: письма Южного Маяка", "kind": "note", "status": "COMPLETED", "authorship": {"category": "personal"}, "quest_ids": [], "content": {"journal": lines, "broadcast": {"hello": str(tokens.get("hello", "")), "news": str(tokens.get("news", "")), "bye": str(tokens.get("bye", ""))}}})
+	if bool(made.get("ok", false)):
+		Collections.create_exhibit(candidate, str(made.work_id), "frame")
 
 ## Finished missions of chapter 2 go to the archive as Maya's own works.
 func _save_c2_work(candidate: Dictionary, mid: String) -> void:
@@ -494,6 +517,8 @@ func _save_school_issue(candidate: Dictionary, info: Dictionary) -> void:
 ## Every step of the mission is completed.
 func _mission_finished(inst: Dictionary) -> bool:
 	var iid := str(inst.get("instance_id", ""))
+	if UI.story_pending(_state(), str(inst.get("quest_id", ""))):
+		return false
 	var stages: Array = inst.get("quest_snapshot", {}).get("adventure", {}).get("stages", [])
 	if stages.is_empty():
 		return false
@@ -860,6 +885,15 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 			# Thirty days done: Bruno's ceremony, then the board and the flame on the wall.
 			app.audio_service.play_sfx("chime_solve")
 			call_deferred("open_finale", "challenge")
+		if operation == "story_scene_done" and bool(result.get("applied", false)):
+			app.audio_service.play_sfx("paper_flip")
+			if bool(result.get("chapter_done", false)):
+				app.audio_service.play_sfx("chime_solve")
+			if bool(result.get("finished", false)):
+				call_deferred("_present_due_finale")
+		if operation in ["attest_stage", "attest_all", "c2_confirm_step", "c2_confirm_all"] and bool(result.get("applied", false)):
+			app.audio_service.play_sfx("chime_solve")
+			call_deferred("_present_due_finale")
 		if operation == "c2_step_done" and bool(result.get("applied", false)):
 			app.audio_service.play_sfx("chime_solve")
 			if bool(result.get("completed", false)):
@@ -874,7 +908,7 @@ func _on_command(operation: String, payload: Dictionary) -> void:
 		if operation in ["stage_submit", "stage_review"] and bool(result.get("applied", false)) and not bool(result.get("awaiting_review", false)) and not bool(result.get("needs_revision", false)):
 			app.audio_service.play_sfx("chime_solve")
 			call_deferred("_present_pending")
-		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale", "toggle_challenge_item", "set_challenge_day", "mark_school_day", "complete_school", "c2_step_done"]:
+		if operation in ["stage_submit", "stage_review", "publish_chapter", "pin_quest", "pause_adventure", "resume_adventure", "place_exhibit", "remove_placement", "create_room", "update_room", "delete_room", "snapshot_room", "restore_snapshot", "create_work", "create_exhibit", "add_work_version", "save_adventure_draft", "import_adventure_package", "publish_adventure", "chapter_finale", "toggle_challenge_item", "set_challenge_day", "mark_school_day", "complete_school", "c2_step_done", "story_scene_done", "attest_stage", "attest_all", "c2_confirm_step", "c2_confirm_all"]:
 			if is_instance_valid(screen):
 				screen.setup(_view(route_context), app.audio_service)
 				_result(result)
@@ -941,6 +975,15 @@ func _mutate(candidate: Dictionary, operation: String, payload: Dictionary) -> D
 		"toggle_challenge_item":
 			var Ritual = preload("res://scripts/services/ritual_service.gd")
 			return Ritual.toggle_challenge_item(candidate, str(payload.get("item_key", "")))
+		"c2_confirm_step":
+			return C2.confirm_step(candidate, str(payload.get("mid", "")), str(payload.get("sid", "")))
+		"c2_confirm_all":
+			return C2.confirm_all(candidate, str(payload.get("mid", "")))
+		"story_scene_done":
+			var told: Dictionary = Story.complete_scene(candidate, str(payload.get("series", "")), str(payload.get("scene", "")), str(payload.get("choice", "")), payload.get("replies", {}))
+			if bool(told.get("applied", false)) and bool(told.get("finished", false)):
+				_save_story_work(candidate, str(payload.get("series", "")))
+			return told
 		"c2_step_done":
 			var step_result: Dictionary = C2.complete_step(candidate, str(payload.get("mid", "")), str(payload.get("sid", "")), payload.get("data", {}), bool(payload.get("adult", false)))
 			if bool(step_result.get("applied", false)) and bool(step_result.get("completed", false)):
